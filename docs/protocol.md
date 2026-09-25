@@ -26,6 +26,41 @@ It is the contract of the experiment, not a plan of work; the plan of attack is 
 Explicit non-goals: no claim about human interactive proof engineering effort; no claim about bugs
 found in real deployed systems; no claim that either route is generally superior outside this task set.
 
+## 1a. Prior art, and the gap this experiment fills
+
+Comparisons of TLC against proof for *one and the same* specification exist — all of them with **human**
+proof effort, none with a priced AI loop:
+
+- **Konnov, Kuppe, Merz, "Specification and Verification With the TLA+ Trifecta: TLC, Apalache, and TLAPS"
+  (ISoLA 2022)** — <https://members.loria.fr/SMerz/papers/2022-isola.pdf>. "This is the first paper that
+  applies all three tools to a common specification" (EWD998, Safra's termination detection). Numbers:
+  "fixing N = 3, K = C = 3 and Q = 9, tlc finds 1.3 million distinct states and requires 42 seconds…
+  For N = 4 … 219 million distinct states, and tlc requires about 50 minutes"; larger values are
+  "hopeless" for TLC. Apalache checks the inductive invariant at `N = 100` in 20 s. The TLAPS invariance
+  proof "was written in one person-day and required about 230 lines"; safety plus refinement "about 110
+  lines … half a person-day"; liveness "245 lines … less than one person-day".
+- **Lu, Merz, Weidenbach, "Towards Verification of the Pastry Protocol using TLA+" (FORTE 2011)** —
+  <https://members.loria.fr/SMerz/papers/forte2011pastry.pdf>. TLC spent "more than a month" over
+  1 952 882 411 states without a counterexample, then the proofs were done in TLAPS; model building took
+  "about 3 months"; the conclusion drawn is that "the effort currently required by interactive proofs is
+  too high to scale to more complete P2P protocols".
+- **Chaudhuri, Doligez, Lamport, Merz, "Verifying Safety Properties With the TLA+ Proof System"
+  (IJCAR 2010)** — <https://members.loria.fr/SMerz/papers/ijcar2010.pdf>. TLAPS proof sizes: Peterson
+  mutual exclusion "about 130 lines"; Bakery "800 lines"; Paxos "550 lines … somewhat over 1000".
+- **Industrial effort reports**: Newcombe et al. 2015 (10 AWS systems, specifications of 102–939 lines,
+  2–3 weeks of tool learning, 0–3 bugs per system); Bornholt et al. 2021 (ShardStore, 16 issues
+  prevented). s2n's published verification is Cryptol/SAW/Coq, not TLA+.
+- **Proof-effort metrics for scale**: seL4 ≈20 person-years and ≈480k lines of proof; the de Bruijn
+  factor ≈4 (proof lines per program line); CompCert ≈87% specification and proof.
+- The bounded-instance-versus-general-theorem tradeoff itself is stated in Clarke & Wing 1996 and in the
+  seL4 SOSP 2009 paper: model checking settles instances, proof settles the theorem.
+
+**The gap.** No published work compares an AI-driven proof loop's wall-clock **and dollar** cost against
+TLC's runtime for the same specification. The Trifecta paper supplies the human-effort baseline for
+TLAPS ("one person-day" for an invariance proof); this experiment replaces that person-day with a
+measured loop, prices it in dollars, and runs it on specifications TLC already handles — so the
+comparison is anchored to published numbers rather than to a new benchmark of our own invention.
+
 ## 2. What exactly is compared
 
 One **task** = one system, one property, one instance parameter `N`, one mutant (see §5).
@@ -206,24 +241,24 @@ audit, and a manifest entry (`tasks/<task>.json`: property, `N₀`, budgets, mut
   per row so a re-run can be attributed.
 - **Machine variance.** Wall-clock is host-specific; CPU seconds and state counts are reported alongside.
 
-## 11. Open questions to settle before runs (protocol questions)
+## 11. Decisions (settled 2026-09-25)
 
-1. **Replacement criterion** — which of §3's three readings is the headline, and what are `K` and `B`?
-2. **Model matrix** — one frontier model, or a small matrix (cheap/expensive) to separate "proof is
-   expensive" from "this model is expensive"?
-3. **Budgets** — per-task wall-clock cap and token/dollar cap for Route B; TLC's per-run cap.
-4. **Liveness** — out of P1, in P2? Liveness needs fairness assumptions on both sides, which is extra
-   translation work and another place for the comparison to go unfair.
-5. **Human role** — may a human repair the spec mid-run, and may a human supply the inductive invariant
-   (arguably the intellectual core of proof work)? Default in this protocol: spec yes, invariant no;
-   supplying it marks the run `assisted`.
-6. **Task-set composition** — which P2 systems are in, and is a "wall-clock hour where TLC dies"
-   instance required (i.e. do we need one instance where model checking genuinely fails)?
-7. **Cost basis** — list price for tokens (assumed in §6), and which host rate for compute, including
-   whether the researcher's own time is costed at all.
-8. **Output** — results stay in-repo, or a written report/paper is the deliverable?
+| # | Question | Decision |
+| --- | --- | --- |
+| 1 | Headline reading of "replacement" | **Tier 2: the general theorem within budget `B`**, where TLC cannot answer at any budget. The bounded-tier ratio `K` and the coverage reading are also reported, as secondary. `B` = the per-run cap in row 3; the headline claim is stated per task *and* per task family. |
+| 2 | Model matrix | **One model** for the closure loop, one selector for the whole experiment, thinking level fixed by the harness and recorded per row. A matrix is a follow-up experiment, not this one. |
+| 3 | Budgets | Route B per run: **2 h wall-clock and $50 of model spend**, whichever binds first. Route A per run: the same 2 h wall-clock cap. `N₀` per task = the largest `N` whose TLC run completes inside that cap in calibration. |
+| 4 | Liveness | **Out of P1–P2.** Safety invariants only until P3, then at most one fairness-dependent liveness task, with the fairness assumption stated on both sides. |
+| 5 | Human role | **Specification and lemma *statements* are human; every proof tactic comes from the loop.** Supplying the inductive invariant is out: a run that receives it is `assisted` and reported separately. |
+| 6 | Task-set composition | **EWD998 (Safra termination detection) is a must-have**, because published TLC, Apalache and TLAPS numbers exist for it (§1a) and it therefore calibrates our rig against external data. It joins the P2 set alongside two-phase commit/Paxos agreement, LCR leader election, and cache coherence. One instance where TLC genuinely dies (no completion inside 2 h) is required. |
+| 7 | Cost basis | Tokens at the provider's **list price** (as recorded in the session's `usage.cost`), compute at a **stated host rate**, researcher time **not** costed. Both components reported separately, never merged into one number. |
+| 8 | Output | **In-repo**: `results/` rows plus `wiki/` analysis, with the verdict stated against decision 1. A paper or post is a later, separate decision. |
 
-## 12. Decision: prover and library
+One decision is deferred by evidence rather than choice: the closure loop runs on a **general model**,
+not a Lean-specialised prover model (no such model is reachable from this host's providers). Every
+claim is therefore about a general model driving Lean, and is labelled that way in the write-up.
+
+## 12. Decision: prover and library (settled: Lean 4 + Mathlib)
 
 The choice is constrained by the experiment's own subject — **AI-driven proof closure** — so the
 deciding criterion is tooling for machine-closed proofs, not only library coverage:

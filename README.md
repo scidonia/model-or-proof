@@ -23,27 +23,50 @@ Result rows land in `results/*.jsonl`; the schema, the fairness controls, the ne
 statistics (`R ≥ 5` repetitions per cell, pass rates, not single numbers), and the threats to validity
 are fixed in **[docs/protocol.md](docs/protocol.md)** *before* numbers are collected.
 
-### Decision pending: prover and library
+## Why this is not already answered
 
-`docs/protocol.md` §12 lays out the options with evidence. Recommendation: **Lean 4 + Mathlib**,
-because the experiment's independent variable is AI proof closure and Lean is where that tooling and
-the trained prover models are. Dafny is the cheap auto-active (SMT) control; TLAPS is the only route
-that proofs the *same* TLA+ text, at the cost of weak automation. No Lean or Rocq embedding of TLA+
-semantics exists — only Isabelle has one (TLAPS's Isabelle/TLA object logic, and the HOL-TLA session),
-so Route B will state idiomatic models plus a committed equivalence audit against the TLA+ module.
+The comparison has been made before, but only with *human* proof effort, and never with money attached:
+
+- **TLC vs Apalache vs TLAPS on one specification** (EWD998, Safra's termination detection) — Konnov,
+  Kuppe, Merz, ISoLA 2022: TLC finds 1.3M distinct states in 42 s at `N=3`, 219M in about 50 minutes at
+  `N=4`, and is hopeless beyond; Apalache checks an inductive invariant at `N=100` in 20 s; the TLAPS
+  invariance proof took **one person-day and about 230 lines**.
+- **TLC vs TLAPS on Pastry** (Lu, Merz, Weidenbach, FORTE 2011): TLC spent *more than a month* over
+  1.95 billion states without a counterexample; the proofs followed, and the paper's conclusion is that
+  interactive proof effort "is too high to scale to more complete P2P protocols".
+- Industrial baselines: 10 AWS systems, specifications of 102–939 lines, 2–3 weeks of tool learning,
+  0–3 bugs each; seL4 at ≈20 person-years and ≈480k lines of proof.
+
+What has changed is the price of proof search. **No published work prices an AI-driven proof loop
+against TLC's runtime for the same specification** — that is the gap this repository fills, and EWD998
+is in the task set precisely because published TLC/TLAPS numbers exist for it and calibrate the rig
+against external data.
+
+### Decisions settled 2026-09-25
+
+| Decision | Choice |
+| --- | --- |
+| Prover + library | **Lean 4 + Mathlib** — where AI proof-closure tooling (lean-repl, Pantograph, Kimina server) and prover-trained models are. No Lean embedding of TLA+ semantics exists, so Route B states idiomatic Lean models plus a committed equivalence audit per task. |
+| Headline verdict | **The general theorem within budget** — the claim that would justify replacement, since TLC cannot answer at any budget. Bounded-tier cost ratio and budgeted coverage are reported as secondary. |
+| Budgets | 2 h wall-clock and $50 of model spend per Route B run, whichever binds first; the same 2 h cap per TLC run; `R ≥ 5` repetitions per cell. |
+| Human role | Specification and lemma *statements* are human; **every proof tactic comes from the loop**. Supplying the inductive invariant marks the run `assisted`. |
+| Liveness | Out of P1–P2 (safety only); at most one fairness-dependent liveness task in P3. |
+| Cost basis | Tokens at list price (from the session's recorded usage) and compute at a stated host rate, reported separately, never merged. |
+
+One caveat fixed by evidence rather than choice: the loop runs on a **general model**, not a
+Lean-specialised prover model — none is reachable from this host's providers.
 
 ## Status
 
 | Piece | State |
 | --- | --- |
-| Repository bootstrap, nix dev shell | done |
+| Repository bootstrap, nix dev shell, push to `scidonia/model-or-proof` | done |
 | TLA+ side: `TokenRing` spec, mutant, measured cost curve | done |
+| Prover, library, headline criterion, budgets, human role, liveness scope | decided (above) |
 | Harness (both routes) + behavior contracts | next — see [plans/2026-09-25-bootstrap.md](plans/2026-09-25-bootstrap.md) |
-| Prover model + AI closure loop | blocked on the §12 decision |
-| P2 task set (consensus, election, coherence) | planned |
-| Results, analysis, write-up | not started |
-
-The repository is not yet pushed to `github.com/scidonia/model-or-proof` (no credentials on this host).
+| Lean 4 + Mathlib provisioning (elan, Mathlib oleans) and the closure loop | P2 |
+| P2 task set: EWD998, two-phase commit/Paxos, LCR election, cache coherence | planned |
+| Results, analysis, write-up in `wiki/` | not started |
 
 ## The TLA+ side, already measured
 
@@ -98,9 +121,8 @@ State 5: <Enter line 26, col 5 to line 28, col 22 of module TokenRingMutant>
 - Route B additionally needs the prover toolchain (§12) and provider credentials for the closure model.
 - No shell activation is required: every command runs as `nix develop -c <command>`.
 
-## Open protocol questions
+## Protocol decisions
 
-The questions that must be answered before runs start — replacement criterion and its factor `K` and
-budget `B`, model matrix, budgets, whether liveness is in scope, the human role in supplying an
-inductive invariant, task-set composition, cost basis, and the output format — are listed in
-`docs/protocol.md` §11 and tracked in the plan.
+The protocol's open questions were settled on 2026-09-25 and are recorded in `docs/protocol.md` §11
+(replacement criterion, model policy, budgets, liveness scope, human role, task set, cost basis,
+output) and §12 (prover and library choice).

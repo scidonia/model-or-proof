@@ -22,8 +22,9 @@ what is blocked.
   `fstar`, `z3`, `cvc5`. AI-closure interfaces for Lean 4: `lean-repl` (JSON goal/tactic protocol),
   Pantograph (goal RPC, used by LeanDojo-v2), Kimina Lean Server. No Lean or Rocq embedding of TLA+
   semantics exists; Isabelle has one (TLAPS's Isabelle/TLA object logic, HOL-TLA session).
-- Not done: nothing is pushed (no GitHub credentials on this host for `scidonia/model-or-proof`);
-  the prover decision (`docs/protocol.md` §12) is open.
+- Pushed to `github.com/scidonia/model-or-proof`; the §11 and §12 decisions are settled (Lean 4 +
+  Mathlib, general-tier headline verdict, 2 h/$50 per-run caps, human statements but no human tactics,
+  safety before liveness, EWD998 as the externally calibrated task).
 
 ## P1 — Harness and calibration (next)
 
@@ -96,11 +97,7 @@ whether it becomes a paper or post is open question 8.
 
 ## Open decisions and blockers
 
-Decisions (from `docs/protocol.md` §11): replacement criterion with `K` and `B`; model matrix; budgets;
-liveness in/out; human role in supplying the inductive invariant; task-set composition; cost basis;
-output format. Plus §12: prover and library, and whether the TLA+ semantics is embedded in the prover
-or the model is idiomatic (no Lean embedding exists, so idiomatic + audit is the default).
+Decisions: settled — see `docs/protocol.md` §11 and §12.
 
-Blockers: repository creation on `scidonia` (no token on this host — SSH auth works and the remote is
-already configured); a Route B model provider with working credentials (DeepSeek and Groq authenticate
-here; the OpenAI and Anthropic keys on this host are rejected).
+Blockers: a Route B model provider with working credentials (DeepSeek and Groq authenticate here; the
+OpenAI and Anthropic keys on this host are rejected). Repository creation is no longer a blocker.
