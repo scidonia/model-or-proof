@@ -11,6 +11,9 @@
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
           tlaplus # TLC, the model checking side
+          elan # Lean toolchain manager — the toolchain version comes from Mathlib's lean-toolchain
+          git # lake materializes Mathlib from git; declared here so provisioning is not host-dependent
+          curl # `lake exe cache get` fetches oleans over HTTP
           python3 # harness
           python3Packages.pytest # scenario runner
           jq # result-row inspection

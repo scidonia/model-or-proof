@@ -5,3 +5,5 @@ __pycache__/
 *.pyc
 .venv/
 states/
+.lake/
+proofs/lean/*/.runs/

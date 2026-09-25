@@ -16,6 +16,16 @@ def compute_cost_usd(wall_clock_s: float, rate_usd_per_h: float = HOST_RATE_USD_
     return round(wall_clock_s / 3600.0 * rate_usd_per_h, 8)
 
 
+def compute_basis(wall_clock_s: float) -> str:
+    """The compute component of a run's cost basis (protocol §6): the rate, what it was applied to,
+    and the dollars it produced — the evidence behind the row's ``compute_usd``.
+    """
+    return (
+        f"compute {wall_clock_s:.3f}s @ {HOST_RATE_USD_PER_H:g} USD/h "
+        f"= ${compute_cost_usd(wall_clock_s):.8f}"
+    )
+
+
 def append_row(results_dir: Path | str, route: str, row: dict) -> Path:
     """Append one result row to results/<route>.jsonl and return the file's path."""
     results_dir = Path(results_dir)

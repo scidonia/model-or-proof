@@ -6,7 +6,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
-from harness.closure import run_loop  # noqa: E402
+from harness.closure import AUTOMATION_TACTICS, run_loop  # noqa: E402
 
 
 class StubProver:
@@ -25,6 +25,8 @@ class StubProver:
         return ["⊢ Mutex"] if self.current else []
 
     def apply(self, tactic):
+        if tactic in AUTOMATION_TACTICS:
+            return
         self.applied.append(tactic)
         self.current = self.queue.pop(0) if self.queue else True
 
@@ -80,7 +82,7 @@ def test_closed_proof_counts_tokens_and_dollars(tmp_path):
     """Scenario 2: a closed proof yields a success row with counted tokens and dollars."""
     prover = StubProver([True, False])
     model = ScriptedModel(
-        ["simp", "omega"], {"input": 1000, "output": 200, "cost_usd": 0.25}
+        ["simp", "trivial"], {"input": 1000, "output": 200, "cost_usd": 0.25}
     )
 
     row = run_loop(prover, model, cap_s=7200, clock=AdvancingClock(step=1))
@@ -91,7 +93,7 @@ def test_closed_proof_counts_tokens_and_dollars(tmp_path):
     assert row["proof"]["input_tokens"] == 2000
     assert row["proof"]["output_tokens"] == 400
     assert row["cost_usd"] == 0.5
-    assert prover.applied == ["simp", "omega"]
+    assert prover.applied == ["simp", "trivial"]
 
 
 def test_token_budget_stops_a_stuck_loop():

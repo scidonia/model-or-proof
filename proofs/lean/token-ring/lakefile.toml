@@ -1,0 +1,24 @@
+name = "token-ring"
+# Matches `lean-toolchain` (elan's pin): tag `v4.35.0-rc3` is Mathlib's release for
+# `leanprover/lean4:v4.35.0-rc3`, whose own `lean-toolchain` this project copies verbatim.
+
+# Provisioning left the library targets out, so `lake build` had nothing to build. These are the
+# Route B artifacts, one seed per tier (protocol §2): the model + the general theorem, the `N₀`
+# corollary over it, and the mutant that must not close (the negative control, plan step 7).
+# `defaultTargets` has to precede the `[[…]]` tables below: after `[[require]]` starts, a bare key
+# belongs to that dependency table.
+defaultTargets = ["TokenRing", "TokenRingN0", "TokenRingMutant"]
+
+[[lean_lib]]
+name = "TokenRing"
+
+[[lean_lib]]
+name = "TokenRingN0"
+
+[[lean_lib]]
+name = "TokenRingMutant"
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "v4.35.0-rc3"

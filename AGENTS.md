@@ -26,6 +26,7 @@ it is the contract of the experiment.
 | `specs/tla/<task>/` | TLA+ modules, `.cfg` per instance, and each task's mutant |
 | `proofs/lean/<task>/` | Lean 4 models and theorems for Route B |
 | `harness/` | Both runners: TLC invocation and parsing, the AI closure loop, result rows |
+| `scripts/` | Standalone analysis/verification scripts that produce no result row (e.g. the token-ring state-graph enumerator behind the equivalence audit's §6) |
 | `tasks/` | Task manifests: property, `N₀`, budgets, mutants, artifacts |
 | `tests/` | Behavior contracts and their executable scenarios |
 | `results/` | `*.jsonl` result rows and run logs |

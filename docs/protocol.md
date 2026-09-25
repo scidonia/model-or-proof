@@ -195,15 +195,15 @@ Every run appends one JSON object to `results/<route>.jsonl`:
 
 - **Route A cost** is compute only: `wall_clock_s × host_rate`. The host rate is stated once, in the
   README, with the measurement basis; dollars are otherwise zero for this route.
-- **Route B cost** is `usage.cost.total` summed over the loop's session records (tokens at list price,
-  per the provider's published rates) plus compute. Both components are reported.
+- **Route B cost** is the summed provider `usage` (tokens at list price, per the provider's published
+  rates) plus compute at the stated host rate. Both components are reported separately.
 - **Per-property normalisation**: results are also reported per property per task, since tasks differ
   in state-space size and proof length.
 
 ### 6a. The published human baseline is data, not a route
 
 Prior-art human effort is **not** a third `route` value in the schema above, and never appears in
-`results/tlc.jsonl` or `results/lean.jsonl`. It is a separate file, `results/human.jsonl`, whose records
+`results/tlc.jsonl` or `results/proof.jsonl`. It is a separate file, `results/human.jsonl`, whose records
 carry `kind: "human_prior_art"`, `machine_checked: false`, publication and pinned-source provenance, a
 verbatim `quote` for every figure, and `never_pooled_with: ["route_a_measured", "route_b_measured"]` —
 and **no** measured field (`route`, `tool`, `wall_clock_s`, `startup_s`, `peak_rss_mb`, `states_reached`,
@@ -249,19 +249,30 @@ are asserted by `tests/human-baseline-contract.md`.
 
 ## 8. Route B measurement procedure
 
-**Chosen: Lean 4 + Mathlib**, driven through one of the machine interfaces in the plan's P2
-provisioning notes (`lean-repl` first; Pantograph if goal-state fidelity needs it). The procedure:
+**Chosen: Lean 4 + Mathlib**, driven through `lean-repl` (Pantograph is the recorded fallback if
+goal-state fidelity proves insufficient). The instrument is `harness/route_b.py` → `harness/closure.py`
+→ `harness/lean_repl.py` (the `LeanReplProver` port) and `harness/model.py` (the model client). The
+procedure:
 
-- The loop is an OMP session with a fixed prompt and a fixed tool set: read the proof file, apply a
-  tactic, compile (`lake build`), read the resulting goal state, repeat. The session terminates when
-  the artifact compiles with no unclosed goal (`sorry`/`Admitted`/`axiom` count is asserted zero by the
-  harness, not trusted from the transcript).
+- The loop reads the proof file, sends the model the specification — the seed's definitions and
+  theorem statement, plus (for a tier-1 corollary) its project-local import's definitions and theorem
+  statement *types* — together with the statement under test, the tactic history, and the repl's
+  per-turn refusal reason (never a proof body, an invariant, or a helper lemma; the row records the
+  prompt's composition). It then receives a tactic, applies it to the repl's in-memory proof state, and
+  repeats — there is **no per-turn `lake build`** (the repl
+  applies tactics directly; the artifact is written back in place only on closure). The session
+  terminates when the repl reports the proof completed **and** the artifact's `sorry`/`sorryAx`/`admit`/
+  `Admitted`/`axiom` count is asserted zero by the harness — never trusted from the transcript.
 - Budget: 2 h wall-clock and $50 of model spend per run, whichever binds first; both recorded. A run
-  that exceeds either is `timeout`, with the partial artifact and the last goal state kept.
-- Cost: summed `usage.cost.total` from the session records in `~/.omp/agent/sessions/`, keyed to the
-  run's session id; the harness writes the session id into the row.
-- The proof may introduce helper lemmas. Their statements are the researcher's (translation work, like
-  writing the spec); their proofs must be the loop's. Any hand-written tactic marks the run `assisted`.
+  that exceeds either is `timeout`, with the partial tactics and the last goal state kept in the row.
+- Cost: OMP's recorded `usage.cost` (tokens priced by OMP, §11 decision 7) plus compute at the stated
+  host rate; the two components are reported separately, never merged. A mid-run provider failure
+  (402/429/5xx) lands a recorded `error` row naming the failure, never a silently lost budget.
+- The prompt may **invite** the model to guess an auxiliary invariant or a strengthened hypothesis, but
+  never supplies one (D19): a model-guessed helper is the loop's own work — recorded in
+  `auxiliary_invariants` with its size and `assisted: false`, and the row shows how it was obtained. A
+  **human**-supplied invariant marks the run `assisted: true` (a full-body declaration diff against the
+  seed), never by discipline.
 
 ## 9. Task set
 
