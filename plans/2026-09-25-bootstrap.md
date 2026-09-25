@@ -123,6 +123,35 @@ whether it becomes a paper or post is open question 8.
 | Cost attribution disputes | both components (compute, tokens) reported separately with their basis stated |
 | Blocked on credentials | Route A and the harness proceed without any; Route B needs provider access; pushing needs a GitHub token |
 
+## Resume here (session restart)
+
+Everything is committed and pushed; no background work is outstanding.
+
+```bash
+cd /home/gavin/dev/model-or-proof
+nix develop -c pytest                       # the seven scenarios
+nix develop -c python -m harness.tlc_run --task tasks/token-ring.json --results results --reps 5
+nix develop -c python -m harness.tlc_run --task tasks/token-ring.json --results results --mutant
+```
+
+Order of work on resume:
+
+1. **P1 close-out** — calibrate `N₀` for token-ring (largest `N` inside the 2 h cap; `N=19` measured at
+   169 s, so extrapolate and then measure), add Bakery and termination detection, fix `N₀` in
+   `tasks/*.json`.
+2. **P2** — provision Lean 4 + Mathlib (`elan` from nixpkgs, project pinned to Mathlib's
+   `lean-toolchain`, `lake exe cache get`), port token-ring's `Mutex` as a general theorem plus the
+   `N₀` corollary, and drive the closure loop through `lean-repl` with the session's usage summed into
+   the row.
+3. **EWD998** — the externally calibrated task (published TLC/Apalache/TLAPS numbers, protocol §1a).
+
+Two environment facts a restarted session needs:
+
+- The OMP pack at `~/src/omp-tools` is linked and loads its agents, rules and skills **at session
+  start** — a session opened before the link does not have them.
+- Route B must run on `deepseek/*` or `groq/*`: those authenticate on this host, while the OpenAI and
+  Anthropic keys are rejected with 401.
+
 ## Open decisions and blockers
 
 Decisions: settled — see `docs/protocol.md` §11 and §12.
