@@ -1,0 +1,20 @@
+{
+  "name": "token-ring",
+  "system": "token-passing ring mutual exclusion",
+  "property": {
+    "name": "Mutex",
+    "kind": "safety",
+    "statement": "at most one node is in its critical section at any time"
+  },
+  "spec": "specs/tla/token-ring/TokenRing.tla",
+  "mutant": {
+    "spec": "specs/tla/token-ring/TokenRingMutant.tla",
+    "config": "specs/tla/token-ring/TokenRingMutant.cfg"
+  },
+  "instances": [
+    { "param_N": 3, "config": "specs/tla/token-ring/TokenRing.cfg" }
+  ],
+  "n0": null,
+  "budgets": { "wall_clock_s": 7200, "usd": 50 },
+  "repetitions": 5
+}

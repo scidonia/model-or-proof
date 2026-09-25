@@ -26,7 +26,14 @@ what is blocked.
   Mathlib, general-tier headline verdict, 2 h/$50 per-run caps, human statements but no human tactics,
   safety before liveness, EWD998 as the externally calibrated task).
 
-## P1 — Harness and calibration (next)
+## P1 — Harness and calibration (harness done, calibration open)
+
+Delivered: `harness/result.py`, `harness/tlc_run.py`, `harness/closure.py`, `tasks/token-ring.json`,
+the two contracts and their seven scenarios (all green), and six Route A rows in `results/tlc.jsonl`
+(five success at 36 distinct states, one mutant violation with the negative control recorded).
+
+Still open in P1: calibrate `N₀` per task against the 2 h cap, add the remaining calibration tasks
+(Bakery, termination detection), and write the Lean-side equivalence audit once the model exists.
 
 Deliverables:
 
@@ -52,7 +59,7 @@ Acceptance checks:
   refuted or established.
 - No scenario reaches the network or a model: the loop is exercised against the stub prover only.
 
-## P2 — Prover, model, and closure loop (blocked on §12 decision)
+## P2 — Prover, model, and closure loop (Lean 4 + Mathlib, decided)
 
 1. Pin the toolchain in the dev shell (for Lean: `elan` + `lake`, project pinned to Mathlib's
    `lean-toolchain`, `lake exe cache get` for oleans; the nixpkgs `lean4-4.30.0` is behind Mathlib's
@@ -70,6 +77,27 @@ Acceptance checks:
 - The mutant fails to close inside budget, and the row says which way it failed.
 - Re-running the same cell twice produces different token counts (stochastic side is visible in the
   data) while the artifact check stays objective.
+
+### P2 provisioning facts (gathered 2026-09-25, sources fetched directly)
+
+- **Toolchain.** `elan` from nixpkgs (`elan-4.2.4`); the Lean version comes from Mathlib's
+  `lean-toolchain`, not from nixpkgs — mathlib4 master pins `leanprover/lean4:v4.35.0-rc3` while
+  nixpkgs ships `lean4-4.30.0`. Oleans are fetched with `lake exe cache get` ("To obtain precompiled
+  `olean` files, run `lake exe cache get`. (Skipping this step means the next step will be very slow.)"
+  — mathlib4 README); the prebuilt Mathlib container image is ~407 MB with oleans included.
+- **Closure interfaces.** `lean-repl` (JSON in/out: `{"tactic": "apply Int.natAbs", "proofState": 0}` →
+  `{"proofState": 1, "goals": [...]}`); Pantograph (`goal.start` / `goal.tactic` RPC, the backend of
+  LeanDojo-v2); Kimina Lean Server (FastAPI over `lean-repl`, MIT, image
+  `projectnumina/kimina-lean-server:2.0.0`). LeanDojo v1 is deprecated in favour of LeanDojo-v2.
+- **What AI closure achieves elsewhere** (context for what to expect, not a baseline of this
+  experiment): DeepSeek-Prover-V2 88.9% on miniF2F-test and 49 of 658 PutnamBench problems;
+  Kimina-Prover 80.7% at pass@8192 on miniF2F; Goedel-Prover-SFT 57.6% at pass@32; on CombiBench the
+  best is 7 of 100; DafnyBench 68%; the vericoding benchmark's 12 504 specs close at 82% in Dafny, 44%
+  in Verus/Rust and 27% in Lean.
+- **TLA+ inside a prover.** Only Isabelle has a TLA+ semantics: TLAPS's Isabelle/TLA object logic and
+  the `HOL-TLA` session. `tlapm` is actively maintained (last push 2026-09-23) with Z3/Zenon/Isabelle
+  backends; Zenon itself is stale. No Lean or Rocq embedding exists, so Route B states idiomatic Lean
+  models with the per-task equivalence audit (`docs/equivalence-<task>.md`).
 
 ## P3 — Task set
 

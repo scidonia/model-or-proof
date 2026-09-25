@@ -1,0 +1,43 @@
+tlc-workers1-cleanup-config/home/gavin/dev/model-or-proof/specs/tla/token-ring/TokenRingMutant.cfg/home/gavin/dev/model-or-proof/specs/tla/token-ring/TokenRingMutant.tla
+
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 64 and seed 3751656216707647941 with 1 worker on 20 cores with 14247MB heap and 64MB offheap memory (Linux 6.8.0-85-generic amd64, Oracle Corporation 1.8.0_504 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/token-ring/TokenRingMutant.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module TokenRingMutant
+Starting... (2026-09-25 15:36:32)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-25 15:36:32.
+Error: Invariant Mutex is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ token = 0
+/\ pc = (0 :> "idle" @@ 1 :> "idle" @@ 2 :> "idle")
+
+State 2: <Request line 21, col 5 to line 23, col 22 of module TokenRingMutant>
+/\ token = 0
+/\ pc = (0 :> "wait" @@ 1 :> "idle" @@ 2 :> "idle")
+
+State 3: <Enter line 26, col 5 to line 28, col 22 of module TokenRingMutant>
+/\ token = 0
+/\ pc = (0 :> "crit" @@ 1 :> "idle" @@ 2 :> "idle")
+
+State 4: <Request line 21, col 5 to line 23, col 22 of module TokenRingMutant>
+/\ token = 0
+/\ pc = (0 :> "crit" @@ 1 :> "wait" @@ 2 :> "idle")
+
+State 5: <Enter line 26, col 5 to line 28, col 22 of module TokenRingMutant>
+/\ token = 0
+/\ pc = (0 :> "crit" @@ 1 :> "crit" @@ 2 :> "idle")
+
+36 states generated, 23 distinct states found, 10 states left on queue.
+The depth of the complete state graph search is 5.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-09-25 15:36:32)

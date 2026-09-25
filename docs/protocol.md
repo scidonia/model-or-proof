@@ -202,19 +202,19 @@ Every run appends one JSON object to `results/<route>.jsonl`:
 
 ## 8. Route B measurement procedure
 
-**Prover and library: decision pending — see §12.** Once fixed, the procedure is:
+**Chosen: Lean 4 + Mathlib**, driven through one of the machine interfaces in the plan's P2
+provisioning notes (`lean-repl` first; Pantograph if goal-state fidelity needs it). The procedure:
 
 - The loop is an OMP session with a fixed prompt and a fixed tool set: read the proof file, apply a
-  tactic, compile (`lake build` / prover equivalent), read the resulting goal state, repeat. The
-  session terminates when the artifact compiles with no unclosed goal (`sorry`/`Admitted`/`axiom`
-  count is asserted zero by the harness, not trusted from the transcript).
-- Budget: wall-clock cap and token cap per run, both recorded. A run that exceeds either is
-  `timeout`, with the partial artifact and the last goal state kept.
+  tactic, compile (`lake build`), read the resulting goal state, repeat. The session terminates when
+  the artifact compiles with no unclosed goal (`sorry`/`Admitted`/`axiom` count is asserted zero by the
+  harness, not trusted from the transcript).
+- Budget: 2 h wall-clock and $50 of model spend per run, whichever binds first; both recorded. A run
+  that exceeds either is `timeout`, with the partial artifact and the last goal state kept.
 - Cost: summed `usage.cost.total` from the session records in `~/.omp/agent/sessions/`, keyed to the
   run's session id; the harness writes the session id into the row.
-- The proof may introduce helper lemmas. Their statements are the researcher's (translation work,
-  like writing the spec); their proofs must be the loop's. Any hand-written tactic marks the run
-  `assisted`.
+- The proof may introduce helper lemmas. Their statements are the researcher's (translation work, like
+  writing the spec); their proofs must be the loop's. Any hand-written tactic marks the run `assisted`.
 
 ## 9. Task set
 

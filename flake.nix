@@ -12,6 +12,7 @@
         packages = with pkgs; [
           tlaplus # TLC, the model checking side
           python3 # harness
+          python3Packages.pytest # scenario runner
           jq # result-row inspection
           z3 # SMT solver available to the prover side
         ];
