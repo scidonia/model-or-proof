@@ -1,0 +1,17 @@
+{
+  "name": "ewd998-paper",
+  "system": "Safra's distributed termination detection on a ring (EWD998), publication-era revision",
+  "property": {
+    "name": "TerminationDetection",
+    "kind": "safety",
+    "statement": "a white token at node 0 with no in-flight messages implies every node is inactive"
+  },
+  "spec": "specs/tla/ewd998-paper/EWD998.tla",
+  "mutant": null,
+  "instances": [
+    { "param_N": 3, "config": "specs/tla/ewd998-paper/EWD998Small.cfg" }
+  ],
+  "n0": null,
+  "budgets": { "wall_clock_s": 7200, "usd": 50 },
+  "repetitions": 5
+}

@@ -31,7 +31,7 @@ PROGRESS_RE = re.compile(
 )
 DEPTH_RE = re.compile(r"The depth of the complete state graph search is (\d+)\.")
 VIOLATION_RE = re.compile(r"Error: (?:Invariant|Temporal property) (\S+) is violated\.")
-CFG_CONSTANT_RE = re.compile(r"(?m)^\s*CONSTANT\s+N\s*=\s*(\d+)")
+CFG_CONSTANT_RE = re.compile(r"(?m)^\s*CONSTANTS?\s+N\s*=\s*(\d+)")
 CFG_INVARIANT_RE = re.compile(r"(?m)^\s*INVARIANTS?\s+(\S+)")
 TLC_VERSION_RE = re.compile(r"Version ([\d.]+) of")
 
