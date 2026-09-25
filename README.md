@@ -42,6 +42,16 @@ against TLC's runtime for the same specification** — that is the gap this repo
 is in the task set precisely because published TLC/TLAPS numbers exist for it and calibrate the rig
 against external data.
 
+That prior art is now committed here at pinned provenance, so it can be checked offline: the EWD998
+specification, the paper's `N = 3` config and both TLAPS proofs (`tlaplus/Examples` @ `3dfe0087…`, MIT,
+with the four MIT CommunityModules modules TLC needs to parse it vendored beside them), and the
+IJCAR 2010 Peterson/Bakery/Paxos modules (`tlaplus/tlapm` @ `7824dab5…`, BSD-2-Clause). The published
+human-effort figures are carried as cited data in `results/human.jsonl` — a separate artifact that no
+measurement path writes and that is never pooled with Route A or Route B — with the attribution, the
+partiality and person-day caveats, and the published-versus-artifact disagreements in
+[docs/human-baseline.md](docs/human-baseline.md). The imported proofs are **not** machine-checked here
+(`tlapm` is not in the dev shell and is never invoked), which the data states explicitly.
+
 ### Decisions settled 2026-09-25
 
 | Decision | Choice |
@@ -63,9 +73,11 @@ Lean-specialised prover model — none is reachable from this host's providers.
 | Repository bootstrap, nix dev shell, push to `scidonia/model-or-proof` | done |
 | TLA+ side: `TokenRing` spec, mutant, measured cost curve | done |
 | Prover, library, headline criterion, budgets, human role, liveness scope | decided (above) |
+| Published human-proof baseline: pinned EWD998 + IJCAR 2010 import, cited figures in `results/human.jsonl` | done — see [docs/human-baseline.md](docs/human-baseline.md) |
+| EWD998: import (pinned branch head + publication-era revision), TLC calibration reproducing the published figures | done — measured numbers and the drift at the pin are in [docs/human-baseline.md](docs/human-baseline.md) |
 | Harness (both routes) + behavior contracts | next — see [plans/2026-09-25-bootstrap.md](plans/2026-09-25-bootstrap.md) |
 | Lean 4 + Mathlib provisioning (elan, Mathlib oleans) and the closure loop | P2 |
-| P2 task set: EWD998, two-phase commit/Paxos, LCR election, cache coherence | planned |
+| P2 task set: two-phase commit/Paxos, LCR election, cache coherence (EWD998 imported and calibrated above) | planned |
 | Results, analysis, write-up in `wiki/` | not started |
 
 ## The TLA+ side, already measured
@@ -101,6 +113,37 @@ State 5: <Enter line 26, col 5 to line 28, col 22 of module TokenRingMutant>
 /\ token = 0
 /\ pc = (0 :> "crit" @@ 1 :> "crit" @@ 2 :> "idle")
 ```
+
+### EWD998, the externally calibrated task
+
+EWD998 (Safra's termination detection) is the one task with published numbers to calibrate against
+(protocol §11 decision 6). Two revisions are committed, both byte-for-byte at pinned provenance: the
+**pinned branch head** (`specs/tla/ewd998/`, `3dfe0087…`, with both configs, both TLAPS proofs and the
+four CommunityModules modules TLC needs) and the **publication-era revision**
+(`specs/tla/ewd998-paper/`, `75f2a7a7369d`) — see each directory's `PROVENANCE.md` and
+[docs/human-baseline.md](docs/human-baseline.md).
+
+Both run the paper's `N = 3` instance through the harness — the same instrument as every other Route A
+row, with the vendored modules resolved from the spec's own directory and no library-path plumbing:
+
+```bash
+nix develop -c python -m harness.tlc_run --task tasks/ewd998-paper.json --results results --reps 1
+nix develop -c python -m harness.tlc_run --task tasks/ewd998.json --results results --reps 1
+```
+
+| | distinct states | states generated | depth | wall-clock |
+| --- | --- | --- | --- | --- |
+| Published — the artifact's own table, measured 01/2021 | 1.3m | 10.1m | 60 | 42 s |
+| Publication-era revision `75f2a7a7369d` — reproduces it | **1 384 582** | 10 150 343 | **60** | 32.1 s |
+| Pinned branch head `3dfe0087…` — has drifted | **1 520 618** | 11 238 019 | **59** | 35.5 s |
+
+The publication-era revision reproduces the published figures (1.3 million distinct states, 10.1m
+generated, and the diameter exactly at 60); the pinned branch head does not, and the cause is upstream:
+commit `dafe1e5c8a74` (2023-07-28) widened one line of `Init` so the token may start at any node,
+*after* the table's figures were recorded in `2589f6465cc5` (2021-01-21). All three rows are recorded
+and none is reconciled: the pinned spec is not edited back to the 2021 `Init`, the paper-era revision is
+a separate directory rather than a modification of the pin, and no flag is tuned to move the numbers.
+Details in [docs/human-baseline.md](docs/human-baseline.md).
 
 ## Layout
 

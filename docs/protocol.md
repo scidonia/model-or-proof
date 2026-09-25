@@ -61,6 +61,37 @@ TLAPS ("one person-day" for an invariance proof); this experiment replaces that 
 measured loop, prices it in dollars, and runs it on specifications TLC already handles — so the
 comparison is anchored to published numbers rather than to a new benchmark of our own invention.
 
+**The prior art is committed here, at pinned provenance.** The specifications and proof artifacts the
+figures above are taken from are imported byte-for-byte, so every claim about them is checkable offline:
+
+- `specs/tla/ewd998/` — `tlaplus/Examples` @ `3dfe0087a36ccfc6f8aae7de6621c68e06fab955` (`ISoLA2022`,
+  MIT): the spec, both configs (`EWD998Small.cfg` is the paper's N = 3 instance, `EWD998.cfg` the
+  branch's N = 4), the asynchronous termination-detection spec it instantiates, and both TLAPS proofs;
+  plus four CommunityModules modules (`SequencesExt`, `FiniteSetsExt`, `Folds`, `Functions`) vendored
+  from `tlaplus/CommunityModules` @ `9aae8ea1318b3ded4629abdccec2c4754b528d70` (MIT), which TLC needs
+  on the parse path to read EWD998 at all.
+- `specs/tla/ijcar2010/` — `tlaplus/tlapm` @ `7824dab55e0c346e913404d59d0bbdeebce73cc1`
+  (BSD-2-Clause): Peterson, Bakery, and Paxos with the trivial consensus spec it instantiates.
+- `specs/tla/ewd998-paper/` — the **publication-era** revision of EWD998 (`tlaplus/Examples`
+  @ `75f2a7a7369d`, the last revision before the 2023-07-28 `Init` widening), committed so the published
+  figures can be *reproduced* rather than only cited. It is explicitly not the pin.
+
+Per-file repositories, commits, upstream paths, licenses, byte/line counts and license notices are in
+each directory's `PROVENANCE.md`. **The imported proofs are not machine-checked here**: `tlapm` is not
+in the dev shell and is invoked nowhere in this repository, so the proofs are text with provenance
+(`machine_checked: false`). The published effort figures are carried as cited data in
+`results/human.jsonl` and documented in `docs/human-baseline.md` (§6a). Two disagreements are recorded
+there and never reconciled:
+
+- **Published proof lines versus the committed artifacts** — Peterson "about 130" vs 199 lines, Bakery
+  "800" vs 383, EWD998's 230 + 110 + 245 vs the artifacts' 863 + 123.
+- **Published EWD998 TLC figures against two re-runs** — published distinct 1.3 M / generated 10.1 M /
+  depth 60 / 42 s. The **publication-era revision** `75f2a7a7369d` *reproduces* them: 1,384,582 /
+  10,150,343 / **60** / 32.1 s. The **pinned branch head** does not: 1,520,618 / 11,238,019 / 59 /
+  35.5 s. The drift is one line — `dafe1e5c8a74` (2023-07-28) widened `Init`
+  (`token \in [pos: {0}, …]` → `token \in [pos: Node, …]`) *after* the embedded 2021 table was recorded.
+  All three rows are measured and stated, never reconciled; the pinned spec is not edited back.
+
 ## 2. What exactly is compared
 
 One **task** = one system, one property, one instance parameter `N`, one mutant (see §5).
@@ -169,6 +200,22 @@ Every run appends one JSON object to `results/<route>.jsonl`:
 - **Per-property normalisation**: results are also reported per property per task, since tasks differ
   in state-space size and proof length.
 
+### 6a. The published human baseline is data, not a route
+
+Prior-art human effort is **not** a third `route` value in the schema above, and never appears in
+`results/tlc.jsonl` or `results/lean.jsonl`. It is a separate file, `results/human.jsonl`, whose records
+carry `kind: "human_prior_art"`, `machine_checked: false`, publication and pinned-source provenance, a
+verbatim `quote` for every figure, and `never_pooled_with: ["route_a_measured", "route_b_measured"]` —
+and **no** measured field (`route`, `tool`, `wall_clock_s`, `startup_s`, `peak_rss_mb`, `states_reached`,
+`cost_usd`, `cost_basis`, `tlc`, `proof`, `outcome`, `repetition`, `tier`, `negative_control`).
+
+The name is the **published human-proof baseline** ("human prior art"); it is never a route and never an
+arm. It may be cited and charted *alongside* Route A and Route B, but must never be pooled into their
+distribution, ratio, or cost statistic. The caveats that keep that honest — person-days exist only for
+EWD998, no person-day is invented for the IJCAR 2010 papers, the Paxos second refinement is incomplete,
+and published line counts disagree with the committed artifacts — are in `docs/human-baseline.md` and
+are asserted by `tests/human-baseline-contract.md`.
+
 ## 7. Route A measurement procedure
 
 - Invocation and parsing are implemented once, in `harness/`, and pinned by a behavior contract
@@ -227,6 +274,18 @@ provisioning notes (`lean-repl` first; Pantograph if goal-state fidelity needs i
 Each task contributes: a TLA+ module, a config per instance, a mutant, a prover model, an equivalence
 audit, and a manifest entry (`tasks/<task>.json`: property, `N₀`, budgets, mutants).
 
+**EWD998 is the externally calibrated task** (decision 6). Its specification, the paper's N = 3 instance
+and its TLAPS proofs are imported at pinned provenance, and so is the **publication-era revision** of the
+same system (`specs/tla/ewd998-paper/`, `75f2a7a7369d`), because the pinned branch head no longer
+reproduces the published figures. Both revisions are run through the same rig (`tasks/ewd998.json`,
+`tasks/ewd998-paper.json`), both rows are measured, and all three rows are recorded in
+`docs/human-baseline.md`: published 1.3 M distinct / 10.1 M generated / depth 60 / 42 s; publication-era
+**1,384,582 / 10,150,343 / 60 / 32.1 s** (a reproduction); pinned branch head
+**1,520,618 / 11,238,019 / 59 / 35.5 s** (drifted by upstream's one-line `Init` widening in
+`dafe1e5c8a74`, 2023-07-28). Each manifest's instance is `EWD998Small.cfg` (`N = 3`, 2 h budget) and
+neither ships a mutant in this phase — the negative control is a P2 task. TLC resolves the vendored
+CommunityModules modules from the spec's own directory, with no library-path plumbing.
+
 ## 10. Threats to validity
 
 - **Translation bias.** The prover model is written by the same hands that wrote the spec. Mitigation:
@@ -253,6 +312,7 @@ audit, and a manifest entry (`tasks/<task>.json`: property, `N₀`, budgets, mut
 | 6 | Task-set composition | **EWD998 (Safra termination detection) is a must-have**, because published TLC, Apalache and TLAPS numbers exist for it (§1a) and it therefore calibrates our rig against external data. It joins the P2 set alongside two-phase commit/Paxos agreement, LCR leader election, and cache coherence. One instance where TLC genuinely dies (no completion inside 2 h) is required. |
 | 7 | Cost basis | Tokens at the provider's **list price** (as recorded in the session's `usage.cost`), compute at a **stated host rate**, researcher time **not** costed. Both components reported separately, never merged into one number. |
 | 8 | Output | **In-repo**: `results/` rows plus `wiki/` analysis, with the verdict stated against decision 1. A paper or post is a later, separate decision. |
+| 9 | Human prior art | **Published human-proof effort is cited data, never a measured arm.** It lives in its own `results/human.jsonl` as `kind: "human_prior_art"` / `machine_checked: false` records that carry no measured field and are `never_pooled_with` Route A or Route B (§1a, §6a, `docs/human-baseline.md`). No human arm is run. |
 
 One decision is deferred by evidence rather than choice: the closure loop runs on a **general model**,
 not a Lean-specialised prover model (no such model is reachable from this host's providers). Every

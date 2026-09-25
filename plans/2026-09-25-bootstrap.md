@@ -25,6 +25,13 @@ what is blocked.
 - Pushed to `github.com/scidonia/model-or-proof`; the §11 and §12 decisions are settled (Lean 4 +
   Mathlib, general-tier headline verdict, 2 h/$50 per-run caps, human statements but no human tactics,
   safety before liveness, EWD998 as the externally calibrated task).
+- EWD998 and the IJCAR 2010 trio imported at pinned provenance (2026-09-25), with the published human
+  baseline carried as cited data in `results/human.jsonl` (`kind: "human_prior_art"`,
+  `machine_checked: false`, never pooled with a route). Two EWD998 revisions are committed and both were
+  measured through the harness: the publication-era revision (`specs/tla/ewd998-paper/`,
+  `75f2a7a7369d`) reproduces the artifact's own figures at 1 384 582 distinct / depth 60, while the
+  pinned branch head measures 1 520 618 / depth 59 — the drift is upstream's 2023-07-28 `Init` widening,
+  recorded and never reconciled in `docs/human-baseline.md`.
 
 ## P1 — Harness and calibration (harness done, calibration open)
 
@@ -32,8 +39,10 @@ Delivered: `harness/result.py`, `harness/tlc_run.py`, `harness/closure.py`, `tas
 the two contracts and their seven scenarios (all green), and six Route A rows in `results/tlc.jsonl`
 (five success at 36 distinct states, one mutant violation with the negative control recorded).
 
-Still open in P1: calibrate `N₀` per task against the 2 h cap, add the remaining calibration tasks
-(Bakery, termination detection), and write the Lean-side equivalence audit once the model exists.
+Still open in P1: calibrate `N₀` per task against the 2 h cap, add the remaining calibration task
+(Bakery — termination detection is EWD998, imported and calibrated 2026-09-25; see
+`plans/2026-09-25-human-proof-baseline.md`), and write the Lean-side equivalence audit once the model
+exists.
 
 Deliverables:
 
@@ -144,6 +153,16 @@ Order of work on resume:
    `N₀` corollary, and drive the closure loop through `lean-repl` with the session's usage summed into
    the row.
 3. **EWD998** — the externally calibrated task (published TLC/Apalache/TLAPS numbers, protocol §1a).
+   **Done 2026-09-25** (plan `plans/2026-09-25-human-proof-baseline.md`): the spec, both configs and both
+   TLAPS proofs are imported from `tlaplus/Examples` @ `3dfe0087…` with the four CommunityModules
+   modules vendored beside them, and the publication-era revision (`specs/tla/ewd998-paper/`,
+   `75f2a7a7369d`) is committed alongside; both revisions run through the harness and both rows are in
+   `results/tlc.jsonl` (`param_N: 3`). The paper-era run reproduces the artifact's own 01/2021 table
+   (1 384 582 distinct / 10 150 343 generated / depth 60 / 32.1 s against 1.3m / 10.1m / 60 / 42 s); the
+   pinned branch head has drifted (1 520 618 / 11 238 019 / depth 59 / 35.5 s) because upstream widened
+   `Init` on 2023-07-28, after those figures were taken. Both are recorded and neither is reconciled —
+   see `docs/human-baseline.md`. The published human-effort baseline is `results/human.jsonl`, with its
+   own contract and docs.
 
 Two environment facts a restarted session needs:
 
