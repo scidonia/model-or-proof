@@ -8,14 +8,16 @@ and its cost grows exponentially in the instance parameter. A proof in a theorem
 *general* theorem, and used to cost a specialist weeks. AI-driven proof closure changed the second
 half of that sentence, so the comparison is worth redoing with money and time attached.
 
-**Results so far:** token-ring, Bakery and LCR each have their Route B cells complete — the general
-theorem closed at `R ≥ 5` on one seed digest per cell, with a negative control that holds on all three.
+**Results so far:** token-ring, Bakery, LCR and EWD998 each have a closed theorem — the first three at
+`R ≥ 5` on one seed digest per cell, EWD998 at one run per cell, with a negative control that holds on
+all four.
 **The same-claim cost pairs do not agree between tasks**: token-ring's and Bakery's favour the proof
 (21.7× and 63.3× as marginal ratios), while LCR's favours TLC by 37.8×, because its state curve is
 shallow enough that its crossover sits above the instance its budget allowed. The comparison point is
 the crossover, not the calibrated instance. The three-way comparison (TLC / AI closure loop / published
-human) lives in `wiki/token-ring-route-a-vs-route-b.md`, with Bakery in its §9 and LCR in its §10.
-Cost varies by task — the theorem medians span 104.8 s to 444.4 s — so medians are quoted
+human) lives in [wiki/closed-by-theorem.md](wiki/closed-by-theorem.md), with the full narrative in
+`wiki/token-ring-route-a-vs-route-b.md` (Bakery §9, LCR §10).
+Cost varies by task — the theorem medians span 104.8 s to 1009.5 s — so medians are quoted
 with their ranges rather than as a single price.
 
 ## Method in one screen
@@ -85,10 +87,10 @@ Lean-specialised prover model — none is reachable from this host's providers.
 | Prover, library, headline criterion, budgets, human role, liveness scope | decided (above) |
 | Published human-proof baseline: pinned EWD998 + IJCAR 2010 import, cited figures in `results/human.jsonl` | done — see [docs/human-baseline.md](docs/human-baseline.md) |
 | EWD998: import (pinned branch head + publication-era revision), TLC calibration reproducing the published figures | done — measured numbers and the drift at the pin are in [docs/human-baseline.md](docs/human-baseline.md) |
-| Harness (both routes) + behavior contracts | **built** — both runners, the closure oracle, the mutant controls, guard 53 green; see [plans/](plans/) |
-| Lean 4 + Mathlib provisioning (elan, Mathlib oleans) and the closure loop | **working** — Route B closes general theorems on three tasks |
-| **P2 task set**: two-phase commit/Paxos, LCR election, cache coherence (EWD998 imported and calibrated above) | **LCR built** — spec, Lean model, both mutants, audit, and `n₀` = 10 calibrated; two-phase commit/Paxos and cache coherence planned |
-| Results, analysis, write-up in `wiki/` | **in progress** — `wiki/token-ring-route-a-vs-route-b.md`, sections 1–9; EWD998's Lean port outstanding |
+| Harness (both routes) + behavior contracts | **built** — both runners, the closure oracle, the mutant controls, guard 72 green; see [plans/](plans/) |
+| Lean 4 + Mathlib provisioning (elan, Mathlib oleans) and the closure loop | **working** — Route B closes general theorems on four tasks |
+| **P2 task set**: two-phase commit/Paxos, LCR election, cache coherence | **LCR complete** — spec, Lean model, both mutants, audit, `n₀` = 10, both cells closed; two-phase commit/Paxos and cache coherence planned |
+| Results, analysis, write-up in `wiki/` | **landed** — [wiki/closed-by-theorem.md](wiki/closed-by-theorem.md) for the closures, costs and comparisons; `wiki/token-ring-route-a-vs-route-b.md` §1–§10 for the full narrative. EWD998 closed; its `n₀` is held at 3 pending a clean sweep (the value is an artifact of the harness's TLC invocation, now fixed) |
 
 ## The TLA+ side, already measured
 
