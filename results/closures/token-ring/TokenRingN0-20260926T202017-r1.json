@@ -1,0 +1,40 @@
+{
+  "artifact": "results/closures/token-ring/TokenRingN0-20260926T202017-r1.lean",
+  "artifact_sha256": "3a6ff370d383a0ab98b0e5bb526def72a7e7813d5d0726c52d64be77a5e8f81d",
+  "closure": {
+    "axiom_report": "ok",
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "closed": true,
+    "elaborates": true,
+    "errors": [],
+    "integrity": true,
+    "lean_path": "/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/Cli/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/batteries/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/Qq/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/aesop/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/importGraph/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/plausible/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/mathlib/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/build/lib/lean:/home/gavin/.elan/toolchains/leanprover--lean4---v4.35.0-rc3/lib/lean",
+    "module": "TokenRingN0",
+    "outside_events": [],
+    "outside_writes": [],
+    "pristine_sha256": "9ee44a72a325472e10ba4987b56a200a7eb1f69ea12f64435481fe8dee9ac325",
+    "raw_tail": [
+      "Quot.sound",
+      "propext",
+      "resolved TokenRing.mutex_n0"
+    ],
+    "rounds": 1,
+    "seed_intact": true,
+    "theorem": "TokenRing.mutex_n0",
+    "timed_out": false,
+    "verdict": true,
+    "watch_blind": null
+  },
+  "digests_agree": true,
+  "mode": "file",
+  "omp_sessions": "results/omp/TokenRingN0-20260926T202017-r1",
+  "pristine_sha256": "9ee44a72a325472e10ba4987b56a200a7eb1f69ea12f64435481fe8dee9ac325",
+  "row": "results/proof.jsonl:56",
+  "row_artifact_sha256": "3a6ff370d383a0ab98b0e5bb526def72a7e7813d5d0726c52d64be77a5e8f81d",
+  "task": "token-ring",
+  "tier": 1
+}

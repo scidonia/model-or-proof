@@ -17,7 +17,7 @@ test — an **audit**, not a machine-checked equivalence.
 | # | Route | Result | Wall-clock | Dollar cost | Evidence |
 |---|---|---|---|---|---|
 | 1 | **A — TLC** (machine, TLA+) | `Mutex` at the bounded instance N=23 | **837.9 s** (13 m 58 s, eight workers) | **$0.04655** | 289,406,976 distinct states enumerated |
-| 2 | **B — AI closure loop** (Lean) | `Mutex` for **arbitrary N** | **130.6 s** | **$0.00043** | `#print axioms` ⊆ `{propext, Classical.choice, Quot.sound}`; statement and definitions byte-identical |
+| 2 | **B — AI closure loop** (Lean) | `Mutex` for **arbitrary N** | **104.8 s** (cell median; six closures, 62.9–1021.8 s) | **$0.00033** | `#print axioms` ⊆ `{propext, Classical.choice, Quot.sound}`; statement and definitions byte-identical |
 | 3 | **Human — published** (TLAPS/TLA+) | invariance / mutual exclusion | **1 person-day** (EWD998 invariance; IJCAR papers report lines only) | not published | the published proofs, imported with quotes and provenance |
 
 Rows 1 and 2 are not the same claim — bounded instance versus general theorem — and row 3 is *cited
@@ -33,8 +33,8 @@ still pending.
 | What was done | enumerated reachable states of the TLA+ spec | proved the Lean theorem | wrote proofs by hand |
 | Claim established | `Mutex` at the bounded instance **N=23** | `Mutex` for **arbitrary N** | `Mutex`/invariance, per paper |
 | Distinct states | **289,406,976** (3,472,883,713 generated, depth 91) | — (no enumeration) | — |
-| Wall-clock | **837.9 s** (13 m 58 s), eight workers | **130.6 s** (2 m 11 s), **1 round / 1 turn** | EWD998 invariance: **1 person-day**; IJCAR trio: lines only |
-| Cost | **$0.04655** (compute @ $0.2/h + tokens, eight workers) | **$0.00043389** (provider usage) | not published in dollars |
+| Wall-clock | **837.9 s** (13 m 58 s), eight workers | **104.8 s** (cell median, six closures), **1 round / 1 turn** each | EWD998 invariance: **1 person-day**; IJCAR trio: lines only |
+| Cost | **$0.04655** (compute @ $0.2/h + tokens, eight workers) | **$0.000326** (provider usage, cell median) | not published in dollars |
 | Peak memory | **8,724 MB** | ~9 GB (prover's Lean repl, Mathlib loaded) | — |
 | Evidence of success | the enumeration completes | `#print axioms TokenRing.mutex` ⊆ `{propext, Classical.choice, Quot.sound}`; statement + all definitions byte-identical to the seed | the published proof |
 | Toolchain | TLC 2.19, `workers: 8` | `omp` 18.3.1 session, `deepseek-v4-pro` (thinking high), Lean 4 `v4.35.0-rc3` | TLAPS / TLA+ proof language |
@@ -46,11 +46,12 @@ still pending.
 |---|---|---|
 | claim | `Mutex` at N=23 | `Mutex` at N=23 |
 | wall-clock | 837.938 s | **26.362 s** |
-| cost | $0.04655211 | **$0.00014254** |
+| cost | $0.04655211 | **$0.000197** (cell median) |
 | distinct states | 289,406,976 | — (no enumeration) |
 | turns | one deterministic run | 1 |
+| closures | one deterministic run | **5**, 25.1–48.5 s |
 
-A single-worker TLC row for the same instance also exists — 6,748.604 s and $0.37492244 — but quoting it against Route B would handicap one side: the fairness ruling is that each route runs at its best configuration with the row naming it, and eight workers scales near-linearly here (8.05× on an identical state count, measured at N=23 itself rather than inferred from N=17). Read the pair with the marginal-cost caveat in §7: the corollary's proof is the trivial instantiation of the general theorem, so Route B's honest total for this claim is the general proof plus this instantiation — **about 157 s and $0.00058** — against 837.9 s and $0.04655 for Route A: **~5.3× faster and ~81× cheaper as the costs are recorded**. The wall-clock ratio is unambiguous; the dollar ratio depends on the billing model, since the harness charges compute per wall-clock hour, not per vCPU-hour. The general theorem in the table above is a strictly stronger result TLC cannot express at all, so that table compares a capability on Route B's side and a cost on Route A's.
+A single-worker TLC row for the same instance also exists — 6,748.604 s and $0.37492244 — but quoting it against Route B would handicap one side: the fairness ruling is that each route runs at its best configuration with the row naming it, and eight workers scales near-linearly here (8.05× on an identical state count, measured at N=23 itself rather than inferred from N=17). Read the pair with the marginal-cost caveat in §7: the corollary's proof is the trivial instantiation of the general theorem, so Route B's honest total for this claim is the general proof plus this instantiation — **the two cells' medians, 104.8 s and 26.4 s, so about 131 s and $0.00052** — against 837.9 s and $0.04655 for Route A: **~6.4× faster and ~89× cheaper as the costs are recorded**. Both cells are now at `R≥5` (six closures for the theorem, five for the corollary, each cell a single seed digest), and both are wide: the theorem's six ran 62.9–1021.8 s, so its median rather than its mean is the figure — and the slowest run closed *because* ruling (a) removed the per-turn cut that would have killed it. The wall-clock ratio is unambiguous; the dollar ratio depends on the billing model, since the harness charges compute per wall-clock hour, not per vCPU-hour. The general theorem in the table above is a strictly stronger result TLC cannot express at all, so that table compares a capability on Route B's side and a cost on Route A's.
 
 ## 2. The same three results, at the calibration instance
 
