@@ -39,11 +39,23 @@ still pending.
 | Evidence of success | the enumeration completes | `#print axioms TokenRing.mutex` ⊆ `{propext, Classical.choice, Quot.sound}`; statement + all definitions byte-identical to the seed | the published proof |
 | Toolchain | TLC 2.19, `workers: 1` | `omp` 18.3.1 session, `deepseek-v4-pro` (thinking high), Lean 4 `v4.35.0-rc3` | TLAPS / TLA+ proof language |
 
-**Same-claim pair.** Route A's N=23 row and Route B's tier-1 corollary (`TokenRingN0.lean`,
-"N=23 instantiated") are the *same claim*; the corollary run is **not yet measured** — it needs the
-model's proof promoted into the seed first. The general theorem in the table is a strictly stronger
-result TLC cannot express at all, so the table compares a capability on Route B's side and a cost on
-Route A's. Do not read 130.6 s as a race against 6,748.6 s.
+**Same-claim pair, now measured.** Route A's N=23 row and Route B's tier-1 corollary
+(`TokenRingN0.lean`, "N=23 instantiated") are the *same claim*, and both are now measured:
+
+| | Route A — TLC | Route B — the corollary |
+|---|---|---|
+| claim | `Mutex` at N=23 | `Mutex` at N=23 |
+| wall-clock | 6,748.604 s | **26.362 s** |
+| cost | $0.37492244 | **$0.00014254** |
+| distinct states | 289,406,976 | — (no enumeration) |
+| turns | one deterministic run | 1 |
+
+Read that pair with the marginal-cost caveat in §7: the corollary's proof is the trivial instantiation
+of the general theorem, so Route B's honest total for this claim is the general proof plus this
+instantiation — about 157 s and $0.00057 — still ~43× faster and ~650× cheaper than TLC for the same
+claim. TLC's figure is also single-worker; the fairness ruling permits a multi-worker re-run, which has
+not been taken. The general theorem in the table above is a strictly stronger result TLC cannot express
+at all, so that table compares a capability on Route B's side and a cost on Route A's.
 
 ## 2. The same three results, at the calibration instance
 
@@ -128,11 +140,12 @@ already handles."*
 ## 5. What is measured, what is pending
 
 - **Measured:** Route A at N=3 (5 runs) and N=23 (1 run, deterministic tool); Route B tier 2 (the
-  general theorem, 1 closure); the negative controls on both sides.
-- **Pending:** Route B **tier 1** (`TokenRingN0.lean`) — the same-claim cell, blocked on promoting the
-  model's proof into the seed; **R≥5** for Route B, which is stochastic (Route A is deterministic, so
-  one row is its protocol); the TLC worker configuration decision (each route runs at its best
-  configuration, recorded in the row).
+  general theorem, 1 closure) and **tier 1** (the same-claim corollary, 1 closure); the negative
+  controls on both sides.
+- **Pending:** **R≥5** for Route B, which is stochastic (Route A is deterministic, so one row is its
+  protocol); a multi-worker TLC re-run of N=23 under the fairness ruling, which may move Route A's
+  wall-clock by up to ~4× on the evidence of the N=17 pair; and Bakery's first cell, whose run was cut
+  by the per-turn deadline before the model proposed a proof, so it measures nothing about that task.
 
 ## 6. Where each route wins, and where this claim stops
 
@@ -190,6 +203,12 @@ price of a coffee; it is not the same question, not the same artifact, and not f
    must be read rather than assumed.** Two mechanisms enforce it — a `kind` on every recorded refusal,
    and an axiom check that reads Lean's elaborated environment instead of parsing text — and they are
    what closed both P0s.
+
+9. **The tier-1 corollary's 26.362 s is a marginal cost, not a from-scratch one.** Its proof is the
+   trivial instantiation of the general theorem, which cost 130.6 s and $0.00043 to prove. Any
+   comparison quoting 26 s without the general proof is quoting a plausible number in place of the real
+   one — the same error class as the hard-coded theorem name. The honest pair is ~157 s and ~$0.00057
+   against TLC's 6,748.6 s and $0.37492244 for the same claim.
 
 ## Provenance
 
