@@ -150,8 +150,10 @@ better, and the difference matters:
 
 - **Small instances: TLC wins outright.** 0.66 s at N=3, push-button — no port, no statements, no audit.
   The proof costs 130.6 s *plus* the port, the statements and the audit, i.e. the human side. The proof
-  only wins past a **crossover**: near **N≈7** for Bakery (2.36 s at N=6, ~×9 per state step) and near
-  **N≈20** for token-ring (33.4 s at N=17 has been measured previously, 6,748.6 s at N=23).
+  only wins past a **crossover**, and the crossover moves with Route A's configuration. At TLC's best
+  configuration measured here — eight workers — it sits near **N≈20** for token-ring (8.0 s at N=17,
+  837.9 s at N=23) and near **N≈8–9** for Bakery (2.4 s at N=6, rising to the N=10 cap). Single-worker,
+  both crossovers move lower, and 6,748.6 s at N=23 is the one-worker datum, not the comparison.
 - **TLC checks the specification's semantics directly.** The Lean route proves a *port*, and
   port-equivalence to the TLA+ is a **hand audit** — the single largest caveat in this report. A
   modelling slip would make the theorem true about the wrong thing.
