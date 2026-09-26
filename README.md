@@ -8,6 +8,13 @@ and its cost grows exponentially in the instance parameter. A proof in a theorem
 *general* theorem, and used to cost a specialist weeks. AI-driven proof closure changed the second
 half of that sentence, so the comparison is worth redoing with money and time attached.
 
+**Results so far:** token-ring and Bakery both have their Route B cells complete — the general
+theorem closed at `R ≥ 5` on one seed digest per task, with a negative control that holds. The
+three-way comparison (TLC / AI closure loop / published human) lives in
+`wiki/token-ring-route-a-vs-route-b.md`, with Bakery in its §9; LCR follows. Cost varies by task:
+Bakery's median is about 4× token-ring's on a theorem of comparable shape, so medians are quoted
+with their ranges rather than as a single price.
+
 ## Method in one screen
 
 For each task (one system, one property, one instance parameter `N`, one mutant) both routes run:
@@ -75,10 +82,10 @@ Lean-specialised prover model — none is reachable from this host's providers.
 | Prover, library, headline criterion, budgets, human role, liveness scope | decided (above) |
 | Published human-proof baseline: pinned EWD998 + IJCAR 2010 import, cited figures in `results/human.jsonl` | done — see [docs/human-baseline.md](docs/human-baseline.md) |
 | EWD998: import (pinned branch head + publication-era revision), TLC calibration reproducing the published figures | done — measured numbers and the drift at the pin are in [docs/human-baseline.md](docs/human-baseline.md) |
-| Harness (both routes) + behavior contracts | next — see [plans/2026-09-25-bootstrap.md](plans/2026-09-25-bootstrap.md) |
-| Lean 4 + Mathlib provisioning (elan, Mathlib oleans) and the closure loop | P2 |
-| P2 task set: two-phase commit/Paxos, LCR election, cache coherence (EWD998 imported and calibrated above) | planned |
-| Results, analysis, write-up in `wiki/` | not started |
+| Harness (both routes) + behavior contracts | **built** — both runners, the closure oracle, the mutant controls, guard 53 green; see [plans/](plans/) |
+| Lean 4 + Mathlib provisioning (elan, Mathlib oleans) and the closure loop | **working** — Route B closes general theorems on three tasks |
+| **P2 task set**: two-phase commit/Paxos, LCR election, cache coherence (EWD998 imported and calibrated above) | **LCR built** — spec, Lean model, both mutants, audit, and `n₀` = 10 calibrated; two-phase commit/Paxos and cache coherence planned |
+| Results, analysis, write-up in `wiki/` | **in progress** — `wiki/token-ring-route-a-vs-route-b.md`, sections 1–9; EWD998's Lean port outstanding |
 
 ## The TLA+ side, already measured
 
