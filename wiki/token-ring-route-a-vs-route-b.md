@@ -302,3 +302,9 @@ ended it, and those rounds are themselves the evidence that the detector was nee
 | Human prior art | `results/human.jsonl`, quotes sourced to `docs/protocol.md` §1a |
 | The reference proof | `proofs/lean/token-ring/reference/HostReference.lean`; fixtures beside it |
 | The audit | `docs/equivalence-token-ring.md`, pinned by `tests/test_equivalence_token_ring.py` |
+| Route B, Bakery | `results/proof.jsonl` — `mode=file, task=bakery, tier=2, outcome=closed`; five rows, all on seed digest `385bb249…`, `turns: 1` each |
+| Bakery's negative control | `results/proof.jsonl` — `task=bakery, mutant=true, outcome=no_progress`, which maps to `fail_to_close`; session `results/omp/BakeryMutant-mutant-20260926T214435-r1/` |
+| Bakery's calibration | `results/tlc.jsonl`, `task=bakery`, N = 3–10 single-worker; the N = 10 row is the 7,200 s cap and is recorded as `timeout` |
+| Bakery's audit | `docs/equivalence-bakery.md` |
+| LCR (built, runs pending) | `specs/tla/lcr/`, `proofs/lean/lcr/`, `tasks/lcr.json` (`n₀` = 10), `docs/equivalence-lcr.md` |
+| The closure check itself | `harness/closure_oracle.py` for the three checks and `tools/checker/` for the axiom query, whose own `PROVENANCE.md` records the interference experiment |
