@@ -1,0 +1,21 @@
+name = "ewd998"
+# Matches `lean-toolchain` (elan's pin): tag `v4.35.0-rc3` is Mathlib's release for
+# `leanprover/lean4:v4.35.0-rc3`, whose own `lean-toolchain` this project copies verbatim.
+
+# The ring layer's port (plan D23 rung 1): the model and the invariance theorem. The tier-1 corollary at
+# `n0` and the mutant land after the calibration; `promote.py`'s `register_module` adds `EWD998Proved` to
+# this list when a promotion writes it, so the targets below name only what exists.
+# `defaultTargets` has to precede the `[[…]]` tables below: once a dependency table starts, a bare key
+# belongs to that dependency table rather than to the package.
+defaultTargets = ["EWD998", "EWD998Mutant"]
+
+[[lean_lib]]
+name = "EWD998"
+
+[[lean_lib]]
+name = "EWD998Mutant"
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "v4.35.0-rc3"

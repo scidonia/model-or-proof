@@ -1,0 +1,28 @@
+name = "lcr"
+# Matches `lean-toolchain` (elan's pin): tag `v4.35.0-rc3` is Mathlib's release for
+# `leanprover/lean4:v4.35.0-rc3`, whose own `lean-toolchain` this project copies verbatim.
+
+# The Route B artifacts, one seed per tier (protocol §2): the model + the general theorem here, and the
+# `N₀` corollary and the mutant that must not close as they land. Promotion writes the proved proof to
+# `LCRProved.lean`, a module of its own and never over a seed's path, and `promote.py`'s
+# `register_module` adds it here when that happens.
+# `defaultTargets` has to precede the `[[…]]` tables below: once a dependency table starts, a bare key
+# belongs to that dependency table rather than to the package.
+defaultTargets = ["LCR", "LCRN0", "LCRMutant", "LCRProved"]
+
+[[lean_lib]]
+name = "LCR"
+
+[[lean_lib]]
+name = "LCRN0"
+
+[[lean_lib]]
+name = "LCRMutant"
+
+[[lean_lib]]
+name = "LCRProved"
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "v4.35.0-rc3"

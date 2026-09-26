@@ -13,7 +13,7 @@ The instance is `tasks/bakery.json`'s `n0`, calibrated by Route A at `N₀ = 9`
 (`specs/tla/bakery/BakeryN9.cfg`), so this is the same number the Route A cell runs at and the two rows
 are comparable by instance rather than only by task.
 -/
-import Bakery
+import BakeryProved
 
 namespace Bakery
 
