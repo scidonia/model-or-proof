@@ -138,20 +138,20 @@ already handles."*
 ## 5. What is measured, what is pending
 
 - **Measured:** Route A at N=3 (5 runs) and N=23 (1 run, deterministic tool); Route B **tier 2** — the
-  general theorem — closed **six times** on a single seed digest (62.883, 73.982, 79.021, 130.629, 141.043
-  and 1021.838 s; median **104.8 s**, $0.00033) and **tier 1** — the same-claim corollary — **five times**
-  on its own (25.086, 25.712, 26.362, 38.534, 48.497 s; median **26.4 s**); the negative controls on both
-  sides. **Bakery's general theorem closed too** — `Mutex` for arbitrary `N` on a second, independent
-  task, **five times on one seed digest, one turn each** (79.7–610.1 s; median **444.4 s**, $0.00062) —
-  so the capability claim is two tasks from one loop with no human proof steps. **Cost varies by
-  problem**: Bakery's median is about 4× token-ring's (444.4 s against 104.8 s) on a theorem of
-  comparable shape, so no single figure should be read as "the cost of a proof".
-- **Pending:** the Route B cells are complete. What remains is Bakery's **mutant control**, which must
-  report that the weakened `Enter` guard does not close, or a working prover and a broken rig are
-  indistinguishable on that task. Wall-clock and cost are not interchangeable even within a cell — the
-  fastest tier-1 run was among the most expensive — so any ratio here is a ratio of one sample of each. The
-  multi-worker TLC re-run has been taken: 837.9 s at eight workers on an identical state count, the figure
-  §1 uses.
+  general theorem — for token-ring (6 closures, median **104.8 s** / $0.00033), Bakery (5 closures,
+  median **444.4 s** / $0.00062) and LCR (4 of 5, one 970.8 s closure in hand); **tier 1** — the
+  same-claim corollary — for token-ring (7 closures, median **26.4 s**) and LCR (5 closures, median
+  **101.0 s** / $0.00042); the negative controls on both sides, holding on three tasks.
+  **Cost varies by problem**: the medians span **100.8 s to 970.8 s** across the tasks measured, so no
+  single figure should be read as "the cost of a proof" — and the variation shows up between a task's
+  own two cells as well as across tasks.
+- **Pending:** Bakery's **corollary** (pinned at `N₀ = 9`, awaiting its promotion) and the last of LCR's
+  tier-2 repetitions. EWD998's Lean model elaborates with its theorem unproved and its calibration sweep
+  running. Bakery's and LCR's **same-claim cost pairs** are un-run, so token-ring remains the only task
+  with that comparison measured — nothing here is estimated except where it says so. Wall-clock and cost
+  are not interchangeable even within a cell: the fastest tier-1 run was among the most expensive, so any
+  ratio here is a ratio of one sample of each. The multi-worker TLC re-run has been taken — 837.9 s at
+  eight workers on an identical state count — and that is the figure §1 uses.
 
 ## 6. Where each route wins, and where this claim stops
 
@@ -308,5 +308,5 @@ ended it, and those rounds are themselves the evidence that the detector was nee
 | Bakery's negative control | `results/proof.jsonl` — `task=bakery, mutant=true, outcome=no_progress`, which maps to `fail_to_close`; session `results/omp/BakeryMutant-mutant-20260926T214435-r1/` |
 | Bakery's calibration | `results/tlc.jsonl`, `task=bakery`, N = 3–10 single-worker; the N = 10 row is the 7,200 s cap and is recorded as `timeout` |
 | Bakery's audit | `docs/equivalence-bakery.md` |
-| LCR (built, runs pending) | `specs/tla/lcr/`, `proofs/lean/lcr/`, `tasks/lcr.json` (`n₀` = 10), `docs/equivalence-lcr.md` |
+| LCR | `specs/tla/lcr/`, `proofs/lean/lcr/` (`LCRProved.lean`), `tasks/lcr.json` (`n₀` = 10), `docs/equivalence-lcr.md`; theorem row `task=lcr, tier=2, outcome=closed`, corollary rows `tier=1` |
 | The closure check itself | `harness/closure_oracle.py` for the three checks and `tools/checker/` for the axiom query, whose own `PROVENANCE.md` records the interference experiment |
