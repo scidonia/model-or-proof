@@ -180,6 +180,17 @@ price of a coffee; it is not the same question, not the same artifact, and not f
    twenty-five-year-old push-button tool against a young one — and neither hole was visible in a
    passing test suite, which is the argument for the reviewer step existing at all.
 
+8. **Almost every defect found today was one species: a plausible value where an observation was
+   needed.** Refusals that could not be told apart (`lean` versus `transport`); a transcript count
+   reading `0` when it meant *not yet written*; an axiom report able to say `ok` while meaning *not
+   found*; a boundary watcher that could report silence before it had started; a per-turn cut sharing a
+   kind with a rig failure; and a hard-coded `"mutex"` standing in for the seed's own theorem name. Each
+   is "I saw nothing" reported as "I could not see", or a default reported as a reading. The rule the
+   harness converged on, stated once: **a failure must be distinguishable from a silence, and a value
+   must be read rather than assumed.** Two mechanisms enforce it — a `kind` on every recorded refusal,
+   and an axiom check that reads Lean's elaborated environment instead of parsing text — and they are
+   what closed both P0s.
+
 ## Provenance
 
 | Number | Where it comes from |
