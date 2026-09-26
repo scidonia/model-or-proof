@@ -60,7 +60,7 @@ A single-worker TLC row for the same instance also exists — 6,748.604 s and $0
 | | Route A — TLC at N=3 | Route B — the closure loop | Human |
 |---|---|---|---|
 | States | 36 distinct (73 generated, depth 11) | — | — |
-| Wall-clock | **0.66 s** (5 runs: 0.656–0.669 s) | **130.6 s** at tier 2 (the general theorem) | — |
+| Wall-clock | **0.66 s** (5 runs: 0.656–0.669 s) | **104.8 s** at tier 2, the general theorem (median of six closures; 62.9–1021.8 s) | — |
 | Negative control | the mutant **violates** `Mutex` (23 distinct, depth 5) | the mutant seed is closed only by a *false* statement, and the harness refuses `sorry` | — |
 
 The calibration instance exists to show the rig works, and it does: TLC finds 36 states at N=3 in
@@ -93,7 +93,7 @@ For reference, the machine figures the ISoLA 2022 paper reports for its own TLC 
 |---|---|---|
 | Host reference proof of `TokenRing.mutex` | 67 lines, one write + two elaboration fixes | `proofs/lean/token-ring/reference/HostReference.lean`; a *control*, not the loop's work |
 | The harness that made the autonomous closure possible | ~2 h 10 m end to end (08:07 → 10:16 on 2026-09-26) | of which the file mode itself, from the directive to the first closure, was ~12 minutes; this is **tooling effort**, not proof effort |
-| The loop's proof effort | 1 round, 1 turn, 130.6 s, $0.00043 | the number that matters for Route B |
+| The loop's proof effort | 1 turn, 104.8 s median over six closures, $0.00033 | the number that matters for Route B |
 
 ## 4. Who the human comparator actually is, per task
 
@@ -159,7 +159,7 @@ The general theorem is a **strictly stronger claim** at far lower **marginal** c
 better, and the difference matters:
 
 - **Small instances: TLC wins outright.** 0.66 s at N=3, push-button — no port, no statements, no audit.
-  The proof costs 130.6 s *plus* the port, the statements and the audit, i.e. the human side. The proof
+  The proof costs 104.8 s *plus* the port, the statements and the audit, i.e. the human side. The proof
   only wins past a **crossover**, and the crossover moves with Route A's configuration. At TLC's best
   configuration measured here — eight workers — it sits near **N≈20** for token-ring (8.0 s at N=17,
   837.9 s at N=23) and near **N≈8–9** for Bakery (2.4 s at N=6, rising to the N=10 cap). Single-worker,
@@ -213,9 +213,9 @@ price of a coffee; it is not the same question, not the same artifact, and not f
    what closed both P0s.
 
 9. **The tier-1 corollary's 26.362 s is a marginal cost, not a from-scratch one.** Its proof is the
-   trivial instantiation of the general theorem, which cost 130.6 s and $0.00043 to prove. Any
+   trivial instantiation of the general theorem, which cost 104.8 s and $0.00033 to prove. Any
    comparison quoting 26 s without the general proof is quoting a plausible number in place of the real
-   one — the same error class as the hard-coded theorem name. The honest pair is **~157 s and ~$0.00058**
+   one — the same error class as the hard-coded theorem name. The honest pair is **~131 s and ~$0.00052**
    against Route A *at its best configuration*: **837.9 s and $0.04655** with eight workers, on an
    identical state count. Both ratios move with the configuration and the billing model — the
    single-worker TLC row (6,748.6 s, $0.37492) is a valid datum and not the comparison, and the harness
