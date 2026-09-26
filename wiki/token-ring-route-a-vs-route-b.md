@@ -139,9 +139,11 @@ already handles."*
   general theorem — closed **six times** on a single seed digest (62.883, 73.982, 79.021, 130.629, 141.043
   and 1021.838 s; median **104.8 s**, $0.00033) and **tier 1** — the same-claim corollary — **five times**
   on its own (25.086, 25.712, 26.362, 38.534, 48.497 s; median **26.4 s**); the negative controls on both
-  sides. **Bakery's general theorem closed too** — `Mutex` for arbitrary `N` on a second, independent task,
-  416.7 s, one turn, $0.0003314, same axioms, same clean checks — so the capability claim is two tasks from
-  one loop with no human proof steps.
+  sides. **Bakery's general theorem closed too** — `Mutex` for arbitrary `N` on a second, independent
+  task, **five times on one seed digest, one turn each** (79.7–610.1 s; median **444.4 s**, $0.00062) —
+  so the capability claim is two tasks from one loop with no human proof steps. **Cost varies by
+  problem**: Bakery's median is about 4× token-ring's (444.4 s against 104.8 s) on a theorem of
+  comparable shape, so no single figure should be read as "the cost of a proof".
 - **Pending:** the Route B cells are complete. What remains is Bakery's **mutant control**, which must
   report that the weakened `Enter` guard does not close, or a working prover and a broken rig are
   indistinguishable on that task. Wall-clock and cost are not interchangeable even within a cell — the
