@@ -135,12 +135,13 @@ already handles."*
 ## 5. What is measured, what is pending
 
 - **Measured:** Route A at N=3 (5 runs) and N=23 (1 run, deterministic tool); Route B tier 2 (the
-  general theorem, 1 closure) and **tier 1** (the same-claim corollary, 1 closure); the negative
-  controls on both sides.
+  general theorem, 1 closure) and **tier 1** — the same-claim corollary, closed **twice independently**
+  at 26.362 s and 25.086 s, so that cell is repeatable rather than lucky; the negative controls on both
+  sides.
 - **Pending:** **R≥5** for Route B, which is stochastic (Route A is deterministic, so one row is its
-  protocol); a multi-worker TLC re-run of N=23 under the fairness ruling, which may move Route A's
-  wall-clock by up to ~4× on the evidence of the N=17 pair; and Bakery's first cell, whose run was cut
-  by the per-turn deadline before the model proposed a proof, so it measures nothing about that task.
+  protocol while the tier-1 cell now has two). The multi-worker TLC re-run has been taken — 837.9 s at
+  eight workers on an identical state count, which is the figure §1 uses. And Bakery is running under
+  ruling (a), having twice been cut by our own bounds before the model proposed a proof.
 
 ## 6. Where each route wins, and where this claim stops
 
