@@ -16,7 +16,7 @@ test — an **audit**, not a machine-checked equivalence.
 
 | # | Route | Result | Wall-clock | Dollar cost | Evidence |
 |---|---|---|---|---|---|
-| 1 | **A — TLC** (machine, TLA+) | `Mutex` at the bounded instance N=23 | **6,748.6 s** (1 h 52 m) | **$0.37492** | 289,406,976 distinct states enumerated |
+| 1 | **A — TLC** (machine, TLA+) | `Mutex` at the bounded instance N=23 | **837.9 s** (13 m 58 s, eight workers) | **$0.04655** | 289,406,976 distinct states enumerated |
 | 2 | **B — AI closure loop** (Lean) | `Mutex` for **arbitrary N** | **130.6 s** | **$0.00043** | `#print axioms` ⊆ `{propext, Classical.choice, Quot.sound}`; statement and definitions byte-identical |
 | 3 | **Human — published** (TLAPS/TLA+) | invariance / mutual exclusion | **1 person-day** (EWD998 invariance; IJCAR papers report lines only) | not published | the published proofs, imported with quotes and provenance |
 
@@ -33,11 +33,11 @@ still pending.
 | What was done | enumerated reachable states of the TLA+ spec | proved the Lean theorem | wrote proofs by hand |
 | Claim established | `Mutex` at the bounded instance **N=23** | `Mutex` for **arbitrary N** | `Mutex`/invariance, per paper |
 | Distinct states | **289,406,976** (3,472,883,713 generated, depth 91) | — (no enumeration) | — |
-| Wall-clock | **6,748.6 s** (1 h 52 m 29 s) | **130.6 s** (2 m 11 s), **1 round / 1 turn** | EWD998 invariance: **1 person-day**; IJCAR trio: lines only |
-| Cost | **$0.37492** (compute @ $0.2/h + tokens) | **$0.00043389** (provider usage) | not published in dollars |
+| Wall-clock | **837.9 s** (13 m 58 s), eight workers | **130.6 s** (2 m 11 s), **1 round / 1 turn** | EWD998 invariance: **1 person-day**; IJCAR trio: lines only |
+| Cost | **$0.04655** (compute @ $0.2/h + tokens, eight workers) | **$0.00043389** (provider usage) | not published in dollars |
 | Peak memory | **8,724 MB** | ~9 GB (prover's Lean repl, Mathlib loaded) | — |
 | Evidence of success | the enumeration completes | `#print axioms TokenRing.mutex` ⊆ `{propext, Classical.choice, Quot.sound}`; statement + all definitions byte-identical to the seed | the published proof |
-| Toolchain | TLC 2.19, `workers: 1` | `omp` 18.3.1 session, `deepseek-v4-pro` (thinking high), Lean 4 `v4.35.0-rc3` | TLAPS / TLA+ proof language |
+| Toolchain | TLC 2.19, `workers: 8` | `omp` 18.3.1 session, `deepseek-v4-pro` (thinking high), Lean 4 `v4.35.0-rc3` | TLAPS / TLA+ proof language |
 
 **Same-claim pair, now measured.** Route A's N=23 row and Route B's tier-1 corollary
 (`TokenRingN0.lean`, "N=23 instantiated") are the *same claim*, and both are now measured:
