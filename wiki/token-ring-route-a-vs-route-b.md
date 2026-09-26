@@ -134,7 +134,30 @@ already handles."*
   one row is its protocol); the TLC worker configuration decision (each route runs at its best
   configuration, recorded in the row).
 
-## 6. Caveats that belong with these numbers
+## 6. Where each route wins, and where this claim stops
+
+The general theorem is a **strictly stronger claim** at far lower **marginal** cost. It is not uniformly
+better, and the difference matters:
+
+- **Small instances: TLC wins outright.** 0.66 s at N=3, push-button — no port, no statements, no audit.
+  The proof costs 130.6 s *plus* the port, the statements and the audit, i.e. the human side. The proof
+  only wins past a **crossover**: near **N≈7** for Bakery (2.36 s at N=6, ~×9 per state step) and near
+  **N≈20** for token-ring (33.4 s at N=17 has been measured previously, 6,748.6 s at N=23).
+- **TLC checks the specification's semantics directly.** The Lean route proves a *port*, and
+  port-equivalence to the TLA+ is a **hand audit** — the single largest caveat in this report. A
+  modelling slip would make the theorem true about the wrong thing.
+- **TLC produces a counterexample trace on failure** — the main debugging artifact for a broken design.
+  A failed proof yields a goal state, not a trace.
+- **The theorem is about a model, not code**, on either route: no refinement to an implementation.
+- **`N ≥ 2`, not `N ≥ 1`** — small, but a real loss of generality in the statement (the statement is
+  the human's, per plan D5).
+- **Safety only.** `Mutex`. Liveness is untouched, and that is where the published EWD998 figures split
+  (1 person-day invariance, <1 person-day liveness).
+
+The correct one-line comparison: **Route B answers a question TLC cannot ask — "for all N" — for the
+price of a coffee; it is not the same question, not the same artifact, and not free of translation risk.**
+
+## 7. Caveats that belong with these numbers
 
 1. **Different claims.** Route A's row is a bounded instance; Route B's row is arbitrary `N`. The
    cost race needs the tier-1 corollary, which is pending.
