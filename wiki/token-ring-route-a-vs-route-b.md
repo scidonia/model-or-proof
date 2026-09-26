@@ -135,17 +135,19 @@ already handles."*
 
 ## 5. What is measured, what is pending
 
-- **Measured:** Route A at N=3 (5 runs) and N=23 (1 run, deterministic tool); Route B tier 2 (the
-  general theorem, 1 closure) and **tier 1** — the same-claim corollary, closed **five times, the pinned
-  seed digest every time**: 25.086, 25.712, 26.362, 38.534 and 48.497 s, median **26.4 s** (the last two
-  taken with five runs in flight, which is the likeliest reason they are the slow ones); the negative
-  controls on both sides.
-- **Pending:** **R≥5** for Route B's *tier-2* cell, which is stochastic (Route A is deterministic, so one
-  row is its protocol); the tier-1 cell is complete at five. Wall-clock and cost are not interchangeable
-  even within one cell — the fastest tier-1 run was among the most expensive — so any ratio quoted here is
-  a ratio of one sample of each. The multi-worker TLC re-run has been taken: 837.9 s at eight workers on
-  an identical state count, the figure §1 uses. And Bakery is running under ruling (a), having twice been
-  cut by our own bounds before the model proposed a proof.
+- **Measured:** Route A at N=3 (5 runs) and N=23 (1 run, deterministic tool); Route B **tier 2** — the
+  general theorem — closed **six times** on a single seed digest (62.883, 73.982, 79.021, 130.629, 141.043
+  and 1021.838 s; median **104.8 s**, $0.00033) and **tier 1** — the same-claim corollary — **five times**
+  on its own (25.086, 25.712, 26.362, 38.534, 48.497 s; median **26.4 s**); the negative controls on both
+  sides. **Bakery's general theorem closed too** — `Mutex` for arbitrary `N` on a second, independent task,
+  416.7 s, one turn, $0.0003314, same axioms, same clean checks — so the capability claim is two tasks from
+  one loop with no human proof steps.
+- **Pending:** the Route B cells are complete. What remains is Bakery's **mutant control**, which must
+  report that the weakened `Enter` guard does not close, or a working prover and a broken rig are
+  indistinguishable on that task. Wall-clock and cost are not interchangeable even within a cell — the
+  fastest tier-1 run was among the most expensive — so any ratio here is a ratio of one sample of each. The
+  multi-worker TLC re-run has been taken: 837.9 s at eight workers on an identical state count, the figure
+  §1 uses.
 
 ## 6. Where each route wins, and where this claim stops
 
