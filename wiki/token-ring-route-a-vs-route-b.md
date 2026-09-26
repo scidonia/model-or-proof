@@ -262,6 +262,34 @@ being measured rather than the prover; and the refutation arm, handed a statemen
 *refute* it rather than prove it — the tactic battery's mutant rows record four `refuted` and one
 `timeout`, the same guarantee approached from the other direction.
 
+## 9. Bakery: the second task
+
+Bakery's mutual-exclusion proof is the second task the loop closed, and the first with a
+calibration instance to compare against. Its cells:
+
+| | Bakery |
+|---|---|
+| theorem, tier 2 | **closed**, 5 runs on one seed digest, one turn each: 79.7, 416.7, 444.4, 484.5, 610.1 s — median **444.4 s**, spread **7.7×**, cost median **$0.00062** |
+| mutant, tier 2 | **`no_progress`** → `fail_to_close`, 273.2 s, $0.0047 — the weakened `Enter` guard is never closed |
+| calibration | N = 3–10 single-worker; `n₀ = 9`, with the N = 10 cap row (7,200 s, `timeout`) as the evidence |
+| same-claim pair | **not yet run** — the tier-1 corollary against the N = 10 TLC row |
+
+Two things this task adds that token-ring could not.
+
+**The negative control is real.** On Bakery the mutant arm was run to completion and the
+weakened `Enter` guard was never closed, which is what distinguishes a working prover from
+a broken rig. Token-ring's mutant is caught by TLC; on Bakery the loop itself was shown
+unable to close the false statement.
+
+**Cost varies by problem.** Bakery's median is about 4× token-ring's (444.4 s against
+104.8 s) on a theorem of comparable shape. The honest reading is that the loop's cost is a
+property of the theorem being proved rather than a constant with noise around it, which is
+why no figure in this report is quoted without its range.
+
+**The mutant's cost is higher than the proofs it controls** — $0.0047 against $0.00062 —
+and that is not an anomaly. It paid for six rounds of the same refusal before `no_progress`
+ended it, and those rounds are themselves the evidence that the detector was needed.
+
 ## Provenance
 
 | Number | Where it comes from |
