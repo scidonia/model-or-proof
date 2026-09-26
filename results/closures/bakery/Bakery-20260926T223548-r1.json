@@ -1,0 +1,41 @@
+{
+  "artifact": "results/closures/bakery/Bakery-20260926T223548-r1.lean",
+  "artifact_sha256": "abc8197f601ca7aa8e4195c7b4926d4bca4e89a85ac04f1e1308af0de023983f",
+  "closure": {
+    "axiom_report": "ok",
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "closed": true,
+    "elaborates": true,
+    "errors": [],
+    "integrity": true,
+    "lean_path": "/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/Cli/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/batteries/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/Qq/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/aesop/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/importGraph/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/plausible/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/mathlib/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/build/lib/lean:/home/gavin/.elan/toolchains/leanprover--lean4---v4.35.0-rc3/lib/lean",
+    "module": "Bakery",
+    "no_progress_rounds": 0,
+    "outside_events": [],
+    "outside_writes": [],
+    "pristine_sha256": "385bb24942644a05b9d894b465d7a86c88981317fa4a942f02b7262b524115b0",
+    "raw_tail": [
+      "Quot.sound",
+      "propext",
+      "resolved Bakery.mutual_exclusion"
+    ],
+    "rounds": 1,
+    "seed_intact": true,
+    "theorem": "Bakery.mutual_exclusion",
+    "timed_out": false,
+    "verdict": true,
+    "watch_blind": null
+  },
+  "digests_agree": true,
+  "mode": "file",
+  "omp_sessions": "results/omp/Bakery-20260926T223548-r1",
+  "pristine_sha256": "385bb24942644a05b9d894b465d7a86c88981317fa4a942f02b7262b524115b0",
+  "row": "results/proof.jsonl:66",
+  "row_artifact_sha256": "abc8197f601ca7aa8e4195c7b4926d4bca4e89a85ac04f1e1308af0de023983f",
+  "task": "bakery",
+  "tier": 2
+}
