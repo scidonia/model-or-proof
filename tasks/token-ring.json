@@ -12,10 +12,23 @@
     "config": "specs/tla/token-ring/TokenRingMutant.cfg"
   },
   "instances": [
-    { "param_N": 3, "config": "specs/tla/token-ring/TokenRing.cfg" },
-    { "param_N": 23, "config": "specs/tla/token-ring/TokenRingN23.cfg" }
+    {
+      "param_N": 3,
+      "config": "specs/tla/token-ring/TokenRing.cfg"
+    },
+    {
+      "param_N": 23,
+      "config": "specs/tla/token-ring/TokenRingN23.cfg"
+    },
+    {
+      "param_N": 17,
+      "config": "specs/tla/token-ring/TokenRingN17.cfg"
+    }
   ],
   "n0": 23,
-  "budgets": { "wall_clock_s": 7200, "usd": 50 },
+  "budgets": {
+    "wall_clock_s": 7200,
+    "usd": 50
+  },
   "repetitions": 5
 }

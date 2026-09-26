@@ -12,9 +12,43 @@
     "config": "specs/tla/bakery/BakeryMutant.cfg"
   },
   "instances": [
-    { "param_N": 3, "config": "specs/tla/bakery/Bakery.cfg" }
+    {
+      "param_N": 3,
+      "config": "specs/tla/bakery/Bakery.cfg"
+    },
+    {
+      "param_N": 4,
+      "config": "specs/tla/bakery/BakeryN4.cfg"
+    },
+    {
+      "param_N": 5,
+      "config": "specs/tla/bakery/BakeryN5.cfg"
+    },
+    {
+      "param_N": 6,
+      "config": "specs/tla/bakery/BakeryN6.cfg"
+    },
+    {
+      "param_N": 7,
+      "config": "specs/tla/bakery/BakeryN7.cfg"
+    },
+    {
+      "param_N": 8,
+      "config": "specs/tla/bakery/BakeryN8.cfg"
+    },
+    {
+      "param_N": 9,
+      "config": "specs/tla/bakery/BakeryN9.cfg"
+    },
+    {
+      "param_N": 10,
+      "config": "specs/tla/bakery/BakeryN10.cfg"
+    }
   ],
-  "n0": null,
-  "budgets": { "wall_clock_s": 7200, "usd": 50 },
+  "n0": 9,
+  "budgets": {
+    "wall_clock_s": 7200,
+    "usd": 50
+  },
   "repetitions": 5
 }
