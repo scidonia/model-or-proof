@@ -8,11 +8,14 @@ and its cost grows exponentially in the instance parameter. A proof in a theorem
 *general* theorem, and used to cost a specialist weeks. AI-driven proof closure changed the second
 half of that sentence, so the comparison is worth redoing with money and time attached.
 
-**Results so far:** token-ring and Bakery both have their Route B cells complete — the general
-theorem closed at `R ≥ 5` on one seed digest per task, with a negative control that holds. The
-three-way comparison (TLC / AI closure loop / published human) lives in
-`wiki/token-ring-route-a-vs-route-b.md`, with Bakery in its §9; LCR follows. Cost varies by task:
-Bakery's median is about 4× token-ring's on a theorem of comparable shape, so medians are quoted
+**Results so far:** token-ring, Bakery and LCR each have their Route B cells complete — the general
+theorem closed at `R ≥ 5` on one seed digest per cell, with a negative control that holds on all three.
+**The same-claim cost pairs do not agree between tasks**: token-ring's and Bakery's favour the proof
+(21.7× and 63.3× as marginal ratios), while LCR's favours TLC by 37.8×, because its state curve is
+shallow enough that its crossover sits above the instance its budget allowed. The comparison point is
+the crossover, not the calibrated instance. The three-way comparison (TLC / AI closure loop / published
+human) lives in `wiki/token-ring-route-a-vs-route-b.md`, with Bakery in its §9 and LCR in its §10.
+Cost varies by task — the theorem medians span 104.8 s to 444.4 s — so medians are quoted
 with their ranges rather than as a single price.
 
 ## Method in one screen

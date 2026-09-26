@@ -391,5 +391,7 @@ comparison for free.
 | Bakery's negative control | `results/proof.jsonl` — `task=bakery, mutant=true, outcome=no_progress`, which maps to `fail_to_close`; session `results/omp/BakeryMutant-mutant-20260926T214435-r1/` |
 | Bakery's calibration | `results/tlc.jsonl`, `task=bakery`, N = 3–10 single-worker; the N = 10 row is the 7,200 s cap and is recorded as `timeout` |
 | Bakery's audit | `docs/equivalence-bakery.md` |
+| Route B, Bakery's corollary | `results/proof.jsonl` — `task=bakery, tier=1, outcome=closed`; five rows on seed digest `e9516ec9…`, one turn each, three of them without a closure copy (§10) |
+| Route B, LCR | `results/proof.jsonl` — `task=lcr, tier=2, outcome=closed` (five rows, `f8a6dceb…`) and `tier=1` (five rows, `3b239bbb…`) |
 | LCR | `specs/tla/lcr/`, `proofs/lean/lcr/` (`LCRProved.lean`), `tasks/lcr.json` (`n₀` = 10), `docs/equivalence-lcr.md`; theorem row `task=lcr, tier=2, outcome=closed`, corollary rows `tier=1` |
 | The closure check itself | `harness/closure_oracle.py` for the three checks and `tools/checker/` for the axiom query, whose own `PROVENANCE.md` records the interference experiment |
