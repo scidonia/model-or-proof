@@ -42,20 +42,15 @@ still pending.
 **Same-claim pair, now measured.** Route A's N=23 row and Route B's tier-1 corollary
 (`TokenRingN0.lean`, "N=23 instantiated") are the *same claim*, and both are now measured:
 
-| | Route A — TLC | Route B — the corollary |
+| | Route A — TLC (8 workers) | Route B — the corollary |
 |---|---|---|
 | claim | `Mutex` at N=23 | `Mutex` at N=23 |
-| wall-clock | 6,748.604 s | **26.362 s** |
-| cost | $0.37492244 | **$0.00014254** |
+| wall-clock | 837.938 s | **26.362 s** |
+| cost | $0.04655211 | **$0.00014254** |
 | distinct states | 289,406,976 | — (no enumeration) |
 | turns | one deterministic run | 1 |
 
-Read that pair with the marginal-cost caveat in §7: the corollary's proof is the trivial instantiation
-of the general theorem, so Route B's honest total for this claim is the general proof plus this
-instantiation — about 157 s and $0.00057 — still ~43× faster and ~650× cheaper than TLC for the same
-claim. TLC's figure is also single-worker; the fairness ruling permits a multi-worker re-run, which has
-not been taken. The general theorem in the table above is a strictly stronger result TLC cannot express
-at all, so that table compares a capability on Route B's side and a cost on Route A's.
+A single-worker TLC row for the same instance also exists — 6,748.604 s and $0.37492244 — but quoting it against Route B would handicap one side: the fairness ruling is that each route runs at its best configuration with the row naming it, and eight workers scales near-linearly here (8.05× on an identical state count, measured at N=23 itself rather than inferred from N=17). Read the pair with the marginal-cost caveat in §7: the corollary's proof is the trivial instantiation of the general theorem, so Route B's honest total for this claim is the general proof plus this instantiation — **about 157 s and $0.00058** — against 837.9 s and $0.04655 for Route A: **~5.3× faster and ~81× cheaper as the costs are recorded**. The wall-clock ratio is unambiguous; the dollar ratio depends on the billing model, since the harness charges compute per wall-clock hour, not per vCPU-hour. The general theorem in the table above is a strictly stronger result TLC cannot express at all, so that table compares a capability on Route B's side and a cost on Route A's.
 
 ## 2. The same three results, at the calibration instance
 
@@ -207,8 +202,11 @@ price of a coffee; it is not the same question, not the same artifact, and not f
 9. **The tier-1 corollary's 26.362 s is a marginal cost, not a from-scratch one.** Its proof is the
    trivial instantiation of the general theorem, which cost 130.6 s and $0.00043 to prove. Any
    comparison quoting 26 s without the general proof is quoting a plausible number in place of the real
-   one — the same error class as the hard-coded theorem name. The honest pair is ~157 s and ~$0.00057
-   against TLC's 6,748.6 s and $0.37492244 for the same claim.
+   one — the same error class as the hard-coded theorem name. The honest pair is **~157 s and ~$0.00058**
+   against Route A *at its best configuration*: **837.9 s and $0.04655** with eight workers, on an
+   identical state count. Both ratios move with the configuration and the billing model — the
+   single-worker TLC row (6,748.6 s, $0.37492) is a valid datum and not the comparison, and the harness
+   charges compute per wall-clock hour rather than per vCPU-hour.
 
 ## Provenance
 
