@@ -1,0 +1,25 @@
+tlc-workers1-cleanup-config/home/gavin/dev/model-or-proof/specs/tla/lcr/LCRN6.cfg/home/gavin/dev/model-or-proof/specs/tla/lcr/LCR.tla
+
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 70 and seed 3200974299543964479 with 1 worker on 20 cores with 14247MB heap and 64MB offheap memory (Linux 6.8.0-85-generic amd64, Oracle Corporation 1.8.0_504 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/lcr/LCR.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module LCR
+Semantic errors:
+
+*** Errors: 1
+
+line 96, col 5 to line 96, col 8 of module LCR
+
+Unknown operator: `Card'.
+
+
+
+Starting... (2026-09-26 22:58:50)
+Error: Parsing or semantic analysis failed.
+Finished in 00s at (2026-09-26 22:58:50)
