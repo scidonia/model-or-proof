@@ -2,9 +2,10 @@
 
 Token-ring mutual exclusion, with Bakery as a second task and LCR built behind it.
 
-**Status:** first results, 2026-09-26. Token-ring and Bakery are complete — both cells each — and
-LCR is built with its runs in progress. Every number below traces to a row or artifact named in
-*Provenance*; nothing here is estimated except where it says so.
+**Status:** first results, 2026-09-26. All three tasks are complete through both of their cells, on
+the evidence in §9–§10. EWD998 is built — model, corollary, mutant, audit — with its calibration held
+at `n₀ = 3` pending a clean sweep, for the reason §5 records. Every number below traces to a row or
+artifact named in *Provenance*; nothing here is estimated except where it says so.
 
 **The property, on all three routes:** `Mutex` — *at most one node is in its critical section at any
 time*. TLC checks it as an invariant of `specs/tla/token-ring/TokenRing.tla`; the Lean port states it
@@ -146,8 +147,14 @@ already handles."*
   **Cost varies by problem**: the theorem medians span **104.8 s to 444.4 s** across the three tasks, so no
   single figure should be read as "the cost of a proof" — and the variation shows up between a task's
   own two cells as well as across tasks.
-- **Pending:** EWD998's theorem, gated on its calibration, and the four file-mode fixes the review's
-  cluster produced (the TLC `error` tail, per-run `metadir` isolation, and the two already landed). All
+- **Pending:** EWD998's theorem, gated on its calibration — and its `n₀` is *held* rather than set. The
+  value 3 is an artifact of the harness's own TLC invocation: `-cleanup` deletes the state pool
+  mid-enumeration, uniquely on this task (Bakery completed at 238.8M states and token-ring at 289.4M
+  with the flag; without it, EWD998's N=5 passes 16× the count at which it died with the flag). The fix
+  is landed and verified — the flag dropped, the per-run metadir removed from Python in a `finally` — so
+  the clean sweep that sets the real `n₀` is the gate. The four file-mode fixes the review's cluster
+  produced have all landed: the TLC `error` tail, per-run `metadir` isolation, the closure copy, and the
+  in-progress copy. All
   three same-claim pairs are now measured, and **they do not agree**: token-ring's favours the proof by
   21.7× and Bakery's by 63.3× as marginal ratios, while **LCR's favours TLC by 37.8×** at the `N₀` its
   budget allowed. See §10 — the pair is a property of where a task's instance falls relative to its own
