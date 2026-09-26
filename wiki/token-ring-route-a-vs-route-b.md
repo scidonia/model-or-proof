@@ -47,13 +47,13 @@ still pending.
 | | Route A — TLC (8 workers) | Route B — the corollary |
 |---|---|---|
 | claim | `Mutex` at N=23 | `Mutex` at N=23 |
-| wall-clock | 837.938 s | **26.362 s** |
-| cost | $0.04655211 | **$0.000197** (cell median) |
+| wall-clock | 837.938 s | **38.534 s** (cell median, 7 closures) |
+| cost | $0.04655211 | **$0.000230** (cell median) |
 | distinct states | 289,406,976 | — (no enumeration) |
 | turns | one deterministic run | 1 |
-| closures | one deterministic run | **5**, 25.1–48.5 s |
+| closures | one deterministic run | **7**, 25.1–64.8 s |
 
-A single-worker TLC row for the same instance also exists — 6,748.604 s and $0.37492244 — but quoting it against Route B would handicap one side: the fairness ruling is that each route runs at its best configuration with the row naming it, and eight workers scales near-linearly here (8.05× on an identical state count, measured at N=23 itself rather than inferred from N=17). Read the pair with the marginal-cost caveat in §7: the corollary's proof is the trivial instantiation of the general theorem, so Route B's honest total for this claim is the general proof plus this instantiation — **the two cells' medians, 104.8 s and 26.4 s, so about 131 s and $0.00052** — against 837.9 s and $0.04655 for Route A: **~6.4× faster and ~89× cheaper as the costs are recorded**. Both cells are now at `R≥5` (six closures for the theorem, five for the corollary, each cell a single seed digest), and both are wide: the theorem's six ran 62.9–1021.8 s, so its median rather than its mean is the figure — and the slowest run closed *because* ruling (a) removed the per-turn cut that would have killed it. The wall-clock ratio is unambiguous; the dollar ratio depends on the billing model, since the harness charges compute per wall-clock hour, not per vCPU-hour. The general theorem in the table above is a strictly stronger result TLC cannot express at all, so that table compares a capability on Route B's side and a cost on Route A's.
+A single-worker TLC row for the same instance also exists — 6,748.604 s and $0.37492244 — but quoting it against Route B would handicap one side: the fairness ruling is that each route runs at its best configuration with the row naming it, and eight workers scales near-linearly here (8.05× on an identical state count, measured at N=23 itself rather than inferred from N=17). Read the pair with the marginal-cost caveat in §7: the corollary's proof is the trivial instantiation of the general theorem, so Route B's honest total for this claim is the general proof plus this instantiation — **the two cells' medians, 104.8 s and 38.5 s, so about 143 s and $0.00056** — against 837.9 s and $0.04655 for Route A: **~5.8× faster and ~84× cheaper as the costs are recorded**. Both cells are at `R≥5` (six closures for the theorem, seven for the corollary, each cell a single seed digest), and both are wide: the theorem's six ran 62.9–1021.8 s, so its median rather than its mean is the figure — and the slowest run closed *because* ruling (a) removed the per-turn cut that would have killed it. The wall-clock ratio is unambiguous; the dollar ratio depends on the billing model, since the harness charges compute per wall-clock hour, not per vCPU-hour. The general theorem in the table above is a strictly stronger result TLC cannot express at all, so that table compares a capability on Route B's side and a cost on Route A's.
 
 ## 2. The same three results, at the calibration instance
 
@@ -139,10 +139,10 @@ already handles."*
 
 - **Measured:** Route A at N=3 (5 runs) and N=23 (1 run, deterministic tool); Route B **tier 2** — the
   general theorem — for token-ring (6 closures, median **104.8 s** / $0.00033), Bakery (5 closures,
-  median **444.4 s** / $0.00062) and LCR (4 of 5, one 970.8 s closure in hand); **tier 1** — the
-  same-claim corollary — for token-ring (7 closures, median **26.4 s**) and LCR (5 closures, median
+  median **444.4 s** / $0.00062) and LCR (5 closures, median **216.0 s**); **tier 1** — the
+  same-claim corollary — for token-ring (7 closures, median **38.5 s**) and LCR (5 closures, median
   **101.0 s** / $0.00042); the negative controls on both sides, holding on three tasks.
-  **Cost varies by problem**: the medians span **100.8 s to 970.8 s** across the tasks measured, so no
+  **Cost varies by problem**: the theorem medians span **104.8 s to 444.4 s** across the three tasks, so no
   single figure should be read as "the cost of a proof" — and the variation shows up between a task's
   own two cells as well as across tasks.
 - **Pending:** EWD998's theorem, gated on its calibration, and the four file-mode fixes the review's
@@ -180,20 +180,44 @@ better, and the difference matters:
 The correct one-line comparison: **Route B answers a question TLC cannot ask — "for all N" — for the
 price of a coffee; it is not the same question, not the same artifact, and not free of translation risk.**
 
+**And the comparison point is the crossover, not `N₀`.** `N₀` is chosen to sit inside the loop's
+budget, which is a different thing from sitting near the instance where the two routes trade places —
+and the three measured pairs (§5, §9, §10) split on exactly that distinction. Token-ring's and Bakery's
+`N₀` fall below their crossovers, where the proof wins by 21.7× and 63.3×; LCR's falls above its own,
+where TLC wins by 37.8×. So "the proof beats model checking" is not a property of the two methods. It is
+a property of where a task's instance falls relative to its own crossover, and a pair measured at a
+budget-chosen `N₀` reports where that happened to be rather than anything about the methods.
+
+The claim this report can support is the one this section's framing already implies: **TLC's cost grows
+exponentially in the instance and the proof's is flat, and the crossover is where they trade places.**
+Turning that from a shape into a number needs a pair measured *at* a crossover, which no task here has
+yet — every `N₀` was set by the loop's budget. The task set therefore needs one task calibrated to cross
+its own crossover, so the pair has an arm on each side.
+
 ## 7. Caveats that belong with these numbers
 
 1. **Different claims.** Route A's row is a bounded instance; Route B's row is arbitrary `N`. The
-   cost race needs the tier-1 corollary, which is pending.
+   cost race is measured on the tier-1 corollary, which instantiates the general theorem at that
+   instance — so the pair is a *marginal* comparison, and §10 shows its direction depends on where the
+   instance falls relative to the task's own crossover rather than on the two methods.
 2. **Lines are not person-days.** The TLAPS papers report proof lines; only EWD998 reports days.
    Nothing here converts one into the other.
 3. **Model, not code.** Both routes prove a property of a *model*, not of running software.
 4. **The equivalence is audited, not proved.** Lean-model ≡ TLA+-semantics is a hand audit.
-5. **R=1 on Route B.** One closure is an existence proof, not a distribution; a range needs R≥5.
+5. **Route B is at `R ≥ 5` per cell, and the rate is per cell.** Token-ring's theorem cell closed six
+   times and its corollary seven, on one seed digest each; Bakery's and LCR's five each. That turns
+   each cell from an existence proof into a distribution, which is why medians are quoted with ranges —
+   the spreads are wide (token-ring's theorem cell runs 62.9–1021.8 s). Rows from the *tactic*
+   configuration are a different cell and are never pooled with these.
 6. **The artifact's durability is handled — but only just.** The closure was copied to
    `results/closures/token-ring/TokenRing-20260926T101642-r1.lean` (digest `9c992250…`) with a sidecar,
    so the result no longer lives only in a gitignored `.runs/` directory that the next sweep deletes.
    A reviewer then showed the sidecar could be bound to bytes the oracle never checked — a swap between
-   the check and the digest — which is being fixed by hashing a single immutable snapshot.
+   the check and the digest — which is now fixed: the oracle check, the row digest and the closure copy
+   all derive from one immutable snapshot taken once per round and never re-read. A second case lets a
+   verdict be withheld for a write *outside* the working copy, where the durable copy is not written at
+   all; the row now carries `closure.withheld` so it says which condition blocked it, and §10 records why
+   that is a limitation rather than a bug.
 7. **Our own verification tooling is days old, and this is the caveat that most changes the reading.**
    The closure oracle — the thing that decides whether a file counts as proved — has had **two soundness
    holes found in a single day**, both by an independent reviewer rather than by the loop, and both now
@@ -214,10 +238,10 @@ price of a coffee; it is not the same question, not the same artifact, and not f
    and an axiom check that reads Lean's elaborated environment instead of parsing text — and they are
    what closed both P0s.
 
-9. **The tier-1 corollary's 26.362 s is a marginal cost, not a from-scratch one.** Its proof is the
+9. **The tier-1 corollary's 38.5 s is a marginal cost, not a from-scratch one.** Its proof is the
    trivial instantiation of the general theorem, which cost 104.8 s and $0.00033 to prove. Any
-   comparison quoting 26 s without the general proof is quoting a plausible number in place of the real
-   one — the same error class as the hard-coded theorem name. The honest pair is **~131 s and ~$0.00052**
+   comparison quoting 39 s without the general proof is quoting a plausible number in place of the real
+   one — the same error class as the hard-coded theorem name. The honest pair is **~143 s and ~$0.00056**
    against Route A *at its best configuration*: **837.9 s and $0.04655** with eight workers, on an
    identical state count. Both ratios move with the configuration and the billing model — the
    single-worker TLC row (6,748.6 s, $0.37492) is a valid datum and not the comparison, and the harness
@@ -299,7 +323,7 @@ enumerates 238,803,200 distinct states: **76.6 s against 4,847.7 s**, and $0.000
 $0.26932. As a *marginal* ratio — the corollary alone — that is 63.3× faster and 565×
 cheaper. On the honest basis §7 insists on, the general theorem plus its instantiation at
 521 s against 4,847.7 s, it is **9.3×**. The marginal figure should not be quoted without
-the total, which is the same error class as quoting the corollary's 26 s for token-ring.
+the total, which is the same error class as quoting the corollary's 39 s for token-ring.
 
 ## 10. LCR: the third task
 
