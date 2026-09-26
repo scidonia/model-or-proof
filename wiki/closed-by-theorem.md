@@ -3,10 +3,10 @@
 Every theorem this repository has closed with an AI proof loop, what it cost in wall-clock and
 dollars, and how it compares with TLC and with published human work.
 
-**Status:** results as of 2026-09-26 / 2026-09-27. Three tasks — `token-ring`, `bakery`, `lcr` — are
-complete through both of their cells. `ewd998` is built (model, corollary, mutant, audit) with its
-calibration held pending a clean sweep, for the reason §7 gives. Every number below traces to a row
-or artifact named in *Provenance*.
+**Status:** results as of 2026-09-26 / 2026-09-27. Four tasks — `token-ring`, `bakery`, `lcr`,
+`ewd998` — have closed their theorem, with `ewd998`'s calibration still held at `n₀ = 3` pending a
+clean sweep, for the reason §7 gives (its `n₀` is an artifact of the harness's own invocation, not a
+tool boundary). Every number below traces to a row or artifact named in *Provenance*.
 
 **How a closure is established.** An AI proof loop runs in file mode: the prover receives the seed
 plus a shell. A CLOSED verdict comes from three checks run by code the candidate cannot reach —
@@ -28,6 +28,13 @@ different configurations are never pooled. See `wiki/token-ring-route-a-vs-route
 | **bakery** | 1 | `MutualExclusion` at N=9 (corollary) | 5 | **76.6 s** | 64.7 – 88.4 | **$0.00048** | $0.00039 – $0.00068 |
 | **lcr** | 2 | at most one leader, **arbitrary N** | 5 | **216.0 s** | 148.0 – 970.8 | **$0.00044** | $0.00034 – $0.00086 |
 | **lcr** | 1 | leader uniqueness at N=10 (corollary) | 5 | **101.0 s** | 79.2 – 178.7 | **$0.00042** | $0.00038 – $0.00077 |
+| **ewd998** | 2 | invariance for **arbitrary N** | 1 | **1009.5 s** | — | **$0.00081** | — |
+| **ewd998** | 1 | invariance at N=3 (corollary) | 1 | **101.2 s** | — | **$0.00062** | — |
+
+**`ewd998`'s cells are single runs, not yet rates.** The other three tasks have R ≥ 5 per cell; `ewd998`
+has one closure each, so its two figures are existence proofs rather than distributions and are not
+comparable in precision with the rows above. Its calibration is also held (§7), so its corollary may be
+restated at a different `N₀` — its 101.2 s is at N=3, the value under revision.
 
 **Tier 1 is a corollary**: the general theorem instantiated at the task's calibrated `N₀`. Its cost is
 consistently a fraction of the theorem's — token-ring 2.7×, bakery 5.8×, lcr 2.1× cheaper in
@@ -49,6 +56,7 @@ loop against the task's *mutant*: a weakened model it must **fail** to close.
 |---|---|---|---|---|
 | **bakery** | weakened `Enter` guard | `no_progress` → `fail_to_close` | 273.2 s | the loop never closed the false statement |
 | **lcr** | weakened `ElectSelf` | `no_progress` → `fail_to_close` | 502.7 s | matches the TLA+ side's `UniqueLeader` violation at depth 3 |
+| **ewd998** | weakened model | `no_progress` → `fail_to_close` | 572.7 s | the loop never closed the false statement |
 | **token-ring** | mutant | TLC reports `violation` | 0.666 s | the TLA+ side refutes it (23 distinct states, depth 5) |
 | **tactic battery** | false statements | 4 `refuted`, 40 `success`, 1 `timeout` | — | the refutation arm, approached from the other direction |
 
@@ -160,17 +168,23 @@ every `N₀` was set by the loop's budget. That is a gap in the task set, not in
 
 ## 7. Pending
 
-**`ewd998`'s theorem**, gated on its calibration — and its `n₀` is *held* rather than set. The value 3
-is an artifact of the harness's own TLC invocation: `-cleanup` deletes the state pool mid-enumeration,
-uniquely on this task. The flag is **necessary but not sufficient** — bakery completed at 238,803,200
-states and token-ring at 289,406,976 *with* the flag, while without it `ewd998`'s N=5 passes 16× the
-count at which it died with the flag. The fix is landed and verified (flag dropped, per-run metadir
-removed from Python in a `finally`), so the clean sweep that sets the real `n₀` is the gate. When it
-lands, EWD998 sets the fourth same-claim pair — and it is the only task with a published person-day
-comparator, so it is the most valuable of the four.
+**`ewd998`'s theorem and corollary have closed** — 1009.5 s and 101.2 s. What remains is its
+**calibration**, which is *held* rather than set: the value `n₀ = 3` is an artifact of the harness's
+own TLC invocation. `-cleanup` deletes the state pool mid-enumeration, uniquely on this task — the flag
+is **necessary but not sufficient**, since bakery completed at 238,803,200 states and token-ring at
+289,406,976 *with* the flag, while without it `ewd998`'s N=5 passes 16× the count at which it died with
+the flag. The fix is landed and verified — the flag dropped, the per-run metadir removed from Python in
+a `finally` — and two clean runs are in flight at N=4 and N=5. When a clean sweep lands, the
+`N₀`-dependent artifacts (the corollary's statement, its baseline, the manifest, the audit) are revisited
+in one pass; `ewd998`'s corollary figure in §1 is provisional in a way the other three are not.
 
 All four file-mode fixes the review's cluster produced have landed: the TLC `error` tail, per-run
 `metadir` isolation, the closure copy, and the in-progress copy.
+
+**The measurement the task set still lacks** is a pair taken *at* a crossover (§6). Every `N₀` so far was
+chosen to fit the loop's budget, so no task has an arm on each side of where the two routes trade places
+— which is why the three measured pairs split: two favour the proof, one favours TLC. Turning the cost
+shape into a number needs a task calibrated to cross its own crossover.
 
 ## Provenance
 
@@ -183,6 +197,7 @@ All four file-mode fixes the review's cluster produced have landed: the TLC `err
 | Route A, bakery N=9 | `results/tlc.jsonl` — `task=bakery, param_N=9`: 4,847.749 s / $0.26932 / 238,803,200 distinct, `workers=1` |
 | Route A, lcr N=10 | `results/tlc.jsonl` — `task=lcr, param_N=10`: 2.670 s / $0.00015 / 177,147 distinct |
 | Route A, token-ring N=3 | `results/tlc.jsonl` — 5 runs, 0.656–0.669 s, 36 distinct; the mutant `violation` at 23 distinct |
+| EWD998 (Route B) | `results/proof.jsonl` — `task=ewd998, mode=file`: tier 2 `closed` 1009.538 s / $0.000814, tier 1 `closed` 101.217 s / $0.00062086, tier 2 `mutant=true` `no_progress` 572.665 s |
 | Human prior art | `results/human.jsonl` — quotes and pinned sources; `machine_checked: false` throughout |
 | The equivalence audits | `docs/equivalence-token-ring.md`, `docs/equivalence-bakery.md`, `docs/equivalence-lcr.md`, `docs/equivalence-ewd998.md` |
 | The closure check | `harness/closure_oracle.py` and `tools/checker/` (whose `PROVENANCE.md` records the interference experiment) |
