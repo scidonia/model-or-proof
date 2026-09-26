@@ -28,7 +28,8 @@ def test_unclosed_handles_comment_and_identifier_edge_cases():
     assert count_unclosed("/- outer /- sorry -/ -/") == 0  # nested block comment
     assert count_unclosed("/-- sorry -/") == 0  # doc comment
     assert count_unclosed("/-! sorry -/") == 0  # doc comment
-    assert count_unclosed("theorem t : True := by\n  exact ?h\n") > 0  # a metavariable is a hole
+    assert count_unclosed("theorem t : True := by\n  exact ?h\n") > 0  # a named metavariable is a hole
+    assert count_unclosed("refine ⟨?_, ?_⟩") == 0  # the anonymous hole is legitimate syntax
     assert count_unclosed("def sorryful : Nat := 1") == 0  # a longer identifier is not the word
     assert count_unclosed("theorem t : True := by\n  sorry\n/- unterminated") > 0  # unterminated comment must not hide a real sorry
 

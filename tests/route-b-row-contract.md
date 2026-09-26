@@ -242,6 +242,17 @@ and break the scenario; stubs ignore `harness.closure.AUTOMATION_TACTICS`.
   batch also rewrote the refutation prompt in an earlier ticket, so byte-identity across the batch is not
   what this scenario claims.
 
+## Scenario 20 — a cut turn records `turn_deadline`, not `provider_failure`
+
+- **Actor**: the researcher.
+- **Boundary**: `harness.closure.run_loop(…)`.
+- **Given**: a model that raises `ProviderError(0, …, deadline=360.0)` — the per-turn deadline bound.
+- **When**: the loop runs.
+- **Then**: `outcome: "error"` with `error.kind == "turn_deadline"` — a budget event, never
+  `provider_failure` (which stays reserved for the rig failing).
+- **Why**: the per-turn deadline is *our* budget choice; a reader must draw the distinction from the row
+  alone, the same `lean` vs `transport` separation.
+
 ## Expected failure before implementation
 
 The row keys `startup_s`/`proof_s`/`resolvedModelIsFallback`/`error`/`mutant`/`assisted` do not

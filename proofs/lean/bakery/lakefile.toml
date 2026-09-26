@@ -8,10 +8,13 @@ name = "bakery"
 # `N₀` is calibrated (plan D23 rung 1; `tasks/bakery.json`'s `n0` is still null), and until then there
 # is nothing for it to state. `defaultTargets` has to precede the `[[…]]` tables below: after
 # `[[require]]` starts, a bare key belongs to that dependency table.
-defaultTargets = ["Bakery", "BakeryMutant"]
+defaultTargets = ["Bakery", "BakeryN0", "BakeryMutant"]
 
 [[lean_lib]]
 name = "Bakery"
+
+[[lean_lib]]
+name = "BakeryN0"
 
 [[lean_lib]]
 name = "BakeryMutant"

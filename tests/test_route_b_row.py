@@ -252,6 +252,21 @@ class FailingModel(NoopModel):
         raise ProviderError(self._status, self._message)
 
 
+class DeadlineModel(NoopModel):
+    """A model that raises the per-turn deadline failure on its first propose."""
+
+    def propose(self, goals, history):
+        raise ProviderError(0, "the turn did not finish within 360.0s", deadline=360.0)
+
+
+def test_turn_deadline_is_distinguished_from_provider_failure():
+    """Scenario 20: a per-turn deadline cut is a budget event, not a rig fault."""
+    row = run_loop(NeverClosesProver(), DeadlineModel(), clock=StepClock())
+    assert row["outcome"] == "error", row
+    assert row["error"]["kind"] == "turn_deadline", row
+    assert row["error"]["kind"] != "provider_failure", row
+
+
 def test_provider_failure_lands_an_error_row():
     """Scenario 5: a mid-run provider failure lands an error row naming the failure."""
     row = run_loop(

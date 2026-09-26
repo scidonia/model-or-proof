@@ -7,12 +7,12 @@ code.
 
 - **TLA+ reference** — `specs/tla/bakery/Bakery.tla` (P1's task instance; `MutualExclusion`, safety)
 - **Lean model** — `proofs/lean/bakery/Bakery.lean` (module `Bakery`), the tier-2 seed
-- **Lean tier-1 seed** — `proofs/lean/bakery/BakeryN0.lean`: deferred until Bakery's `N₀` is calibrated (§2)
+- **Lean tier-1 seed** — `proofs/lean/bakery/BakeryN0.lean` (module `BakeryN0`): written — `mutual_exclusion_n0` at `N₀ = 9`, the tier-1 seed (§2)
 - **TLA+ mutant** — `specs/tla/bakery/BakeryMutant.tla`
 - **Lean mutant** — `proofs/lean/bakery/BakeryMutant.lean` (module `BakeryMutant`)
 - **Toolchain** — `leanprover/lean4:v4.35.0-rc3`, Mathlib `c55e6e786f49471c72fbddbec5415808896aec1e`; the same pin as `proofs/lean/token-ring/`, whose resolved `lake-manifest.json` this package copies
-- **Route A instance** — not fixed yet: `tasks/bakery.json`'s `n0` is `null` and there is no `BakeryN<N>.cfg`, so Bakery has no Route A row to compare against (the calibration is outstanding)
-- **Enumerator** — deferred with the calibration: there is no committed Bakery TLC log for a state-graph check to compare with (§6)
+- **Route A instance** — `tasks/bakery.json`'s `n0` is **9**: Route A's calibration landed, so the tier-1 corollary is stated at that instance and the two rows are comparable by instance
+- **Enumerator** — deferred: no `scripts/equivalence_bakery.py` has been written yet; the TLC logs a state-graph check would consume now exist under `results/logs/` (§6)
 
 What the reference spec is *not*: the imported IJCAR 2010 artifact
 (`specs/tla/ijcar2010/bakery/Bakery.tla`, `machine_checked: false`) is the provenance, and it is
@@ -68,13 +68,14 @@ theorem mutual_exclusion (hN : 2 ≤ N) (s : State N) (hs : Reachable s) : Mutua
   `N ≥ 2`, has at most one process in its critical section. This is the statement the module makes as
   `Spec => []MutualExclusion` under `ASSUME N >= 2`; it is not restricted to any instance, so it is
   strictly stronger than anything a bounded TLC run establishes.
-- **Tier 1 — the corollary at `N₀`: deferred.** Bakery's `N₀` is not fixed yet — `tasks/bakery.json`
-  carries `"n0": null` and no `BakeryN<N>.cfg` exists — so there is no instance to state the corollary
-  at and `proofs/lean/bakery/BakeryN0.lean` is not written. When the calibration lands, the corollary
-  is stated the way token-ring's is (protocol §2): `mutual_exclusion_n0`, importing `Bakery` and
-  concluding `MutualExclusion` from the same `Reachable`, at the fixed `N₀` — over the model by import,
-  adding no model of its own. The corollary name is therefore **deferred** with the file; nothing here
-  claims a tier-1 statement exists.
+- **Tier 1 — the corollary at `N₀`.** `mutual_exclusion_n0`: the general `mutual_exclusion` at the task's
+  instance, `N₀ = 9` (`tasks/bakery.json`'s `n0`, Route A's calibration). The file imports `Bakery` and
+  adds no model of its own, concluding `MutualExclusion` from the same `Reachable` — the same shape
+  token-ring's tier-1 seed has (protocol §2) — and it carries exactly one statement under test with one
+  `sorry`, which is what the closure loop requires of a seed (plan D5/D6). One asymmetry to note:
+  `Bakery.Reachable` takes no `N ≥ 2` argument, unlike token-ring's, so the instance bound lives in the
+  proof rather than in the statement — promoting the closed artifact makes the proof the trivial
+  instantiation `exact mutual_exclusion (by decide : 2 ≤ 9) s hs`.
 
 ## 3. Faithfulness: no strengthened assumption, no weakened goal
 
@@ -187,9 +188,10 @@ transition relation compared against TLC's own state graph (`scripts/equivalence
 `docs/equivalence-token-ring.md` §6). **Bakery has no such check committed yet**, and this audit does
 not pretend otherwise:
 
-- there is no committed Bakery TLC run to compare with — no `bakery` row in `results/tlc.jsonl` and no
-  log under `results/logs/`, because the `N₀` calibration is outstanding;
-- the enumerator is deferred with it (plan D23 rung 1), so no reachable-state count, depth or outdegree
+- there is no `scripts/equivalence_bakery.py` to make the comparison: the Bakery TLC logs a state-graph
+  check would consume now exist under `results/logs/` (committed), but nothing reads them into a
+  reachable-state comparison yet;
+- the enumerator is deferred (plan D23 rung 1), so no reachable-state count, depth or outdegree
   figure for this model is asserted anywhere in this file. A number a reader cannot reproduce from the
   tree would be exactly the kind of claim §6 of token-ring's audit had to repair.
 
@@ -197,7 +199,7 @@ What is checked today is §1's statement-by-statement reading, the mutant witnes
 a reader can walk through the guards — and one checked by enumerating the transcription's reachable
 states at `N = 2` during authoring, which a reader can repeat only once the committed enumerator lands),
 and the structural checks the harness performs on any artifact (zero `sorry`/`Admitted`/`axiom`,
-statement unchanged, imports clean — plans D6/D13). When the calibration lands, the enumerator and the
+statement unchanged, imports clean — plans D6/D13). When the enumerator is written, it and the
 TLC comparison follow the token-ring precedent: same relation, same metrics, same named depth
 convention, and the figures locked by a `--check` that compares them against the committed log.
 
@@ -215,6 +217,8 @@ convention, and the figures locked by a `--check` that compares them against the
   decision 4).
 - It does not cover the mutant's `disproof` branch, which is a recorded heuristic for this slice
   (plan D7).
-- It says nothing about a tier-1 statement: `BakeryN0.lean` is deferred until `N₀` is calibrated (§2),
-  and no `mutual_exclusion_n0` is claimed to exist.
+- The tier-1 statement is `mutual_exclusion_n0` in `proofs/lean/bakery/BakeryN0.lean` (§2), stated at
+  `N₀ = 9`. This audit's statement-by-statement reading covers the *model*, and the corollary adds no
+  model of its own: it imports `Bakery` and concludes `MutualExclusion` from the same `Reachable`, so
+  nothing here needs a second reading for it.
 - It says nothing about Route A's rows for Bakery, because there are none yet.

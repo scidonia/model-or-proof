@@ -18,6 +18,8 @@
           python3Packages.pytest # scenario runner
           jq # result-row inspection
           z3 # SMT solver available to the prover side
+          inotify-tools # file mode's boundary is observed, not enforced (no unprivileged userns here): its
+                        # events are the evidence that the shell wrote outside the working copy
         ];
       };
     };

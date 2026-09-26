@@ -44,9 +44,9 @@ def test_every_operator_has_a_lean_correspondence():
 
 
 def test_general_theorem_and_faithfulness_are_stated():
-    """Scenario 2: the general theorem, the deferred corollary, and the faithfulness claim are named."""
+    """Scenario 2: the general theorem, the named corollary, and the faithfulness claim are named."""
     audit = text()
     assert "mutual_exclusion" in audit, "the general theorem's Lean statement is not named"
     assert "strengthen" in audit.lower(), "no-strengthen guarantee not stated"
     assert "weaken" in audit.lower(), "no-weaken guarantee not stated"
-    assert "deferred" in audit.lower(), "the N0 corollary's deferral is not stated"
+    assert "mutual_exclusion_n0" in audit, "the N0 corollary is not named"

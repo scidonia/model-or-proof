@@ -212,12 +212,23 @@ class ProviderError(RuntimeError):
     ``status`` is the HTTP status the provider answered with (0 when the call never got one) and
     ``message`` its own message, verbatim. ``run_loop`` turns this into an ``error`` row instead of
     letting a mid-run failure lose the budget already spent.
+
+    ``deadline`` is set when the failure was *our own* per-turn bound cutting the turn rather than the
+    provider failing (D24, re-ruled): the two are different things — a budget choice against a rig fault —
+    and a row must be able to tell them apart, the same way ``lean`` and ``transport`` refusals are told
+    apart. :func:`provider_failure_kind` is the single place that decides the row's word.
     """
 
-    def __init__(self, status: int, message: str) -> None:
+    def __init__(self, status: int, message: str, *, deadline: float | None = None) -> None:
         super().__init__(f"provider call failed: HTTP {status}: {message}")
         self.status = status
+        self.deadline = deadline
         self.message = message
+
+
+def provider_failure_kind(failure: ProviderError) -> str:
+    """The row's word for a provider-side failure: a cut turn, or the rig's failure (D24, re-ruled)."""
+    return "turn_deadline" if failure.deadline is not None else "provider_failure"
 
 
 class ProverError(RuntimeError):
@@ -997,7 +1008,7 @@ def run_loop(
                 except ProviderError as failure:
                     _bill(totals[plan_arm], usage, model.usage())
                     error = {
-                        "kind": "provider_failure",
+                        "kind": provider_failure_kind(failure),
                         "status": failure.status,
                         "message": failure.message,
                     }
@@ -1066,7 +1077,11 @@ def run_loop(
             # turns, tokens and dollars below — not an exception that loses the run's budget. The
             # attempt's own usage (a retry's tokens, if any) still belongs to the arm that made it.
             _bill(totals[arm], usage, model.usage())
-            error = {"kind": "provider_failure", "status": failure.status, "message": failure.message}
+            error = {
+                "kind": provider_failure_kind(failure),
+                "status": failure.status,
+                "message": failure.message,
+            }
             outcome = "error"
             break
 

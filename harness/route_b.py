@@ -667,6 +667,70 @@ def repl_identity(provenance: Path = PROVENANCE) -> dict:
     return {"commit": cells["Commit"], "toolchain": cells["Toolchain"]}
 
 
+def write_closure_sidecar(rows_path: Path, row: dict, *, task: str, results_dir: Path) -> Path | None:
+    """Copy a closure's bytes out of `.runs/` and write the sidecar that binds them (finding F6).
+
+    `.runs/` is gitignored and swept at the next invocation's start, so a `closed` row whose artifact is
+    gone cannot be reverified — and a row claiming closure whose artifact is gone is close to unfalsifiable.
+    The checked bytes are copied to `results/closures/<task>/<token>.lean`, task and token being what the row
+    already names, and a sidecar beside them states the row's address, both digests and the verdict, so the
+    closure can be checked from the copy and the record without trusting either alone.
+
+    A copy whose digest disagrees with the one the row recorded is reported **loudly**: that means the file
+    changed between the oracle's check and this copy, and the pair is not evidence of anything.
+    """
+    if row.get("outcome") != "closed":
+        return None
+    # The copy itself is written by `file_mode` **from its one snapshot** of the candidate (finding: the
+    # sidecar race), so this sidecar verifies that copy rather than making a fresh one from a path that may
+    # have been swapped since the oracle read it. A missing copy is loud: a closed row with no durable
+    # artifact is the thing F6 exists to prevent.
+    recorded = row["artifacts"].get("artifact_sha256")
+    copy_path = Path(row["artifacts"].get("closure_copy") or "")
+    if not copy_path.is_file():
+        print(
+            f"LOUD: the row says closed on {row['artifacts'].get('proof')} but no closure copy exists at "
+            f"{copy_path!s}; the artifact is not durable and the row is not evidence"
+        )
+        return None
+    copied = hashlib.sha256(copy_path.read_bytes()).hexdigest()
+    # A row that records *no* digest is not a disagreement — it predates the field (the file-mode row that
+    # prompted this, written before `artifact_sha256` existed). Only a digest that differs is a finding.
+    agrees = None if recorded is None else copied == recorded
+    sidecar = {
+        "row": f"{relative(rows_path)}:{len(rows_path.read_text().splitlines())}",
+        "task": task,
+        "tier": row.get("tier"),
+        "mode": row.get("mode"),
+        "omp_sessions": row["artifacts"]["omp_sessions"],
+        "artifact": relative(copy_path),
+        "artifact_sha256": copied,
+        "row_artifact_sha256": recorded,
+        "digests_agree": agrees,
+        "pristine_sha256": row["artifacts"]["baseline"]["sha256"],
+        # The row's closure block *whole*, not a fixed subset: the sidecar is the durable record, and a key
+        # list here is how `module` and `theorem` went missing from it the moment they were added to the row
+        # — the same "a value that has to be maintained in two places agrees until it does not" shape as the
+        # `"mutex"` default. The row's closure is already JSON-clean (its axioms are a sorted list).
+        "closure": row["closure"],
+    }
+    sidecar_path = copy_path.with_suffix(".json")
+    sidecar_path.write_text(json.dumps(sidecar, indent=2, sort_keys=True) + "\n")
+    if agrees is False:
+        print(
+            f"LOUD: the closure copy's digest {copied} does not match the {recorded} the row records; "
+            "the artifact changed after it was checked, and the pair is not evidence"
+        )
+    elif recorded is None:
+        # Not a mismatch, but worth saying: this row predates `artifact_sha256`, so the copy, its digest and
+        # the oracle's re-verification are the evidence rather than the row's own field.
+        print(
+            f"note: the row records no artifact digest (it predates the field); the copy's digest {copied} "
+            "and the recorded closure verdict are the evidence"
+        )
+    return sidecar_path
+
+
 def run_file_mode(
     args, *, task: str, results_dir: Path, seed: Path, baseline: Baseline, cap_s: float, cap_usd: float
 ) -> int:
@@ -682,25 +746,42 @@ def run_file_mode(
     swept = sweep_working_copies(seed)
     if swept:
         heartbeat(f"phase: swept {len(swept)} stale working copy/copies of {relative(seed)}")
-    setup = {
-        **setup_of(args.arms),
-        "mode": "file",
-        "tier": args.tier,
-        # The invocation the file-mode session actually runs: tools on, approval automatic. The row's
-        # recorded flags must match the command, not the tactic mode's (finding from the D26 split).
-        "omp": model.omp_invocation(tools=file_mode.DEFAULT_TOOLS),
-    }
     status = 0
     for repetition in range(1, args.reps + 1):
         copy = working_copy(baseline, repetition)
         run_dir = run_session_dir(seed, results_dir, args.mutant, repetition)
         heartbeat(f"phase: run {relative(seed)} r{repetition} (mode: file)")
+        # The actual file-mode invocation (finding F7): one role, the working copy's own directory, the
+        # file-mode message's sections and the tool flags - not the tactic-mode setup, whose
+        # `proof`/`refutation`/`plan` roles, temporary cwd and refutation configuration describe a session
+        # that never ran. Built per repetition because the working copy's directory is per repetition.
+        setup = {
+            "model": model_constants.MODEL_SELECTOR,
+            "thinking": model_constants.THINKING_LEVEL,
+            "mode": "file",
+            "tier": args.tier,
+            "role": "file",
+            "tools": file_mode.DEFAULT_TOOLS,
+            "cwd": relative(copy.parent),
+            "prompt": {"sections": list(file_mode.FILE_MODE_PROMPT_SECTIONS)},
+            "system_prompt": "harness.model.FILE_MODE_SYSTEM_PROMPT",
+            # The nested invocation as it actually ran: one role, the working copy's directory. Without these
+            # the block would record the tactic roles and a temporary cwd for a session that never ran
+            # (finding F7's remainder).
+            "omp": model.omp_invocation(
+                tools=file_mode.DEFAULT_TOOLS,
+                roles=("file",),
+                cwd=relative(copy.parent),
+                # File mode has no per-turn cut (D24 as re-ruled): the recorded bound is the provider
+                # client's, and `turn_deadline_s=None` says so rather than leaving 360 in the record.
+                turn_deadline_s=None,
+                provider_timeout_s=model.PROVIDER_TIMEOUT_S,
+            ),
+        }
         session = model.OmpFileModel(
-            specification=baseline.text,
             session_root=run_dir,
             cwd=copy.parent,
-            examples=model.prompt_examples(),
-            timeout_s=model.TURN_TIMEOUT_S,
+            timeout_s=model.PROVIDER_TIMEOUT_S,
             startup_timeout_s=model.STARTUP_TIMEOUT_S,
         )
         try:
@@ -722,13 +803,24 @@ def run_file_mode(
             )
         finally:
             session.close()
-        append_row(results_dir, "proof", row)
+        rows_path = append_row(results_dir, "proof", row)
+        # F6: the closure's bytes and the sidecar that binds them to this row, written the moment the row
+        # exists — before anything can sweep `.runs/`.
+        sidecar = write_closure_sidecar(rows_path, row, task=task, results_dir=results_dir)
+        if sidecar is not None:
+            heartbeat(f"phase: closure copy {relative(sidecar)}")
+        closure = row["closure"]
+        # `.get` throughout: a provider failure ends the run *before* the oracle ever runs, so its row has no
+        # `integrity`/`elaborates`/`axioms` — and a summary that assumed them crashed with a KeyError after
+        # the row was already appended, turning a recorded outcome into a traceback (the P1 invariant).
         print(
             f"file mode r{repetition}: {row['outcome']} in {row['wall_clock_s']}s "
-            f"(rounds {row['closure']['rounds']}, turns {row['proof']['turns']}, "
-            f"cost ${row['cost_usd']:.4f}) integrity={row['closure']['integrity']} "
-            f"elaborates={row['closure']['elaborates']} axioms={row['closure']['axioms']} "
-            f"seed_intact={row['closure']['seed_intact']}"
+            f"(rounds {closure['rounds']}, turns {row['proof']['turns']}, "
+            f"cost ${row['cost_usd']:.4f}) integrity={closure.get('integrity')} "
+            f"elaborates={closure.get('elaborates')} axioms={closure.get('axioms')} "
+            f"seed_intact={closure.get('seed_intact')} "
+            f"outside_events={len(closure.get('outside_events') or [])} "
+            f"watch_blind={closure.get('watch_blind')}"
         )
         if row["outcome"] != "closed":
             status = EXIT_UNCLOSED_ARTIFACT
@@ -833,6 +925,19 @@ def main(argv: list[str] | None = None) -> int:
         # baseline, and its package. Both refusals below happen before a turn, so there is no row:
         # nothing was measured, and a refused cell is not an observation.
         baseline = load_baseline(seed)
+        # The pristine baseline is immutable (the planner's ruling): `promote.py` rewrites the seed for tier 1
+        # but never re-pins `baseline/<file>`, so every run re-seeds from the `sorry` text. If a baseline ever
+        # does arrive closed, that is a defect in the rig and is refused - before either mode, so both read
+        # one sentence - never reported as a zero-turn "closed". The wording is the driver's own for a closed
+        # seed, so a reader who meets it in file mode recognises the rule rather than a new one.
+        if count_unclosed(baseline.text) == 0:
+            print(
+                f"{relative(seed.parent / BASELINE_DIR / seed.name)} carries no unclosed "
+                "goal: a measured run starts from the recorded baseline, never from a file a previous run "
+                "rewrote (plans D15/D26)",
+                file=sys.stderr,
+            )
+            return EXIT_SEED_ALREADY_CLOSED
         if args.mode == "file":
             # File mode: the same working copy and the same recorded baseline, but the proof is the
             # session's to write and the oracle's to check (plan D26) - a different instrument, so a

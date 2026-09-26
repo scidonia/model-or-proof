@@ -103,10 +103,13 @@ def _tools_flags(tools: str | None) -> list[str]:
 # think harder, and aborting a healthy turn is the more expensive mistake of the two.
 TURN_TIMEOUT_S = 360.0
 STARTUP_TIMEOUT_S = 120.0
-
-# The prefix OMP's footer starts with (see `OMP_CONTEXT_FLAGS`): what a row records as the part of the
-# system prompt that is not ours.
-OMP_FOOTER_MARKER = "PROJECT"
+# File mode has no per-turn deadline (D24 as re-ruled after the transport experiment: a per-turn cut
+# closes the OMP session, so it is a kill rather than a chunk and cannot be continued). What replaces it
+# is the provider client's own bound: a genuinely wedged request still ends the run, but as a
+# `provider_failure` with the bound named, not as a cut the loop pretends to continue from. It is set
+# well above any turn the task has needed (Bakery's model was working at 360 s) and below the run budget,
+# so it only ever fires on a request that is never coming back.
+PROVIDER_TIMEOUT_S = 1800.0
 
 # Enumerated on this host rather than typed from memory (plan D3's caveat): the provider reaches
 # exactly `deepseek-flash` and `deepseek-v4-pro`, and both are reasoning models (effort low/high/max).
@@ -529,9 +532,12 @@ def omp_invocation(
     selector: str = MODEL_SELECTOR,
     thinking: str = THINKING_LEVEL,
     tools: str | None = None,
+    roles: Sequence[str] | None = None,
+    cwd: Path | str | None = None,
     binary: str = OMP_BIN,
-    turn_deadline_s: float = TURN_TIMEOUT_S,
+    turn_deadline_s: float | None = TURN_TIMEOUT_S,
     startup_deadline_s: float = STARTUP_TIMEOUT_S,
+    provider_timeout_s: float | None = None,
 ) -> dict:
     """The invocation a row's ``setup`` records (plans D17/D20).
 
@@ -543,22 +549,31 @@ def omp_invocation(
     ``--approval-mode=yolo``, a default row records ``--no-tools``, and each is the same
     :func:`_tools_flags` the command was built with — so the flags cannot claim a mode the session did
     not run in.
+
+    ``roles`` and ``cwd`` are what the run's *configuration* decides, so they are recorded as given
+    rather than assumed (finding F7): file mode opens one session, role ``file``, and it works in the
+    working copy's directory — inside the repository — where this module's temporary-directory
+    placeholder would contradict the same row's ``mode`` and ``tools``. The defaults reproduce the
+    tactic invocation's record exactly: the roles of :data:`OMP_ROLES` and the placeholder.
     """
     return {
         "version": omp_version(binary),
         "binary": binary,
-        "roles": list(OMP_ROLES),
-        # The bounds the run itself ran under (plan D24): a stalled turn is cut at `turn_deadline_s` and
-        # recorded as a provider failure, so a row that ends that way states the deadline it was cut at
-        # instead of leaving a reader to guess whether the model was thinking or wedged.
+        "roles": list(OMP_ROLES if roles is None else roles),
+        # The bounds the run itself ran under (plan D24, as re-ruled): `turn_deadline_s` is the per-turn
+        # cut the tactic arms run under, and `None` for file mode, which has none — a per-turn cut there
+        # closes the session, so it is a kill rather than a chunk. What file mode has instead is the
+        # provider client's bound, recorded here so a reader sees which bound applied rather than
+        # inferring it from silence.
         "turn_deadline_s": turn_deadline_s,
+        "provider_timeout_s": provider_timeout_s,
         "startup_deadline_s": startup_deadline_s,
         "flags": [
             *OMP_HEAD_FLAGS,
             *_tools_flags(tools),
             *OMP_CONTEXT_FLAGS,
             "--cwd",
-            "<a clean temporary directory outside the repository>",
+            "<a clean temporary directory outside the repository>" if cwd is None else str(cwd),
             "--session-dir",
             "<the run's session directory>/<role>",
             "--model",
@@ -610,6 +625,7 @@ class OmpSession:
         binary: str = OMP_BIN,
         timeout_s: float = TURN_TIMEOUT_S,
         startup_timeout_s: float = STARTUP_TIMEOUT_S,
+        cut_at_deadline: bool = True,
     ) -> None:
         # The canonical role directory (finding P2): the same call `omp_command` makes for
         # `--session-dir`, so the path created here and the path OMP is handed cannot drift.
@@ -620,7 +636,11 @@ class OmpSession:
         # deadline failure names, so a row says *which* turn stalled and under what bound rather than
         # leaving a reader to infer it from a prompt id.
         self.role = role
-        self.turn_deadline_s = timeout_s
+        # The *marker* that a timeout was our own per-turn bound (`turn_deadline`) rather than the
+        # provider failing (`provider_failure`, `deadline=None`). The tactic arms want the marker; file
+        # mode passes `cut_at_deadline=False`, because a per-turn cut there closes the session — it is a
+        # kill, not a chunk — so its timeouts are the provider client's bound and end the run.
+        self.turn_deadline_s = timeout_s if cut_at_deadline else None
         self.cmd = omp_command(
             system_prompt=system_prompt,
             session_root=self.session_root,
@@ -762,15 +782,18 @@ class OmpSession:
         act on and a silence that has to be diagnosed from process tables (plan D24).
         """
         remaining = deadline - time.monotonic()
-        timeout = self.turn_deadline_s
+        # The bound the *message* names is the session's call bound; the separate marker handed to
+        # `ProviderError` is what tells a per-turn cut (`turn_deadline`) from the provider failing
+        # (`provider_failure`), and is None where there is no per-turn deadline at all.
+        timeout = self.timeout_s
         if remaining <= 0:
             self.close()
-            raise ProviderError(0, self._deadline_message(describing, timeout))
+            raise ProviderError(0, self._deadline_message(describing, timeout), deadline=self.turn_deadline_s)
         try:
             line = self._lines.get(timeout=remaining)
         except queue.Empty:
             self.close()
-            raise ProviderError(0, self._deadline_message(describing, timeout)) from None
+            raise ProviderError(0, self._deadline_message(describing, timeout), deadline=self.turn_deadline_s) from None
         if line is None:
             raise ProviderError(0, f"omp exited while sending {describing}{self._stderr_tail()}")
         try:
@@ -831,6 +854,16 @@ class OmpSession:
     def _stderr_tail(self, lines: int = 20) -> str:
         tail = "\n".join(self._stderr[-lines:])
         return f"\nomp stderr:\n{tail}" if tail else ""
+
+    @property
+    def alive(self) -> bool:
+        """Whether the process is still there.
+
+        A caller that holds this session needs to ask before reusing it: a timeout or an exited
+        process closes it from the inside, and a holder that assumes it is still there will write into
+        a closed pipe and hear `omp is not running` on a turn that never had a chance.
+        """
+        return self._process is not None and self._process.poll() is None
 
     def close(self) -> None:
         """Stop the process: closing its stdin ends the session, and the tail is drained first."""
@@ -1127,6 +1160,11 @@ class OmpFileModel:
     the file edits, the closure oracle and the row. ``tools`` defaults to ``bash``, which is what the mode
     needs: the session edits the file and runs ``lake env lean`` on it.
 
+    It carries no prompt material of its own, and so takes none: the specification and the few-shot
+    examples are the *tactic* arms' inputs — they reach a prompt through ``user_message`` — whereas file
+    mode's message is assembled by the driver and this session's only framing is
+    ``FILE_MODE_SYSTEM_PROMPT``. A parameter this port never reads would be a claim that it does.
+
     One session, not one per arm: file mode has no arms. It is opened on the first :meth:`attempt`, so a
     driver that never prompts it starts no process, and :meth:`close` is what stops it.
     """
@@ -1134,19 +1172,18 @@ class OmpFileModel:
     def __init__(
         self,
         *,
-        specification: str,
         session_root: Path | str,
         cwd: Path | str,
-        examples: str | None = None,
         tools: str = "bash",
         selector: str = MODEL_SELECTOR,
         thinking: str = THINKING_LEVEL,
         binary: str = OMP_BIN,
-        timeout_s: float = TURN_TIMEOUT_S,
+        # The provider client's bound, not a per-turn deadline: file mode has no per-turn cut (D24 as
+        # re-ruled), because a cut closes the session and cannot be continued. A wedged request still
+        # ends the run, as `provider_failure` naming this bound.
+        timeout_s: float = PROVIDER_TIMEOUT_S,
         startup_timeout_s: float = STARTUP_TIMEOUT_S,
     ) -> None:
-        self.specification = specification
-        self.examples = prompt_examples() if examples is None else examples
         self.tools = tools
         self.selector = selector
         self.thinking = thinking
@@ -1213,8 +1250,13 @@ class OmpFileModel:
             self._session_obj = None
 
     def _session(self) -> OmpSession:
-        """The one session, started on first use (plan D26)."""
-        if self._session_obj is None:
+        """The one session, started on first use, and restarted if it died (plan D26).
+
+        A session closes itself when a turn times out or its process exits, and a port that kept handing
+        out the closed one would answer `omp is not running` on a turn that never had a chance. Asking
+        `alive` is what makes the next `attempt` a real retry rather than a eulogy.
+        """
+        if self._session_obj is None or not self._session_obj.alive:
             self._session_obj = OmpSession(
                 FILE_MODE_SYSTEM_PROMPT,
                 role="file",
@@ -1226,5 +1268,6 @@ class OmpFileModel:
                 binary=self.binary,
                 timeout_s=self.timeout_s,
                 startup_timeout_s=self.startup_timeout_s,
+                cut_at_deadline=False,
             )
         return self._session_obj

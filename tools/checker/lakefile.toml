@@ -1,0 +1,15 @@
+name = "axiom-checker"
+
+# See PROVENANCE.md. No dependencies: the checker needs only Lean's own environment API, so the build
+# is bare Lean core — there is no Mathlib here, and no `lake exe cache get`.
+defaultTargets = ["axiom-checker"]
+
+[[lean_lib]]
+name = "AxiomChecker"
+
+# The interpreter is linked for the same reason `tools/repl` links it: loading an olean's environment
+# extensions (`loadExts`) may evaluate imported extension data.
+[[lean_exe]]
+name = "axiom-checker"
+root = "AxiomChecker.Main"
+supportInterpreter = true

@@ -99,11 +99,13 @@ nix develop -c bash -c 'cd specs/tla/token-ring && tlc -workers 1 -config TokenR
 | 11 | 1.01 s | 202 753 | 33 792 | 17 |
 | 13 | 1.99 s | 1 118 209 | 159 744 | 19 |
 | 15 | 7.2 s | — | ≈3.4·10⁵ | — |
-| 17 | 33.4 s | — | ≈3.2·10⁶ | — |
+| 17 | 33.4 s | — | 3 342 336 | — |
+| 23 | 6 748.6 s | 3 472 883 713 | 289 406 976 | 91 |
 
-Distinct states grow ≈`2.2^N`; wall-clock doubles about every second node. That exponential is what
-Route B is being measured against, and it is why `N₀` is fixed per task by calibration rather than
-guessed.
+Distinct states grow ≈`2.2^N` (N=17→23 is ×86.6 against `2.2^6 ≈ ×113`); wall-clock tracks the state
+curve, not a flat doubling every second node — N=17→23 is ×202.6 in time against ×86.6 in states, ≈×2.3
+per state. That growth is what Route B is being measured against, and it is why `N₀` is fixed per task by
+calibration rather than guessed.
 
 The mutant — `TokenRingMutant.tla`, which drops the token-holding guard on `Enter` — is caught by TLC
 as required, with the counterexample trace:

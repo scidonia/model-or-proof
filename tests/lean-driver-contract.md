@@ -17,10 +17,11 @@ the repl process — the plan's "a scripted lean-repl responder, no real Lean").
   is `trivial`, and texts whose only `sorry` is in a `--` comment, a `/- … -/` block comment, or a
   string literal.
 - **When**: `count_unclosed` is applied to each.
-- **Then**: the count is positive for every spelling and for a `?ident` metavariable, zero for the clean
-  proof, zero for the comment/string-only mentions (including nested `/- … -/` and doc `/--`/`/-!`
-  comments), zero for `sorry` inside a longer identifier, and an unterminated literal must not hide a
-  real `sorry`.
+- **Then**: the count is positive for every spelling and for a `?ident` metavariable (`?h`, `?motive`;
+  the anonymous `?_` is **not** a hole — `refine ⟨?_, ?_⟩` is the ordinary constructor idiom and each
+  `?_` is discharged by the following tactics), zero for the clean proof, zero for the comment/string-only
+  mentions (including nested `/- … -/` and doc `/--`/`/-!` comments), zero for `sorry` inside a longer
+  identifier, and an unterminated literal must not hide a real `sorry`.
 - **Why**: protocol §8 — the artifact must have zero unclosed goals, and `admit`/`sorryAx`/`Admitted`
   are the same hole under other names; but a `sorry` mentioned only in prose must not refuse a genuinely
   closed proof (and lose its row).

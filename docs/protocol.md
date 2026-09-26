@@ -242,10 +242,13 @@ are asserted by `tests/human-baseline-contract.md`.
   | 11 | 1.01 s | 33 792 |
   | 13 | 1.99 s | 159 744 |
   | 15 | 7.2 s | ≈3.4·10⁵ |
-  | 17 | 33.4 s | ≈3.2·10⁶ |
+  | 17 | 33.4 s | 3 342 336 |
+  | 23 | 6 748.6 s | 289 406 976 |
 
-  Growth is ≈`2.2^N` distinct states: doubling the wall-clock roughly every +2 nodes. This is H2's
-  subject, and it is why `N₀` must be fixed per task by calibration.
+  Distinct states grow ≈`2.2^N` (N=17→23 is ×86.6 against `2.2^6 ≈ ×113`). Wall-clock tracks the state
+  curve, not a flat ×2 per +2 nodes: N=17→23 is ×202.6 in time against ×86.6 in states — ≈×2.3 per state,
+  a mild extra per-state slowdown at the top end. This is H2's subject, and it is why `N₀` must be fixed
+  per task by calibration.
 
 ## 8. Route B measurement procedure
 

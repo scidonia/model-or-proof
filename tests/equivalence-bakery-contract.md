@@ -26,11 +26,11 @@ network.
 - **Boundary**: the same file.
 - **When**: its text is read.
 - **Then**: it names the general theorem's Lean statement (`mutual_exclusion`) and states that the Lean
-  model neither strengthens an assumption nor weakens the goal; it states the `N₀` corollary is **deferred**
-  until Bakery's TLC calibration lands (the tier-1 instance is not yet fixed).
+  model neither strengthens an assumption nor weakens the goal; it names the `N₀` corollary
+  (`mutual_exclusion_n0`) at `N₀ = 9` — Bakery's TLC calibration landed there, so the tier-1 instance is
+  fixed.
 - **Why**: the two-tier framing (§2) and the no-strengthen/no-weaken guarantee (§4.1) must be tied to the
-  actual Lean statement; the deferral is recorded so a reader does not mistake a missing corollary for an
-  omission.
+  actual Lean statement; the corollary is named so a reader does not mistake its absence for an omission.
 
 ## Expected failure before implementation
 

@@ -1,0 +1,42 @@
+{
+  "artifact": "results/closures/token-ring/TokenRing-20260926T101642-r1.lean",
+  "artifact_sha256": "9c9922505658f74e261c7b12e937e1394a63c60a900db5137e9501b3fc79f4de",
+  "closure": {
+    "axiom_report": null,
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "closed": true,
+    "elaborates": true,
+    "integrity": true,
+    "outside_writes": null,
+    "rounds": 1,
+    "seed_intact": true,
+    "verdict": true
+  },
+  "digests_agree": null,
+  "mode": "file",
+  "omp_sessions": "results/omp/TokenRing-20260926T101642-r1",
+  "pristine_sha256": "e1d65f1a467ec21a04712c2d4b6cf19912cc92251ad682e1b04260f951b5cf4d",
+  "reverified_by_oracle": {
+    "agrees_with_row": true,
+    "axiom_report": "ok",
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "closed": true,
+    "elaborates": true,
+    "integrity": true,
+    "oracle": "harness.closure_oracle.check",
+    "verdict": true,
+    "why": "the row's verdict was recorded by the extractor before finding F1's fix; this is the same artifact checked by the fixed oracle"
+  },
+  "row": "results/proof.jsonl:48",
+  "row_artifact_sha256": null,
+  "task": "token-ring",
+  "tier": 2
+}

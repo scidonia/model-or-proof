@@ -124,24 +124,35 @@ def skip_quoted_identifier(text: str, start: int) -> int:
 
 
 def synthetic_hole_end(text: str, start: int) -> int | None:
-    """One past a synthetic hole opening at ``start`` (``?h``, ``?_``, ``?«x»``), or ``None``.
+    """One past a synthetic hole opening at ``start`` (``?h``, ``?«x»``), or ``None``.
 
     Lean's ``?name`` is a synthetic sorry: the goal is left to a metavariable, which the repl reports
     as ``contains metavariable(s)`` rather than as ``contains sorry``. It is a hole all the same, and
     the import-clean guard reads a module's source with no repl verdict to fall back on (plan D13), so
     it is counted here. The syntax is ``?`` followed by an identifier, so the name is read to its own
-    end (``?_uniq.123`` is the hole ``?_uniq`` and a projection) and may be a ``« … »`` quoted
-    identifier, which is one token like any other. ``?`` must be followed by a name to be a hole:
+    end (``?m.123`` is the hole ``?m`` and a projection) and may be a ``« … »`` quoted identifier,
+    which is one token like any other. ``?`` must be followed by a *letter* to be a hole: a bare ``?``,
+    a digit-named ``?1`` and the anonymous ``?_`` are other spellings and stay with the repl's verdict
+    — ``?_`` is the ordinary anonymous-constructor idiom (``refine ⟨?_, ?_⟩``), each hole becoming a
+    goal the following focusing discharges, and a surviving one shows up as ``sorryAx`` in the axiom
+    set, which is the authority this scan is a pre-filter for (plan D6, revised).
+
     ``admit?``, ``simp?`` and ``exact?`` end in ``?`` and are ordinary identifiers, which the scan
-    consumes before reaching this. A bare ``?``, a digit-named ``?1`` and a ``_`` placeholder are
-    other spellings and stay with the repl's verdict.
+    consumes before reaching this.
+
+    **This scan is a pre-filter and a diagnostic; the axiom check is the authority for closure.** A
+    hole that survives elaboration is `sorry`-backed, so it shows up as ``sorryAx`` in the axiom set
+    regardless of how the term was written — which is why the proxy can afford to leave ``?_`` to the
+    repl's verdict rather than guess at Lean's syntax. Read the two as layers, not as competing rules:
+    this one is cheap, needs no toolchain, and runs on a module source; the axiom set is what says the
+    proof is real.
     """
     if text[start] != "?" or start + 1 >= len(text):
         return None
     if text[start + 1] == "«":
         end = skip_quoted_identifier(text, start + 1)
         return end if end > start + 2 else None  # an unclosed « is not a name
-    if not (text[start + 1].isalpha() or text[start + 1] == "_"):
+    if not text[start + 1].isalpha():
         return None
     end = start + 2
     while end < len(text) and is_identifier_char(text[end]):

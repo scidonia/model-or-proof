@@ -19,10 +19,10 @@ What it does, in order:
    *added* are the loop's own work — a helper the model guessed and then proved — so they promote; a
    changed statement, a changed value or a dropped declaration is a rewrite no loop tactic can
    produce, and is refused rather than recorded as the new baseline (plan D5/D19).
-2. **Writes the three files together:** the seed itself, its sha256 in `seeds.json`, and the pristine
-   text in `baseline/<file>`. Doing all three is what keeps the next run restorable and its baseline
-   check honest: a bare `cp` leaves the record pinning the old text, and the next run would then report
-   the committed seed as a human's edit.
+2. **Writes the seed and its record:** the seed itself and its sha256 in `seeds.json`. The pristine text in
+   `baseline/<file>` is deliberately **left alone** — it keeps the `sorry` text forever, so every run
+   re-seeds from it and a promoted baseline cannot masquerade as a zero-turn "closed". Re-pinning it was the
+   old behaviour and it turned promotion into a measurement trap.
 3. **Runs `lake build`** through the harness's own runner, so the olean the tier-1 run loads reflects
    the promoted proof. A build that fails is loud — the tree keeps the promoted files, and the next run
    refuses on its own failed build rather than measuring a stale olean.
@@ -82,7 +82,31 @@ def recorded_sha256(artifact: Path, results: Path) -> str | None:
         artifacts = row.get("artifacts") or {}
         if artifacts.get("proof") == wanted:
             recorded = artifacts.get("artifact_sha256")
-    return recorded if isinstance(recorded, str) else None
+    if isinstance(recorded, str):
+        return recorded
+    # A closure copy has no row of its own: rows name the working copy under `.runs/`, and this file is the
+    # durable copy `route_b.write_closure_sidecar` wrote from the very snapshot the oracle checked. Its
+    # digest and the row identity behind it are in the sidecar beside it (finding F6), so a row written
+    # before `artifact_sha256` existed is still promotable — by the sidecar's evidence, not by skipping the
+    # check. A sidecar that records a disagreement is refused: the pair is not evidence of anything.
+    sidecar = artifact.with_suffix(".json")
+    if not sidecar.is_file():
+        return None
+    try:
+        evidence = json.loads(sidecar.read_text())
+    except json.JSONDecodeError:
+        return None
+    if route_b.relative(Path(str(evidence.get("artifact", "")))) != wanted:
+        return None
+    if evidence.get("digests_agree") is False:
+        print(
+            f"{wanted}'s sidecar records that its digest disagrees with the row's: nothing is promoted "
+            "from evidence that contradicts itself",
+            file=sys.stderr,
+        )
+        return None
+    digest = evidence.get("artifact_sha256")
+    return digest if isinstance(digest, str) else None
 
 
 def promote(artifact: Path, seed: Path, results: Path = DEFAULT_RESULTS) -> int:
@@ -144,7 +168,9 @@ def promote(artifact: Path, seed: Path, results: Path = DEFAULT_RESULTS) -> int:
     record = json.loads(record_path.read_text())
     record[seed.name] = digest
     record_path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
-    (seed.parent / route_b.BASELINE_DIR / seed.name).write_text(text)
+    # The pristine baseline is deliberately **not** re-pinned (the planner's ruling): `baseline/<file>` keeps
+    # the `sorry` text forever, so every run re-seeds from it. Re-pinning it would make the next tier-2 run
+    # copy a closed file and "close" in zero turns — a rig artefact wearing the shape of a result.
     try:
         build = route_b.run_lake_build(route_b.project_root(seed))
     except route_b.Refusal as refusal:
@@ -152,7 +178,7 @@ def promote(artifact: Path, seed: Path, results: Path = DEFAULT_RESULTS) -> int:
         return refusal.code
     print(
         f"promoted {route_b.relative(artifact)} into {route_b.relative(seed)} "
-        f"(sha256 {digest}), record and baseline re-pinned, lake build {build['seconds']}s"
+        f"(sha256 {digest}), record re-pinned, baseline left pristine, lake build {build['seconds']}s"
     )
     return 0
 
