@@ -145,10 +145,12 @@ already handles."*
   **Cost varies by problem**: the medians span **100.8 s to 970.8 s** across the tasks measured, so no
   single figure should be read as "the cost of a proof" — and the variation shows up between a task's
   own two cells as well as across tasks.
-- **Pending:** Bakery's **corollary** (pinned at `N₀ = 9`, awaiting its promotion) and the last of LCR's
-  tier-2 repetitions. EWD998's Lean model elaborates with its theorem unproved and its calibration sweep
-  running. Bakery's and LCR's **same-claim cost pairs** are un-run, so token-ring remains the only task
-  with that comparison measured — nothing here is estimated except where it says so. Wall-clock and cost
+- **Pending:** EWD998's theorem, gated on its calibration, and the four file-mode fixes the review's
+  cluster produced (the TLC `error` tail, per-run `metadir` isolation, and the two already landed). All
+  three same-claim pairs are now measured, and **they do not agree**: token-ring's favours the proof by
+  21.7× and Bakery's by 63.3× as marginal ratios, while **LCR's favours TLC by 37.8×** at the `N₀` its
+  budget allowed. See §10 — the pair is a property of where a task's instance falls relative to its own
+  crossover, not a verdict on the two methods. Wall-clock and cost
   are not interchangeable even within a cell: the fastest tier-1 run was among the most expensive, so any
   ratio here is a ratio of one sample of each. The multi-worker TLC re-run has been taken — 837.9 s at
   eight workers on an identical state count — and that is the figure §1 uses.
@@ -274,7 +276,7 @@ calibration instance to compare against. Its cells:
 | theorem, tier 2 | **closed**, 5 runs on one seed digest, one turn each: 79.7, 416.7, 444.4, 484.5, 610.1 s — median **444.4 s**, spread **7.7×**, cost median **$0.00062** |
 | mutant, tier 2 | **`no_progress`** → `fail_to_close`, 273.2 s, $0.0047 — the weakened `Enter` guard is never closed |
 | calibration | N = 3–10 single-worker; `n₀ = 9`, with the N = 10 cap row (7,200 s, `timeout`) as the evidence |
-| same-claim pair | **not yet run** — the tier-1 corollary against the N = 10 TLC row |
+| same-claim pair | **measured** — see below |
 
 Two things this task adds that token-ring could not.
 
@@ -292,6 +294,13 @@ why no figure in this report is quoted without its range.
 and that is not an anomaly. It paid for six rounds of the same refusal before `no_progress`
 ended it, and those rounds are themselves the evidence that the detector was needed.
 
+**The same-claim pair, measured.** Bakery's corollary against TLC's N = 9 row, which
+enumerates 238,803,200 distinct states: **76.6 s against 4,847.7 s**, and $0.000476 against
+$0.26932. As a *marginal* ratio — the corollary alone — that is 63.3× faster and 565×
+cheaper. On the honest basis §7 insists on, the general theorem plus its instantiation at
+521 s against 4,847.7 s, it is **9.3×**. The marginal figure should not be quoted without
+the total, which is the same error class as quoting the corollary's 26 s for token-ring.
+
 ## 10. LCR: the third task
 
 Leader election on a unidirectional ring, with the same-claim target chosen to be `Mutex`-shaped
@@ -305,7 +314,7 @@ rather than forking a second apparatus. That choice is the reason this rung was 
 | corollary, tier 1 | **closed**, 5 runs on one seed digest: 79.2, 94.3, 101.0, 102.8, 178.7 s — median **101.0 s**, cost median **$0.00042** |
 | mutant, tier 2 | **`no_progress`** → `fail_to_close`, 502.7 s — the weakened `ElectSelf` never closed, matching the TLA+ side's `UniqueLeader` violation at depth 3 |
 | calibration | N = 3–10 single-worker; `n₀ = 10`, the first instance where nothing approached the cap |
-| same-claim pair | **not yet run** — the corollary against the N = 10 TLC row |
+| same-claim pair | **measured, and TLC wins** — see below |
 | audit | `docs/equivalence-lcr.md` |
 
 **The corollary being cheaper than the theorem holds here too** — 101.0 s against 216.0 s, a
@@ -318,6 +327,20 @@ asserted: O(N²) is what the algorithm *sends*, not what TLC *enumerates*. And t
 never approached its cap, which is the first time the 2 h bound was not the constraint bounding
 the result — worth knowing, since a cap that is not binding should not be quoted as though it
 were.
+
+**The same-claim pair, and it goes the other way.** LCR's corollary against TLC's N = 10 row,
+which enumerates 177,147 distinct states: **101.0 s against 2.670 s** — TLC faster by **37.8×**
+— and $0.000421 against $0.00015, TLC cheaper.
+
+This is the first task in the set where the pair favours model checking, and the reason is the
+calibration's own curve. LCR enumerates 177 *thousand* states at N = 10 where token-ring
+enumerates 289 *million* at N = 23, so its crossover sits above the N₀ the calibration chose.
+"The proof beats model checking" is therefore not a property of the two methods; it is a
+property of where a task's instance falls relative to its own crossover — and N₀ is chosen to
+sit inside the *loop's* budget, which is not the same thing as being near that crossing. A task
+whose crossover is high will show a pair that favours TLC at whatever N₀ the budget allows,
+and reporting that pair as a verdict on the method would be wrong in the same way as reading a
+single cell's median as the cost of a proof.
 
 **One observation recorded as a hypothesis, not a finding.** The two theorem rows without a
 closure copy are the two slowest runs (881 s and 971 s against a 148–216 s cluster), and the
