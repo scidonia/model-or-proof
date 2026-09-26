@@ -1,0 +1,45 @@
+tlc-workers1-cleanup-config/home/gavin/dev/model-or-proof/specs/tla/ewd998/EWD998N4.cfg/home/gavin/dev/model-or-proof/specs/tla/ewd998/EWD998.tla
+
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 2 and seed -8688233304197494325 with 1 worker on 20 cores with 14247MB heap and 64MB offheap memory (Linux 6.8.0-85-generic amd64, Oracle Corporation 1.8.0_504 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/EWD998.tla
+Parsing file /tmp/Integers.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/Functions.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/SequencesExt.tla
+Parsing file /tmp/Randomization.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/Folds.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/FiniteSetsExt.tla
+Parsing file /tmp/Bags.tla
+Parsing file /tmp/TLC.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/AsyncTerminationDetection.tla
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module Folds
+Semantic processing of module Functions
+Semantic processing of module FiniteSetsExt
+Semantic processing of module TLC
+Semantic processing of module Bags
+Semantic processing of module SequencesExt
+Semantic processing of module Randomization
+Semantic processing of module AsyncTerminationDetection
+Semantic processing of module EWD998
+Starting... (2026-09-26 23:29:06)
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Computed 16 initial states...
+Computed 32 initial states...
+Computed 64 initial states...
+Computed 128 initial states...
+Computed 256 initial states...
+Computed 512 initial states...
+Finished computing initial states: 1024 distinct states generated at 2026-09-26 23:29:06.
+Progress(5) at 2026-09-26 23:29:09: 607,643 states generated (607,643 s/min), 201,981 distinct states found (201,981 ds/min), 147,352 states left on queue.
+Error: when reading the disk (StatePoolReader.run):
+/home/gavin/dev/model-or-proof/specs/tla/ewd998/states/26-09-26-23-29-06/132 (No such file or directory)

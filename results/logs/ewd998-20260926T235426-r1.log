@@ -1,0 +1,67 @@
+tlc-workers1-cleanup-config/home/gavin/dev/model-or-proof/specs/tla/ewd998/EWD998N4.cfg/home/gavin/dev/model-or-proof/specs/tla/ewd998/EWD998.tla
+
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 87 and seed 5413763172795299832 with 1 worker on 20 cores with 14247MB heap and 64MB offheap memory (Linux 6.8.0-85-generic amd64, Oracle Corporation 1.8.0_504 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/EWD998.tla
+Parsing file /tmp/Integers.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/Functions.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/SequencesExt.tla
+Parsing file /tmp/Randomization.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/Folds.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/FiniteSetsExt.tla
+Parsing file /tmp/Bags.tla
+Parsing file /tmp/TLC.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/AsyncTerminationDetection.tla
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module Folds
+Semantic processing of module Functions
+Semantic processing of module FiniteSetsExt
+Semantic processing of module TLC
+Semantic processing of module Bags
+Semantic processing of module SequencesExt
+Semantic processing of module Randomization
+Semantic processing of module AsyncTerminationDetection
+Semantic processing of module EWD998
+Starting... (2026-09-26 23:31:27)
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Computed 16 initial states...
+Computed 32 initial states...
+Computed 64 initial states...
+Computed 128 initial states...
+Computed 256 initial states...
+Computed 512 initial states...
+Finished computing initial states: 1024 distinct states generated at 2026-09-26 23:31:28.
+Progress(5) at 2026-09-26 23:31:31: 628,392 states generated (628,392 s/min), 207,085 distinct states found (207,085 ds/min), 150,290 states left on queue.
+Progress(8) at 2026-09-26 23:32:31: 19,872,828 states generated (19,244,436 s/min), 3,325,293 distinct states found (3,118,208 ds/min), 1,785,636 states left on queue.
+Progress(8) at 2026-09-26 23:33:31: 39,241,500 states generated (19,368,672 s/min), 5,702,664 distinct states found (2,377,371 ds/min), 2,668,138 states left on queue.
+Progress(9) at 2026-09-26 23:34:31: 58,093,612 states generated (18,852,112 s/min), 7,945,731 distinct states found (2,243,067 ds/min), 3,312,693 states left on queue.
+Progress(10) at 2026-09-26 23:35:31: 76,875,504 states generated (18,781,892 s/min), 9,778,049 distinct states found (1,832,318 ds/min), 3,779,940 states left on queue.
+Progress(10) at 2026-09-26 23:36:31: 95,583,330 states generated (18,707,826 s/min), 11,936,024 distinct states found (2,157,975 ds/min), 4,267,527 states left on queue.
+Progress(10) at 2026-09-26 23:37:31: 114,811,324 states generated (19,227,994 s/min), 13,749,469 distinct states found (1,813,445 ds/min), 4,583,358 states left on queue.
+Progress(11) at 2026-09-26 23:38:31: 133,622,649 states generated (18,811,325 s/min), 15,724,494 distinct states found (1,975,025 ds/min), 4,982,577 states left on queue.
+Progress(11) at 2026-09-26 23:39:31: 151,896,942 states generated (18,274,293 s/min), 17,718,992 distinct states found (1,994,498 ds/min), 5,360,843 states left on queue.
+Progress(11) at 2026-09-26 23:40:31: 169,979,117 states generated (18,082,175 s/min), 19,347,758 distinct states found (1,628,766 ds/min), 5,562,495 states left on queue.
+Progress(12) at 2026-09-26 23:41:31: 188,182,446 states generated (18,203,329 s/min), 21,284,251 distinct states found (1,936,493 ds/min), 5,913,956 states left on queue.
+Progress(12) at 2026-09-26 23:42:31: 206,603,334 states generated (18,420,888 s/min), 23,278,389 distinct states found (1,994,138 ds/min), 6,293,069 states left on queue.
+Progress(12) at 2026-09-26 23:43:31: 224,973,292 states generated (18,369,958 s/min), 25,193,512 distinct states found (1,915,123 ds/min), 6,655,888 states left on queue.
+Progress(13) at 2026-09-26 23:44:31: 243,264,057 states generated (18,290,765 s/min), 26,738,096 distinct states found (1,544,584 ds/min), 6,783,399 states left on queue.
+Progress(13) at 2026-09-26 23:45:31: 261,555,849 states generated (18,291,792 s/min), 28,869,450 distinct states found (2,131,354 ds/min), 7,242,575 states left on queue.
+Progress(13) at 2026-09-26 23:46:31: 279,629,483 states generated (18,073,634 s/min), 30,823,278 distinct states found (1,953,828 ds/min), 7,598,809 states left on queue.
+Progress(13) at 2026-09-26 23:47:31: 297,616,476 states generated (17,986,993 s/min), 32,716,293 distinct states found (1,893,015 ds/min), 7,949,621 states left on queue.
+Progress(13) at 2026-09-26 23:48:31: 316,037,485 states generated (18,421,009 s/min), 34,365,345 distinct states found (1,649,052 ds/min), 8,169,796 states left on queue.
+Progress(14) at 2026-09-26 23:49:31: 334,200,708 states generated (18,163,223 s/min), 36,368,777 distinct states found (2,003,432 ds/min), 8,539,109 states left on queue.
+Progress(14) at 2026-09-26 23:50:31: 352,534,993 states generated (18,334,285 s/min), 38,271,989 distinct states found (1,903,212 ds/min), 8,822,476 states left on queue.
+Progress(14) at 2026-09-26 23:51:31: 370,705,191 states generated (18,170,198 s/min), 40,198,752 distinct states found (1,926,763 ds/min), 9,158,762 states left on queue.
+Progress(14) at 2026-09-26 23:52:31: 388,671,371 states generated (17,966,180 s/min), 42,017,698 distinct states found (1,818,946 ds/min), 9,442,045 states left on queue.
+Progress(14) at 2026-09-26 23:53:31: 406,730,878 states generated (18,059,507 s/min), 43,634,504 distinct states found (1,616,806 ds/min), 9,628,381 states left on queue.
+Error: when reading the disk (StatePoolReader.run):
+/home/gavin/dev/model-or-proof/specs/tla/ewd998/states/26-09-26-23-31-27/4319 (No such file or directory)

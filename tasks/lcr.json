@@ -1,0 +1,54 @@
+{
+  "name": "lcr",
+  "system": "LeLann–Chang–Roberts leader election on a unidirectional ring",
+  "property": {
+    "name": "UniqueLeader",
+    "kind": "safety",
+    "statement": "at most one process is ever a leader"
+  },
+  "spec": "specs/tla/lcr/LCR.tla",
+  "mutant": {
+    "spec": "specs/tla/lcr/LCRMutant.tla",
+    "config": "specs/tla/lcr/LCRMutant.cfg"
+  },
+  "instances": [
+    {
+      "param_N": 3,
+      "config": "specs/tla/lcr/LCR.cfg"
+    },
+    {
+      "param_N": 4,
+      "config": "specs/tla/lcr/LCRN4.cfg"
+    },
+    {
+      "param_N": 5,
+      "config": "specs/tla/lcr/LCRN5.cfg"
+    },
+    {
+      "param_N": 6,
+      "config": "specs/tla/lcr/LCRN6.cfg"
+    },
+    {
+      "param_N": 7,
+      "config": "specs/tla/lcr/LCRN7.cfg"
+    },
+    {
+      "param_N": 8,
+      "config": "specs/tla/lcr/LCRN8.cfg"
+    },
+    {
+      "param_N": 9,
+      "config": "specs/tla/lcr/LCRN9.cfg"
+    },
+    {
+      "param_N": 10,
+      "config": "specs/tla/lcr/LCRN10.cfg"
+    }
+  ],
+  "n0": 10,
+  "budgets": {
+    "wall_clock_s": 7200,
+    "usd": 50
+  },
+  "repetitions": 5
+}

@@ -1,0 +1,20 @@
+tlc-workers1-cleanup-config/home/gavin/dev/model-or-proof/specs/tla/ewd998/EWD998Mutant.cfg/home/gavin/dev/model-or-proof/specs/tla/ewd998/EWD998Mutant.tla
+
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 43 and seed 5483245553276949530 with 1 worker on 20 cores with 14247MB heap and 64MB offheap memory (Linux 6.8.0-85-generic amd64, Oracle Corporation 1.8.0_504 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/EWD998Mutant.tla
+Lexical error at line 94, column 24.  Encountered: "`" (96), after : ""
+
+Fatal errors while parsing TLA+ spec in file EWD998Mutant
+
+tla2sany.semantic.AbortException
+*** Abort messages: 1
+
+In module EWD998Mutant
+
+Could not parse module EWD998Mutant from file EWD998Mutant.tla
+
+
+Starting... (2026-09-26 23:29:51)
+Error: Parsing or semantic analysis failed.
+Finished in 00s at (2026-09-26 23:29:51)
