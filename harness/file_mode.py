@@ -103,8 +103,9 @@ def file_prompt(working: pathlib.Path, *, statement: str, feedback: str | None =
         "   in particular no `sorry` or `sorryAx` may remain anywhere in the file.",
         "",
         "You have a shell with `lean` on your path, so you can check all three yourself before you stop.",
-        "Work inside the current directory only: a file written anywhere else in the package is a write",
-        "outside the working copy, and the run's verdict is withheld when that happens.",
+        "Work inside `.runs/` — the directory holding your working file — and nowhere else. A file written",
+        "anywhere else in the package is a write outside the working copy, and the run's verdict is",
+        "withheld when that happens, so the proof would not count even if it were correct.",
     ]
     if feedback:
         lines += ["", "The previous round did not close it. What the check reported:", "", feedback]
@@ -465,6 +466,22 @@ def run_file(
             and not watch_blind
             and closure_oracle.verdict(closure_result, seed_intact=seed_intact)
         ),
+        # Why the final judgement was withheld, when it was (planner's ruling). `outcome` answers "how did
+        # the loop stop" and `verdict` answers "is this a proof, boundary conditions included" — two
+        # different questions, so a reader meeting `outcome: closed` beside `verdict: False` needs to see
+        # that a boundary condition withheld it rather than that the oracle refused the proof. Empty on a
+        # run whose verdict stands, which is the ordinary case.
+        "withheld": [
+            name
+            for name, blocked in (
+                ("seed_intact", not seed_intact),
+                ("oracle", not (closure_result and closure_oracle.verdict(closure_result, seed_intact=seed_intact))),
+                ("outside_writes", bool(outside_writes)),
+                ("outside_events", bool(outside_events)),
+                ("watch_blind", bool(watch_blind)),
+            )
+            if blocked
+        ],
         "rounds": rounds,
         # How much of the run was repetition rather than work (plan D24, as ruled): consecutive rounds whose
         # check result and candidate bytes were identical. Zero on a run that never repeated itself, and the
