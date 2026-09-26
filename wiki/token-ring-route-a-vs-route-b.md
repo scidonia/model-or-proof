@@ -292,6 +292,42 @@ why no figure in this report is quoted without its range.
 and that is not an anomaly. It paid for six rounds of the same refusal before `no_progress`
 ended it, and those rounds are themselves the evidence that the detector was needed.
 
+## 10. LCR: the third task
+
+Leader election on a unidirectional ring, with the same-claim target chosen to be `Mutex`-shaped
+— `card {i | leader i} ≤ 1`, at most one leader — so the oracle's theorem/definitions split,
+the cell identity, the `no_progress` outcome and the mutant mapping carried over unchanged
+rather than forking a second apparatus. That choice is the reason this rung was cheap.
+
+| | LCR |
+|---|---|
+| theorem, tier 2 | **closed**, 5 runs on one seed digest, one turn each: 148.0, 184.3, 216.0, 881.1, 970.8 s — median **216.0 s**, cost median **$0.00044** |
+| corollary, tier 1 | **closed**, 5 runs on one seed digest: 79.2, 94.3, 101.0, 102.8, 178.7 s — median **101.0 s**, cost median **$0.00042** |
+| mutant, tier 2 | **`no_progress`** → `fail_to_close`, 502.7 s — the weakened `ElectSelf` never closed, matching the TLA+ side's `UniqueLeader` violation at depth 3 |
+| calibration | N = 3–10 single-worker; `n₀ = 10`, the first instance where nothing approached the cap |
+| same-claim pair | **not yet run** — the corollary against the N = 10 TLC row |
+| audit | `docs/equivalence-lcr.md` |
+
+**The corollary being cheaper than the theorem holds here too** — 101.0 s against 216.0 s, a
+factor of 2.1, against token-ring's 4.0 and Bakery's 5.8. Instantiating a general theorem is a
+small fraction of proving it, consistently.
+
+**Two things this task corrected in the plan rather than confirmed.** The state curve is
+*geometric*, ~×3.3 per node with the ratios converging near 3.24, not the quadratic the plan
+asserted: O(N²) is what the algorithm *sends*, not what TLC *enumerates*. And the calibration
+never approached its cap, which is the first time the 2 h bound was not the constraint bounding
+the result — worth knowing, since a cap that is not binding should not be quoted as though it
+were.
+
+**One observation recorded as a hypothesis, not a finding.** The two theorem rows without a
+closure copy are the two slowest runs (881 s and 971 s against a 148–216 s cluster), and the
+same direction appears on Bakery. But Bakery's tier-1 cell is the fastest in the set and lost
+three of five, so duration is not the mechanism; the variable that fits both is which *file* the
+model is working on — the cells that probe are the ones whose proof needed an axiom or
+counterexample check, and duration follows from that rather than causing it. Two cells is not
+enough to settle it, and `outside_events` is on every row so the next probing cell joins the
+comparison for free.
+
 ## Provenance
 
 | Number | Where it comes from |
