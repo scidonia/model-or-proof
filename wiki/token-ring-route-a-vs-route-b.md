@@ -252,8 +252,11 @@ changes what the model is told, not what is verified. Nor does any of this make 
 **Why a rate rather than a run.** Closure is stochastic, so the unit of evidence is a cell of `R ≥ 5`
 runs sharing one seed digest, and rows from different configurations are never pooled — the
 configuration is the digest the rows carry, not the path they name, because a promotion or a seed fix
-rewrites paths that live rows still point at. The complement is the negative control: a run on the
-task's mutant must *fail* to close, or the rig is what is being measured rather than the prover.
+rewrites paths that live rows still point at. The complement is the negative control, and it runs on
+both sides: a run on the task's *mutant* must *fail to close* the weakened model, or the rig is what is
+being measured rather than the prover; and the refutation arm, handed a statement that is *false*, must
+*refute* it rather than prove it — the tactic battery's mutant rows record four `refuted` and one
+`timeout`, the same guarantee approached from the other direction.
 
 ## Provenance
 
