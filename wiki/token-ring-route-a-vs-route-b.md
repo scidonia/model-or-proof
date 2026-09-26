@@ -1,8 +1,10 @@
-# Token-ring mutual exclusion: three routes, side by side
+# Three routes, side by side
 
-**Status:** first results, 2026-09-26. Working tree at commit `ea2f50b` plus the file-mode fixes.
-Every number below traces to a row or artifact named in *Provenance*; nothing here is estimated
-except where it says so.
+Token-ring mutual exclusion, with Bakery as a second task and LCR built behind it.
+
+**Status:** first results, 2026-09-26. Token-ring and Bakery are complete — both cells each — and
+LCR is built with its runs in progress. Every number below traces to a row or artifact named in
+*Provenance*; nothing here is estimated except where it says so.
 
 **The property, on all three routes:** `Mutex` — *at most one node is in its critical section at any
 time*. TLC checks it as an invariant of `specs/tla/token-ring/TokenRing.tla`; the Lean port states it
