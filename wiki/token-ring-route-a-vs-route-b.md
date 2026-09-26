@@ -140,8 +140,9 @@ already handles."*
 - **Measured:** Route A at N=3 (5 runs) and N=23 (1 run, deterministic tool); Route B **tier 2** — the
   general theorem — for token-ring (6 closures, median **104.8 s** / $0.00033), Bakery (5 closures,
   median **444.4 s** / $0.00062) and LCR (5 closures, median **216.0 s**); **tier 1** — the
-  same-claim corollary — for token-ring (7 closures, median **38.5 s**) and LCR (5 closures, median
-  **101.0 s** / $0.00042); the negative controls on both sides, holding on three tasks.
+  same-claim corollary — for token-ring (7 closures, median **38.5 s**), Bakery (5 closures, median
+  **76.6 s** / $0.00048) and LCR (5 closures, median **101.0 s** / $0.00042); the negative controls on
+  both sides, holding on three tasks.
   **Cost varies by problem**: the theorem medians span **104.8 s to 444.4 s** across the three tasks, so no
   single figure should be read as "the cost of a proof" — and the variation shows up between a task's
   own two cells as well as across tasks.
