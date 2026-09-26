@@ -42,8 +42,18 @@ from harness.result import COST_BASIS  # noqa: E402  (the row's cost_basis defau
 DEFAULT_TOOLS = "bash"
 
 #: What the file-mode message carries, in order (finding F7): one list, used by the message and recorded in
-#: the row, so the setup cannot claim sections the session never saw.
-FILE_MODE_PROMPT_SECTIONS = ("specification", "statement", "working file")
+#: the row, so the setup cannot claim sections the session never saw. "closure criteria" is the grading
+#: contract from plan D26 — the three things the oracle decides on, stated before the model starts.
+FILE_MODE_PROMPT_SECTIONS = ("specification", "statement", "working file", "closure criteria")
+
+#: How many consecutive rounds with an *identical* check result and a *byte-identical* working file end the
+#: run as `no_progress`, distinct from `timeout` (plan D24's round-boundary decision, ruled 2026-09-26).
+#: The degenerate case is a false statement: the mutant control ran 94 rounds reporting `sorryAx` with the
+#: file untouched, turn times collapsing from 117 s to 2 s. Five is deliberately conservative — the same
+#: axioms *and* the same bytes, not merely slow progress — because a detector that fires on a converging
+#: run would end real work. It is not a cut: the per-turn deadline stays gone, and this reads facts the
+#: round boundary already has.
+NO_PROGRESS_ROUNDS = 5
 
 
 
@@ -68,13 +78,33 @@ def statement_of(pristine: str, theorem: str | None = None) -> str:
 
 
 def file_prompt(working: pathlib.Path, *, statement: str, feedback: str | None = None) -> str:
-    """The turn's message: the file to close, and what the last round said if this is a retry."""
+    """The turn's message: what closes the theorem, and what the last round said if this is a retry.
+
+    The three criteria are the *grading contract* (plan D26), stated before the model starts rather than only
+    in the check's report after a failed round. They are what the oracle will decide on and they say nothing
+    about how to prove the theorem — a contract, not a hint. File mode hands the session a shell with `lean`
+    on its path, so the model can check all three itself before it stops; the point is to convert
+    fail-then-retry into a self-check. The oracle stays the only authority: no verdict and no measurement
+    changes, and a run that ignored these lines would be graded exactly as before.
+    """
     lines = [
         "The statement under test:",
         "",
         statement.strip(),
         "",
         f"Your working file: {working.name} (in the current directory).",
+        "",
+        "It closes only if all three of these hold, and they are exactly what the check decides:",
+        "",
+        "1. The file elaborates.",
+        "2. The statement above it, and every definition before that, are byte-identical to the seed:",
+        "   replace the `sorry` and nothing else, up to and including `:=`.",
+        "3. What you prove depends on no axioms beyond `propext`, `Classical.choice` and `Quot.sound` —",
+        "   in particular no `sorry` or `sorryAx` may remain anywhere in the file.",
+        "",
+        "You have a shell with `lean` on your path, so you can check all three yourself before you stop.",
+        "Work inside the current directory only: a file written anywhere else in the package is a write",
+        "outside the working copy, and the run's verdict is withheld when that happens.",
     ]
     if feedback:
         lines += ["", "The previous round did not close it. What the check reported:", "", feedback]
@@ -234,6 +264,10 @@ def run_file(
     # The bytes the oracle last checked, taken once per round and never reread (see the check site): the row's
     # digest and the closure copy both come from this, so nothing can be swapped in between.
     candidate: str | None = None
+    # The round-boundary repetition signal (plan D24, as ruled): the previous round's check result and
+    # candidate digest, and how many consecutive rounds have matched it exactly.
+    previous_signature: tuple | None = None
+    no_progress_rounds = 0
     # The working-copy-only boundary, observed rather than enforced: no unprivileged user namespaces on this
     # host, so `harness.outside_watch` watches the package the shell can reach and records every event outside
     # the working copy. One watch for the whole run, so no round can write outside it unseen.
@@ -274,6 +308,10 @@ def run_file(
             # continued). Every provider failure therefore ends the run, which is what the row records.
             error = {"kind": provider_failure_kind(failure), "status": failure.status, "message": failure.message}
             outcome = "error"
+            # The turn failed, so no round end will run: copy what it wrote before the run ends. This is
+            # the path where the evidence matters most — a cut or a dead session is exactly the case that
+            # leaves nothing behind otherwise.
+            heartbeat(f"file {label}: {preserve_in_progress(working, run_dir)}")
             break
         finally:
             stop.set()
@@ -322,6 +360,36 @@ def run_file(
         )
         if closure_oracle.verdict(closure_result, seed_intact=seed_intact):
             outcome = "closed"
+            break
+        # The repetition signal (plan D24, as ruled): a round is *the same* as the last when the check
+        # reported the same thing *and* the candidate's bytes are identical. Both facts are already in hand
+        # at a round boundary, so this adds no observation — and requiring both is what keeps it off a
+        # converging run, where the file changes even when a round fails. Repeated rounds end the run as
+        # `no_progress` rather than running the budget down: "repeated itself" and "tried for two hours" are
+        # different facts about the model, and the row should say which happened.
+        signature = (
+            closure_result["integrity"],
+            closure_result["elaborates"],
+            closure_result["closed"],
+            tuple(sorted(closure_result["axioms"] or ())),
+            closure_oracle.sha256_text(candidate),
+        )
+        no_progress_rounds = no_progress_rounds + 1 if signature == previous_signature else 0
+        previous_signature = signature
+        if no_progress_rounds >= NO_PROGRESS_ROUNDS:
+            outcome = "no_progress"
+            error = {
+                "kind": "no_progress",
+                "message": (
+                    f"the check reported the same result and the file was byte-identical for "
+                    f"{no_progress_rounds + 1} consecutive rounds: the run repeated itself rather than "
+                    "making progress"
+                ),
+            }
+            heartbeat(
+                f"file {label}: no progress for {no_progress_rounds + 1} rounds "
+                f"({closure_result['axioms']}); ending as no_progress"
+            )
             break
         # The next round's feedback is what the oracle saw, verbatim where it is Lean's own words: the
         # model fixes what the check reported, not what the harness thinks of it.
@@ -398,6 +466,11 @@ def run_file(
             and closure_oracle.verdict(closure_result, seed_intact=seed_intact)
         ),
         "rounds": rounds,
+        # How much of the run was repetition rather than work (plan D24, as ruled): consecutive rounds whose
+        # check result and candidate bytes were identical. Zero on a run that never repeated itself, and the
+        # count that ended a `no_progress` run, so a reader sees *why* the run stopped rather than inferring
+        # it from the outcome name alone.
+        "no_progress_rounds": no_progress_rounds,
         # What the checks were *told* to check, as opposed to what they assumed: the module is the seed's own
         # file stem and the theorem its fully-qualified name, both read off the seed. A reader can see which
         # declaration the axioms belong to, the same way `pristine_sha256` says which text was pinned.

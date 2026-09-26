@@ -97,6 +97,56 @@ def Mutex (s : State N) : Prop :=
 /-- **Mutual exclusion**, in general (tier 2, protocol §2): every state reachable under `Spec` has at
 most one node in its critical section — TLA+ `Spec => []Mutex`. -/
 theorem mutex (hN : 2 ≤ N) (s : State N) (hs : Reachable hN s) : Mutex s := by
-  sorry
+  have hInv : ∀ i, s.pc i = Phase.crit → s.token = i := by
+    induction hs with
+    | init hInit =>
+        rename_i s₀
+        intro i hcrit
+        have hpc : s₀.pc i = Phase.idle := by
+          rw [hInit.2]
+        rw [hpc] at hcrit
+        cases hcrit
+    | step =>
+        rename_i _hr hstep ih
+        intro j hcrit
+        rcases hstep with hnext | rfl
+        · rcases hnext with ⟨i, h⟩
+          rcases h with hreq | henter | hrel
+          · rcases hreq with ⟨hpc, hpc_t, htok⟩
+            by_cases hji : j = i
+            · subst j
+              rw [hpc_t, Function.update_self] at hcrit
+              cases hcrit
+            · rw [hpc_t, Function.update_of_ne hji] at hcrit
+              rw [htok]
+              exact ih j hcrit
+          · rcases henter with ⟨hpc, htok, hpc_t, htok_t⟩
+            by_cases hji : j = i
+            · subst j
+              rw [htok_t, htok]
+            · rw [hpc_t, Function.update_of_ne hji] at hcrit
+              rw [htok_t]
+              exact ih j hcrit
+          · rcases hrel with ⟨hpc, hpc_t, htok⟩
+            by_cases hji : j = i
+            · subst j
+              rw [hpc_t, Function.update_self] at hcrit
+              cases hcrit
+            · rw [hpc_t, Function.update_of_ne hji] at hcrit
+              have hs_j := ih j hcrit
+              have hs_i := ih i hpc
+              have h_eq : i = j := hs_i.symm.trans hs_j
+              exfalso
+              exact hji h_eq.symm
+        · exact ih j hcrit
+  classical
+  unfold Mutex
+  rw [Finset.card_le_one]
+  intro i hi j hj
+  have hci : s.pc i = Phase.crit := (Finset.mem_filter.mp hi).2
+  have hcj : s.pc j = Phase.crit := (Finset.mem_filter.mp hj).2
+  have hti := hInv i hci
+  have htj := hInv j hcj
+  exact hti.symm.trans htj
 
 end TokenRing

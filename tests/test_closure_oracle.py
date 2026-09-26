@@ -39,6 +39,7 @@ def test_sorry_seed_compiles_but_is_not_closed():
 def test_bogus_body_reports_the_error_not_the_axiom_report():
     """Scenario 4: the model-facing `errors` carries the unknown identifier, not the axiom/linter tail."""
     seed_text = BASELINE.read_text()
+    assert "sorry" in seed_text, "the fixture's marker is gone; the candidate would not differ from the seed"
     candidate = "exact bogus_tactic_name".join(seed_text.rsplit("sorry", 1))
     result = check(candidate, pristine=seed_text, package=PACKAGE, module=MODULE, theorem=THEOREM)
     assert result["integrity"] is True, result

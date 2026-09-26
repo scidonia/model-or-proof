@@ -95,6 +95,11 @@ The untouched seed's `errors` is **empty** (its `sorry` warning is dropped) whil
 
 ## Expected failure before implementation
 
+A fixture that *edits* a seed must **refuse if its marker is absent** — a candidate built by
+`rsplit("sorry", 1)` that matches nothing is the pristine seed, so every assertion about the edit is
+vacuous and the test can report success while checking nothing. The guard is one line
+(`assert "sorry" in seed_text`), and it turns a silent no-edit into a red at the point of cause.
+
 `closure_oracle` does not exist yet → `ModuleNotFoundError` / `ImportError` (the "does not exist yet"
 row). Observed red run: recorded by the coder once observed.
 

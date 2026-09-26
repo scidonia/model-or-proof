@@ -5,12 +5,19 @@ name = "token-ring"
 # Provisioning left the library targets out, so `lake build` had nothing to build. These are the
 # Route B artifacts, one seed per tier (protocol §2): the model + the general theorem, the `N₀`
 # corollary over it, and the mutant that must not close (the negative control, plan step 7).
+# `TokenRingProved` is where promotion writes the proved proof (never over the seed's own path), so it
+# is a library target too: without an entry here the module compiles to nothing and every `import` of
+# it fails with "unknown module prefix" — loudly, at the build, which is the point, but a promotion
+# that leaves the tree unbuildable has not finished its job.
 # `defaultTargets` has to precede the `[[…]]` tables below: after `[[require]]` starts, a bare key
 # belongs to that dependency table.
-defaultTargets = ["TokenRing", "TokenRingN0", "TokenRingMutant"]
+defaultTargets = ["TokenRing", "TokenRingProved", "TokenRingN0", "TokenRingMutant"]
 
 [[lean_lib]]
 name = "TokenRing"
+
+[[lean_lib]]
+name = "TokenRingProved"
 
 [[lean_lib]]
 name = "TokenRingN0"

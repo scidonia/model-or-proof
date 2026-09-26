@@ -20,6 +20,6 @@ abbrev N₀ : ℕ := 23
 /-- **Mutual exclusion at `N₀`** (tier 1): the general `mutex` at the task's instance — the same
 reachability hypothesis and the same `Mutex`, at `N = 23`. -/
 theorem mutex_n0 (s : State N₀) (hs : Reachable (by norm_num : 2 ≤ N₀) s) : Mutex s := by
-  sorry
+  exact mutex (by norm_num : 2 ≤ N₀) s hs
 
 end TokenRing

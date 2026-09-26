@@ -1,5 +1,6 @@
 {
   "TokenRing.lean": "e1d65f1a467ec21a04712c2d4b6cf19912cc92251ad682e1b04260f951b5cf4d",
   "TokenRingMutant.lean": "4ed8fc8aba3677002a3f6340d8a32023c676d6c201992c986950b759d061c97c",
-  "TokenRingN0.lean": "9ee44a72a325472e10ba4987b56a200a7eb1f69ea12f64435481fe8dee9ac325"
+  "TokenRingN0.lean": "4e6f0693339e3691eb64cfd579f9e4fcc250a01dd9c266701ef81a49ce84dd38",
+  "TokenRingProved.lean": "6633be74ef2448f01468588b452fbed93970bb2ab722ca033ebf83fca55ae929"
 }

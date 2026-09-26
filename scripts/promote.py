@@ -2,9 +2,10 @@
 """Promote a closed Route B artifact into the committed seed (plan D10/D13/D15).
 
 The tier-1 run instantiates the tier-2 result, and the repl loads the *olean* of the module it imports:
-so `TokenRing.lean` has to carry the real proof on disk before `mutex_n0` can rest on it (plan D13), and
-before `lake build` can produce an olean that says so (plan D10's tier ordering). A run never writes the
-committed seed (plan D15) — it works on `.runs/<stem>-r<N>.lean` — so promotion is an explicit,
+so the proved text has to exist as a module on disk before `mutex_n0` can rest on it, and before `lake
+build` can produce an olean that says so (plan D10's tier ordering) — as `<Stem>Proved.lean`, a new
+module, never the seed's own path (the planner's ruling, after the incident of 2026-09-26). A run never
+writes the committed seed (plan D15) — it works on `.runs/<stem>-r<N>.lean` — so promotion is an explicit,
 human-run step between the tiers, and this script is it.
 
     nix develop -c python3 scripts/promote.py <closed-artifact> <seed>
@@ -19,10 +20,14 @@ What it does, in order:
    *added* are the loop's own work — a helper the model guessed and then proved — so they promote; a
    changed statement, a changed value or a dropped declaration is a rewrite no loop tactic can
    produce, and is refused rather than recorded as the new baseline (plan D5/D19).
-2. **Writes the seed and its record:** the seed itself and its sha256 in `seeds.json`. The pristine text in
-   `baseline/<file>` is deliberately **left alone** — it keeps the `sorry` text forever, so every run
-   re-seeds from it and a promoted baseline cannot masquerade as a zero-turn "closed". Re-pinning it was the
-   old behaviour and it turned promotion into a measurement trap.
+2. **Writes the proof to a new module, and the record:** the proved text goes to `<Stem>Proved.lean`, a
+   module of its own, and `seeds.json` receives both that module's sha256 and the seed's. The seed's own
+   digest is *unchanged* — the seed is never written — so the record is idempotent by construction, and
+   nothing proved sits at a seed's path for a mistaken `--record-baseline` to accept (the planner's
+   ruling, after the incident of 2026-09-26). The pristine text in `baseline/<file>` is left alone too:
+   it keeps the `sorry` text forever, so every run re-seeds from it and a promoted baseline cannot
+   masquerade as a zero-turn "closed". It is a copy of a seed that still exists rather than the last
+   line of defence.
 3. **Runs `lake build`** through the harness's own runner, so the olean the tier-1 run loads reflects
    the promoted proof. A build that fails is loud — the tree keeps the promoted files, and the next run
    refuses on its own failed build rather than measuring a stale olean.
@@ -109,6 +114,26 @@ def recorded_sha256(artifact: Path, results: Path) -> str | None:
     return digest if isinstance(digest, str) else None
 
 
+def register_module(lakefile: Path, module: str) -> bool:
+    """Add ``module`` to the package's library targets; report whether the file changed.
+
+    A new module with no ``[[lean_lib]]`` entry compiles to nothing, so every ``import`` of it fails with
+    "unknown module prefix". That failure is loud — the build refuses, which is the point — but a
+    promotion that leaves the tree unbuildable has not finished its job, so this runs before the build.
+    Idempotent: a module already named is left alone, and a file with no ``[[require]]`` marker gets the
+    entry appended.
+    """
+    text = lakefile.read_text()
+    if f'name = "{module}"' in text:
+        return False
+    text = text.replace("defaultTargets = [", f'defaultTargets = ["{module}", ', 1)
+    entry = f'[[lean_lib]]\nname = "{module}"\n\n'
+    marker = "[[require]]"
+    text = text.replace(marker, entry + marker, 1) if marker in text else text.rstrip() + "\n\n" + entry
+    lakefile.write_text(text)
+    return True
+
+
 def promote(artifact: Path, seed: Path, results: Path = DEFAULT_RESULTS) -> int:
     """Promote ``artifact`` into ``seed`` and report the exit code (see the module docstring)."""
     try:
@@ -163,22 +188,44 @@ def promote(artifact: Path, seed: Path, results: Path = DEFAULT_RESULTS) -> int:
         )
         return EXIT_UNFAITHFUL
     digest = hashlib.sha256(text.encode()).hexdigest()
-    seed.write_text(text)
+    # The proof goes to a **new module**, never to the seed's path (D15 as ruled after the incident this
+    # afternoon): a promotion must leave nothing proved where a seed belongs, so a mistaken
+    # `--record-baseline` has nothing to accept, and `baseline/` becomes a copy of a seed that still
+    # exists rather than the last line of defence. The seed's digest is therefore unchanged across a
+    # promotion, and the record is re-pinned to that unchanged digest — idempotent by construction.
+    proved = seed.with_name(f"{seed.stem}Proved{seed.suffix}")
+    seed_text = seed.read_text()
+    proved.write_text(text)
+    seed_digest = hashlib.sha256(seed_text.encode()).hexdigest()
+    if seed_text != baseline.text:
+        # The seed no longer matches the text it is pinned as: a caller edited it, so the promotion's
+        # premise ("this proof closes *this* seed") is gone. Loud rather than absorbed.
+        print(
+            f"{seed} no longer matches its recorded baseline ({route_b.relative(seed)} is not the "
+            "pinned text); a promotion proves the seed it was run against (plan D15)",
+            file=sys.stderr,
+        )
+        return EXIT_UNVERIFIED
     record_path = seed.parent / route_b.SEEDS_RECORD
     record = json.loads(record_path.read_text())
-    record[seed.name] = digest
+    record[seed.name] = seed_digest
+    record[proved.name] = digest
     record_path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
-    # The pristine baseline is deliberately **not** re-pinned (the planner's ruling): `baseline/<file>` keeps
-    # the `sorry` text forever, so every run re-seeds from it. Re-pinning it would make the next tier-2 run
-    # copy a closed file and "close" in zero turns — a rig artefact wearing the shape of a result.
+    # `baseline/<file>` is deliberately **not** re-pinned (the planner's ruling): it keeps the `sorry`
+    # text forever, so every run re-seeds from it. Re-pinning it would make the next tier-2 run copy a
+    # closed file and "close" in zero turns — a rig artefact wearing the shape of a result. With the seed
+    # itself untouched this is now a copy of a live input rather than the only record of one.
+    if register_module(seed.parent / "lakefile.toml", proved.stem):
+        print(f"registered {proved.stem} as a library target in {seed.parent.name}/lakefile.toml")
     try:
         build = route_b.run_lake_build(route_b.project_root(seed))
     except route_b.Refusal as refusal:
         print(refusal.message, file=sys.stderr)
         return refusal.code
     print(
-        f"promoted {route_b.relative(artifact)} into {route_b.relative(seed)} "
-        f"(sha256 {digest}), record re-pinned, baseline left pristine, lake build {build['seconds']}s"
+        f"promoted {route_b.relative(artifact)} into {route_b.relative(proved)} "
+        f"(sha256 {digest}), seed {route_b.relative(seed)} left byte-identical (sha256 {seed_digest}), "
+        f"record re-pinned, baseline left pristine, lake build {build['seconds']}s"
     )
     return 0
 

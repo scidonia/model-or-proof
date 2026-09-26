@@ -32,10 +32,12 @@ Fixtures (``proofs/lean/token-ring/reference/``, deliberately outside the loop's
 * positive — ``SeedWithReferenceProof.lean``: the host reference reshaped onto the seed's exact
   statement, so it passes all three and is the one the oracle is demonstrated against;
 * negative — the seed's recorded pristine text, ``proofs/lean/token-ring/baseline/TokenRing.lean``:
-  passes integrity and elaboration, fails on ``sorryAx``. Not the seed file beside it, which
-  ``scripts/promote.py`` rewrites (and re-pins in ``seeds.json``) once its proof is promoted for tier 1:
-  the baseline is left alone precisely so that "the untouched seed" keeps meaning the ``sorry`` text,
-  and it is what the callers pass as ``pristine``;
+  passes integrity and elaboration, fails on ``sorryAx``. It is the seed itself, kept byte-identical at a
+  path of its own: the seed file beside it is never written, and a proof that is promoted goes to a new
+  path rather than over its own input (D15). An earlier revision of this note said
+  ``scripts/promote.py`` rewrote the seed file and re-pinned ``seeds.json`` — that was the behaviour the
+  promotion actually had, and it is what produced a stale pin and a closed proof sitting where a seed
+  belongs. The baseline is what the callers pass as ``pristine``;
 * ``HostReference.lean`` is *not* a fixture: it takes ``N`` as an explicit binder and names the theorem
   ``mutex_mine``, so it fails integrity on purpose — the demonstration that the check bites.
 
