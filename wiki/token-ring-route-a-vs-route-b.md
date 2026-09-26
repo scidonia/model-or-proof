@@ -215,6 +215,46 @@ price of a coffee; it is not the same question, not the same artifact, and not f
    single-worker TLC row (6,748.6 s, $0.37492) is a valid datum and not the comparison, and the harness
    charges compute per wall-clock hour rather than per vCPU-hour.
 
+## 8. Why a closure counts as a result, and what is not verified
+
+A `closed` row is not the harness repeating the model's claim. Three checks run by code the candidate
+cannot reach, in order, and the verdict is their conjunction.
+
+**Integrity.** The candidate must be byte-identical to the seed up to and including the theorem's `:=`.
+That pins every definition, the statement and the model; only the proof body is free. A violation is
+*reported* in the row rather than silently prevented, so a run that weakened the model is visible
+rather than merely rejected.
+
+**Elaboration.** The candidate is handed to `lean` directly, with no `lake` in the invocation: the
+candidate's own shell can reach the package's lakefile, so a lake-built environment would be *the
+candidate's*, not the harness's. Necessary, and worth nothing on its own — the untouched seed compiles.
+
+**Closure.** A prebuilt checker imports the elaborated olean and reads the declaration's axiom set out
+of Lean's **API**, against `{propext, Classical.choice, Quot.sound}`. This is the load-bearing check,
+and the reason it is an API query rather than a text one is measured: `#print axioms` is *syntax*,
+syntax is an environment extension a candidate can install, and it crosses imports — a candidate
+rewrote the command into text of its own and the real report never ran. Text-level interference cannot
+reach the set in which the seed's own `sorryAx` is caught.
+
+Around those three: the bytes checked are one immutable snapshot taken once per round and never
+re-read, so the row digest and the closure copy come from the same bytes as the verdict; the
+elaboration environment is captured before the session opens; the seed's digest is re-checked on every
+exit path; and `sorry`/`admit` text scanning is only a pre-filter, with the axiom set as the authority.
+The checker's forward contract states the principle directly: it prints *no* `axioms` line when it
+cannot answer, and exits non-zero, so "I could not find it" and "it has no axioms" are never the same
+answer.
+
+**What is not claimed.** The criteria are not stated to the model up front; it receives them as the
+checker's report after a failed round, which costs iterations it may not have needed. Fixing that
+changes what the model is told, not what is verified. Nor does any of this make the theorem about the
+*TLA+ specification*: the port is by hand, and port equivalence is the audit §7 discusses.
+
+**Why a rate rather than a run.** Closure is stochastic, so the unit of evidence is a cell of `R ≥ 5`
+runs sharing one seed digest, and rows from different configurations are never pooled — the
+configuration is the digest the rows carry, not the path they name, because a promotion or a seed fix
+rewrites paths that live rows still point at. The complement is the negative control: a run on the
+task's mutant must *fail* to close, or the rig is what is being measured rather than the prover.
+
 ## Provenance
 
 | Number | Where it comes from |
