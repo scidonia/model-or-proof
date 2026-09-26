@@ -395,3 +395,4 @@ comparison for free.
 | Route B, LCR | `results/proof.jsonl` — `task=lcr, tier=2, outcome=closed` (five rows, `f8a6dceb…`) and `tier=1` (five rows, `3b239bbb…`) |
 | LCR | `specs/tla/lcr/`, `proofs/lean/lcr/` (`LCRProved.lean`), `tasks/lcr.json` (`n₀` = 10), `docs/equivalence-lcr.md`; theorem row `task=lcr, tier=2, outcome=closed`, corollary rows `tier=1` |
 | The closure check itself | `harness/closure_oracle.py` for the three checks and `tools/checker/` for the axiom query, whose own `PROVENANCE.md` records the interference experiment |
+| EWD998 (built, theorem pending) | `specs/tla/ewd998/` (spec, mutant, N3–N6 configs), `proofs/lean/ewd998/` (`Ewd998.lean`, `Ewd998Mutant.lean`), `tasks/ewd998.json`, `docs/equivalence-ewd998.md`; calibration rows are `task=ewd998` in `results/tlc.jsonl`, with the mutant control recorded as `violation` at N=3 |
