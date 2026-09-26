@@ -166,9 +166,19 @@ price of a coffee; it is not the same question, not the same artifact, and not f
 3. **Model, not code.** Both routes prove a property of a *model*, not of running software.
 4. **The equivalence is audited, not proved.** Lean-model ≡ TLA+-semantics is a hand audit.
 5. **R=1 on Route B.** One closure is an existence proof, not a distribution; a range needs R≥5.
-6. **The artifact could evaporate once.** The closure lives in `proofs/lean/token-ring/.runs/`, which
-   is gitignored and swept by the next invocation on that seed; a durable copy plus its digest is
-   being added. An independent copy with sha256 `9c9922505658f74e261c7b12e937e1394a63c60a900db5137e9501b3fc79f4de` exists today.
+6. **The artifact's durability is handled — but only just.** The closure was copied to
+   `results/closures/token-ring/TokenRing-20260926T101642-r1.lean` (digest `9c992250…`) with a sidecar,
+   so the result no longer lives only in a gitignored `.runs/` directory that the next sweep deletes.
+   A reviewer then showed the sidecar could be bound to bytes the oracle never checked — a swap between
+   the check and the digest — which is being fixed by hashing a single immutable snapshot.
+7. **Our own verification tooling is days old, and this is the caveat that most changes the reading.**
+   The closure oracle — the thing that decides whether a file counts as proved — has had **two soundness
+   holes found in a single day**, both by an independent reviewer rather than by the loop, and both now
+   failing closed: one let a candidate print a fake axiom report; the other let a candidate *redefine*
+   `#print axioms` in its own syntax so the check never ran, which no parser-based check survives. As
+   with the hand audit, what is being compared is not only a proof against an enumeration but a
+   twenty-five-year-old push-button tool against a young one — and neither hole was visible in a
+   passing test suite, which is the argument for the reviewer step existing at all.
 
 ## Provenance
 
