@@ -186,6 +186,67 @@ chosen to fit the loop's budget, so no task has an arm on each side of where the
 — which is why the three measured pairs split: two favour the proof, one favours TLC. Turning the cost
 shape into a number needs a task calibrated to cross its own crossover.
 
+## 8. Verdict against the three readings of "replacement"
+
+`docs/protocol.md` §3 names three readings of "replacing model checking with proof", to be reported
+rather than one chosen for the reader; §11 decision 1 makes **reading 2 the headline**.
+
+### Reading 2 — bounded budget for the general tier (headline)
+
+> Route B proves the Tier-2 theorem within budget `B`, where Route A cannot answer at any cost.
+
+**Supported, 4 of 4 tasks.** `B` is 2 h wall-clock and $50 of model spend per run (§11 decision 3).
+Every task closed its general theorem inside both caps:
+
+| Task | theorem wall-clock | % of the 2 h cap | cost | % of the $50 cap |
+|---|---|---|---|---|
+| token-ring | 104.8 s (median of 6) | 1.5% | $0.00033 | 0.0007% |
+| lcr | 216.0 s (median of 5) | 3.0% | $0.00044 | 0.0009% |
+| bakery | 444.4 s (median of 5) | 6.2% | $0.00062 | 0.0012% |
+| ewd998 | 1009.5 s (1 run) | 14.0% | $0.00081 | 0.0016% |
+
+The side TLC cannot reach is not a cost question: no budget settles `Mutex` for arbitrary `N` by
+enumeration. This reading is about replacement of the *question*, and it is met on all four tasks.
+
+### Reading 1 — cost parity at the bounded tier (`K`)
+
+> Route B settles the Tier-1 question at a cost within a factor `K` of Route A.
+
+**Reported as measured, and it goes both ways.** `K` = Route B ÷ Route A on the same claim:
+
+| Task | Route A | Route B (corollary) | `K` | Favours |
+|---|---|---|---|---|
+| token-ring (N=23) | 837.938 s | 38.5 s | **0.046** | proof, 21.7× |
+| bakery (N=9) | 4,847.749 s | 76.6 s | **0.016** | proof, 63.3× |
+| lcr (N=10) | 2.670 s | 101.0 s | **37.8** | TLC, 37.8× |
+
+`K < 1` on two tasks and `K ≫ 1` on one, and the reason is not the method: `N₀` is set by the loop's
+budget, not by the task's crossover (§6). `K = 1`, the strict reading, is met in sign on two of three
+and missed on the third — and the honest statement is that a pair measured at a budget-chosen instance
+reports where that instance happened to fall, not a property of the two routes.
+
+### Reading 3 — coverage under a fixed budget
+
+> For a fixed budget, how many tasks of the set does each route settle.
+
+**Tabulated, with the distinction explicit: the counts are equal and the claims are not.**
+
+| | Route A (TLC) | Route B (proof) |
+|---|---|---|
+| tasks settled inside the per-run cap | **4 of 4** | **4 of 4** |
+| what is settled | a *bounded instance* at `N₀` | the **general theorem**, arbitrary `N` |
+| tasks settled at the general tier | **0 of 4** — at any budget | 4 of 4 |
+
+Route A settles four *bounded* instances: token-ring N=23, bakery N=9, lcr N=10, ewd998 N=3, with
+bakery's N=10 row a `timeout` at the 7,200 s cap and therefore the reason its `N₀` is 9. Route B
+settles four *general* theorems. Those are not the same claim, so the equal count in the first row
+does not mean the two routes cover the same ground — the reading separates into **parity at the
+bounded tier and 4–0 at the general tier.**
+
+What this does *not* include is a task calibrated so both routes are under pressure at once — the
+crossover gap §6 names. Eight settled cells is also a small denominator for a coverage claim, and the
+set is four tasks rather than a sampled population.
+
 ## Provenance
 
 | Number | Where it comes from |
