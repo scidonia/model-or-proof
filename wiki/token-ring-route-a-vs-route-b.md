@@ -135,13 +135,16 @@ already handles."*
 ## 5. What is measured, what is pending
 
 - **Measured:** Route A at N=3 (5 runs) and N=23 (1 run, deterministic tool); Route B tier 2 (the
-  general theorem, 1 closure) and **tier 1** — the same-claim corollary, closed **twice independently**
-  at 26.362 s and 25.086 s, so that cell is repeatable rather than lucky; the negative controls on both
-  sides.
-- **Pending:** **R≥5** for Route B, which is stochastic (Route A is deterministic, so one row is its
-  protocol while the tier-1 cell now has two). The multi-worker TLC re-run has been taken — 837.9 s at
-  eight workers on an identical state count, which is the figure §1 uses. And Bakery is running under
-  ruling (a), having twice been cut by our own bounds before the model proposed a proof.
+  general theorem, 1 closure) and **tier 1** — the same-claim corollary, closed **five times, the pinned
+  seed digest every time**: 25.086, 25.712, 26.362, 38.534 and 48.497 s, median **26.4 s** (the last two
+  taken with five runs in flight, which is the likeliest reason they are the slow ones); the negative
+  controls on both sides.
+- **Pending:** **R≥5** for Route B's *tier-2* cell, which is stochastic (Route A is deterministic, so one
+  row is its protocol); the tier-1 cell is complete at five. Wall-clock and cost are not interchangeable
+  even within one cell — the fastest tier-1 run was among the most expensive — so any ratio quoted here is
+  a ratio of one sample of each. The multi-worker TLC re-run has been taken: 837.9 s at eight workers on
+  an identical state count, the figure §1 uses. And Bakery is running under ruling (a), having twice been
+  cut by our own bounds before the model proposed a proof.
 
 ## 6. Where each route wins, and where this claim stops
 
