@@ -7,11 +7,14 @@ is data: it is read by no code.
 - **TLA+ reference** — `specs/tla/ewd998/EWD998.tla`, imported at pinned provenance with its TLAPS proofs
   (`EWD998_proof.tla`); the publication-era revision is `specs/tla/ewd998-paper/` (see `PROVENANCE.md`)
 - **Lean model** — `proofs/lean/ewd998/EWD998.lean` (module `EWD998`), the tier-2 seed
-- **Lean tier-1 seed** — not written; waits on `tasks/ewd998.json`'s `n0`
+- **Lean tier-1 seed** — not written yet; `tasks/ewd998.json`'s `n0` is now **3**, so its statement is
+  determined and only the seed itself is outstanding
 - **TLA+ mutant** — **not defined**; the manifest carries `mutant: null`
 - **Lean mutant** — **not written**
 - **Toolchain** — `leanprover/lean4:v4.35.0-rc3`, the same pin as the other Route B packages
-- **Route A instance** — `n0` is `null`; the manifest has one instance, `N = 3` (`EWD998Small.cfg`)
+- **Route A instance** — `n0` is **3**: the calibration completed at N=3 (1,520,618 states in 35.7 s) and has
+  not at N=4 (75,753,775 states, 2,506.9 s, then `Error: when reading the disk (StatePoolReader.run)`). The
+  manifest lists N=3..6 with generated configs; only `N=3` has completed
 - **Enumerator** — deferred, as elsewhere
 
 **Scope: the ring layer only.** The plan's ruling, and it is what makes the port tractable: the
@@ -87,7 +90,7 @@ theorem inv (hN : 1 ≤ N) (s : State N) (hs : Reachable (Nat.lt_of_lt_of_le Nat
 - **Tier 2 — the general theorem.** `inv`: every state reachable under `Init /\ [][Next]_vars` satisfies
   Safra's inductive invariant, at every `N ≥ 1`. This is the module's `Invariance` theorem, and it is not
   restricted to any instance, so it is strictly stronger than anything a bounded TLC run establishes.
-- **Tier 1 — the corollary at `N₀`.** Not written; it waits on `n0` from the calibration sweep, and will
+- **Tier 1 — the corollary at `N₀ = 3`.** Not written; `n0` is settled, and it will
   be a separate seed closed by instantiating the tier-2 theorem, importing the promoted module
   (`EWD998Proved.lean`) rather than the seed.
 
@@ -171,7 +174,7 @@ two mutations that look alike.
 - **No resolution of the `property` mismatch.** The manifest names `TerminationDetection`; the seed states
   `Inv`. The audit records both facts and flags the disagreement rather than choosing.
 - **No endpoint comparison yet.** The TLA+ side is imported and its published figures are in
-  `docs/human-baseline.md`; the Route A calibration for this task (`n0`) has not run.
+  `docs/human-baseline.md`; the Route A calibration ran and set `n0 = 3` (§7).
 
 ## 6. Pending
 
@@ -179,8 +182,18 @@ two mutations that look alike.
   planner's ruling, Main's authorisation), `instances` lists `N = 3..6`, and `mutant` names the two mutant
   files.
 - **Done:** the mutant, both sides, verified against TLC (§4).
-- **Done:** per-`N` configs generated (`EWD998N3.cfg`..`EWD998N6.cfg`) and the calibration sweep running;
-  `n0` follows from it.
+- **Done:** per-`N` configs generated (`EWD998N3.cfg`..`EWD998N6.cfg`) and the calibration run through them:
+  N=3 completes in 35.7 s with 1,520,618 states; N=4 does not complete, failing after 2,506.9 s at 75,753,775
+  states with `Error: when reading the disk (StatePoolReader.run)`. **`n0` is therefore 3**, set in
+  `tasks/ewd998.json`.
+- **Open, and separate from the above:** whether that N=4 failure is *deterministic*. A repeat in the same
+  storage mode is running; if it completes, the earlier failure was not deterministic, which is a TLC
+  property that would matter before trusting any large calibration.
+- **Filed, not yet done:** raising TLC's direct-memory ceiling from `run_tlc`'s command line. The comparison
+  "the tool cannot do N=4" versus "this storage mode cannot" is not reachable through TLC's own flags —
+  `-fp N` is the fingerprint size (all of 0, 1, 2 still start `MSBDiskFPSet`), and `-fpmem 0.7` left the JVM's
+  64 MB direct-memory default unchanged — so it needs `-XX:MaxDirectMemorySize` or whatever the wrapper
+  honours, confirmed by reading the header's `offheap memory` figure back.
 - `TerminationDetection` remains the *task*'s property for the deferred refinement rung, deliberately not
   the pilot's (`property` above).
 - `proofs/lean/ewd998/baseline/` and `seeds.json`, and the tier-1 seed.

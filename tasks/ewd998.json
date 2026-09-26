@@ -1,17 +1,38 @@
 {
-  "name": "ewd998",
-  "system": "Safra's distributed termination detection on a ring (EWD998)",
-  "property": {
-    "name": "TerminationDetection",
-    "kind": "safety",
-    "statement": "a white token at node 0 with no in-flight messages implies every node is inactive"
+  "budgets": {
+    "usd": 50,
+    "wall_clock_s": 7200
   },
-  "spec": "specs/tla/ewd998/EWD998.tla",
-  "mutant": null,
   "instances": [
-    { "param_N": 3, "config": "specs/tla/ewd998/EWD998Small.cfg" }
+    {
+      "config": "specs/tla/ewd998/EWD998N3.cfg",
+      "param_N": 3
+    },
+    {
+      "config": "specs/tla/ewd998/EWD998N4.cfg",
+      "param_N": 4
+    },
+    {
+      "config": "specs/tla/ewd998/EWD998N5.cfg",
+      "param_N": 5
+    },
+    {
+      "config": "specs/tla/ewd998/EWD998N6.cfg",
+      "param_N": 6
+    }
   ],
-  "n0": null,
-  "budgets": { "wall_clock_s": 7200, "usd": 50 },
-  "repetitions": 5
+  "mutant": {
+    "config": "specs/tla/ewd998/EWD998Mutant.cfg",
+    "spec": "specs/tla/ewd998/EWD998Mutant.tla"
+  },
+  "n0": 3,
+  "name": "ewd998",
+  "property": {
+    "kind": "safety",
+    "name": "Invariance",
+    "statement": "every state reachable under Init /\\ [][Next]_vars satisfies Safra's inductive invariant Inv"
+  },
+  "repetitions": 5,
+  "spec": "specs/tla/ewd998/EWD998.tla",
+  "system": "Safra's distributed termination detection on a ring (EWD998)"
 }

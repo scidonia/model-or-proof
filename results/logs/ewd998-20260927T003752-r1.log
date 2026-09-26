@@ -1,0 +1,88 @@
+tlc-workers1-cleanup-metadir/tmp/nix-shell.WxuUPX/tlc-states-fw_23kzk-config/home/gavin/dev/model-or-proof/specs/tla/ewd998/EWD998N4.cfg/home/gavin/dev/model-or-proof/specs/tla/ewd998/EWD998.tla
+
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 21 and seed 2527505506525328554 with 1 worker on 20 cores with 14247MB heap and 64MB offheap memory (Linux 6.8.0-85-generic amd64, Oracle Corporation 1.8.0_504 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/EWD998.tla
+Parsing file /tmp/Integers.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/Functions.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/SequencesExt.tla
+Parsing file /tmp/Randomization.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/Folds.tla
+Parsing file /tmp/Sequences.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/FiniteSetsExt.tla
+Parsing file /tmp/Bags.tla
+Parsing file /tmp/TLC.tla
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/ewd998/AsyncTerminationDetection.tla
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module Folds
+Semantic processing of module Functions
+Semantic processing of module FiniteSetsExt
+Semantic processing of module TLC
+Semantic processing of module Bags
+Semantic processing of module SequencesExt
+Semantic processing of module Randomization
+Semantic processing of module AsyncTerminationDetection
+Semantic processing of module EWD998
+Starting... (2026-09-26 23:56:06)
+Computing initial states...
+Computed 2 initial states...
+Computed 4 initial states...
+Computed 8 initial states...
+Computed 16 initial states...
+Computed 32 initial states...
+Computed 64 initial states...
+Computed 128 initial states...
+Computed 256 initial states...
+Computed 512 initial states...
+Finished computing initial states: 1024 distinct states generated at 2026-09-26 23:56:06.
+Progress(5) at 2026-09-26 23:56:09: 613,973 states generated (613,973 s/min), 203,631 distinct states found (203,631 ds/min), 148,343 states left on queue.
+Progress(8) at 2026-09-26 23:57:09: 19,528,167 states generated (18,914,194 s/min), 3,270,773 distinct states found (3,067,142 ds/min), 1,768,792 states left on queue.
+Progress(8) at 2026-09-26 23:58:09: 38,678,748 states generated (19,150,581 s/min), 5,643,199 distinct states found (2,372,426 ds/min), 2,644,527 states left on queue.
+Progress(9) at 2026-09-26 23:59:09: 57,673,628 states generated (18,994,880 s/min), 7,899,592 distinct states found (2,256,393 ds/min), 3,299,458 states left on queue.
+Progress(10) at 2026-09-27 00:00:09: 76,561,640 states generated (18,888,012 s/min), 9,732,596 distinct states found (1,833,004 ds/min), 3,765,417 states left on queue.
+Progress(10) at 2026-09-27 00:01:09: 95,227,016 states generated (18,665,376 s/min), 11,895,552 distinct states found (2,162,956 ds/min), 4,255,891 states left on queue.
+Progress(10) at 2026-09-27 00:02:09: 114,026,385 states generated (18,799,369 s/min), 13,690,778 distinct states found (1,795,226 ds/min), 4,580,219 states left on queue.
+Progress(11) at 2026-09-27 00:03:09: 132,804,424 states generated (18,778,039 s/min), 15,643,312 distinct states found (1,952,534 ds/min), 4,967,970 states left on queue.
+Progress(11) at 2026-09-27 00:04:09: 151,295,698 states generated (18,491,274 s/min), 17,652,496 distinct states found (2,009,184 ds/min), 5,343,995 states left on queue.
+Progress(11) at 2026-09-27 00:05:09: 169,499,270 states generated (18,203,572 s/min), 19,302,599 distinct states found (1,650,103 ds/min), 5,553,110 states left on queue.
+Progress(12) at 2026-09-27 00:06:09: 187,856,573 states generated (18,357,303 s/min), 21,247,755 distinct states found (1,945,156 ds/min), 5,904,671 states left on queue.
+Progress(12) at 2026-09-27 00:07:09: 206,051,640 states generated (18,195,067 s/min), 23,213,996 distinct states found (1,966,241 ds/min), 6,281,596 states left on queue.
+Progress(12) at 2026-09-27 00:08:09: 224,173,137 states generated (18,121,497 s/min), 25,122,166 distinct states found (1,908,170 ds/min), 6,643,571 states left on queue.
+Progress(12) at 2026-09-27 00:09:09: 242,331,216 states generated (18,158,079 s/min), 26,646,706 distinct states found (1,524,540 ds/min), 6,778,138 states left on queue.
+Progress(13) at 2026-09-27 00:10:09: 260,477,635 states generated (18,146,419 s/min), 28,756,539 distinct states found (2,109,833 ds/min), 7,223,135 states left on queue.
+Progress(13) at 2026-09-27 00:11:09: 278,415,517 states generated (17,937,882 s/min), 30,710,284 distinct states found (1,953,745 ds/min), 7,588,437 states left on queue.
+Progress(13) at 2026-09-27 00:12:09: 296,276,049 states generated (17,860,532 s/min), 32,596,770 distinct states found (1,886,486 ds/min), 7,942,159 states left on queue.
+Progress(13) at 2026-09-27 00:13:09: 314,550,554 states generated (18,274,505 s/min), 34,232,931 distinct states found (1,636,161 ds/min), 8,144,127 states left on queue.
+Progress(14) at 2026-09-27 00:14:09: 332,487,620 states generated (17,937,066 s/min), 36,178,480 distinct states found (1,945,549 ds/min), 8,501,527 states left on queue.
+Progress(14) at 2026-09-27 00:15:09: 350,660,263 states generated (18,172,643 s/min), 38,009,494 distinct states found (1,831,014 ds/min), 8,745,581 states left on queue.
+Progress(14) at 2026-09-27 00:16:09: 368,564,799 states generated (17,904,536 s/min), 39,942,292 distinct states found (1,932,798 ds/min), 9,098,474 states left on queue.
+Progress(14) at 2026-09-27 00:17:09: 386,450,482 states generated (17,885,683 s/min), 41,806,230 distinct states found (1,863,938 ds/min), 9,420,547 states left on queue.
+Progress(14) at 2026-09-27 00:18:09: 404,294,082 states generated (17,843,600 s/min), 43,420,468 distinct states found (1,614,238 ds/min), 9,609,272 states left on queue.
+Progress(15) at 2026-09-27 00:19:09: 422,174,543 states generated (17,880,461 s/min), 45,073,408 distinct states found (1,652,940 ds/min), 9,799,786 states left on queue.
+Progress(15) at 2026-09-27 00:20:09: 439,918,800 states generated (17,744,257 s/min), 47,057,004 distinct states found (1,983,596 ds/min), 10,134,822 states left on queue.
+Progress(15) at 2026-09-27 00:21:09: 457,797,887 states generated (17,879,087 s/min), 48,889,639 distinct states found (1,832,635 ds/min), 10,360,443 states left on queue.
+Progress(15) at 2026-09-27 00:22:09: 475,727,230 states generated (17,929,343 s/min), 50,658,756 distinct states found (1,769,117 ds/min), 10,582,668 states left on queue.
+Progress(15) at 2026-09-27 00:23:09: 493,496,686 states generated (17,769,456 s/min), 52,413,910 distinct states found (1,755,154 ds/min), 10,800,951 states left on queue.
+Progress(15) at 2026-09-27 00:24:09: 511,081,354 states generated (17,584,668 s/min), 54,021,147 distinct states found (1,607,237 ds/min), 10,946,411 states left on queue.
+Progress(15) at 2026-09-27 00:25:09: 528,742,156 states generated (17,660,802 s/min), 55,397,662 distinct states found (1,376,515 ds/min), 10,952,935 states left on queue.
+Checkpointing of run /tmp/nix-shell.WxuUPX/tlc-states-fw_23kzk/26-09-26-23-56-05
+Checkpointing completed at (2026-09-27 00:26:09)
+Progress(16) at 2026-09-27 00:26:09: 546,082,510 states generated (17,340,354 s/min), 57,377,297 distinct states found (1,979,635 ds/min), 11,258,973 states left on queue.
+Progress(16) at 2026-09-27 00:27:09: 563,715,174 states generated (17,632,664 s/min), 59,110,328 distinct states found (1,733,031 ds/min), 11,424,155 states left on queue.
+Progress(16) at 2026-09-27 00:28:09: 581,329,333 states generated (17,614,159 s/min), 60,962,885 distinct states found (1,852,557 ds/min), 11,650,311 states left on queue.
+Progress(16) at 2026-09-27 00:29:09: 599,360,963 states generated (18,031,630 s/min), 62,633,730 distinct states found (1,670,845 ds/min), 11,759,715 states left on queue.
+Progress(16) at 2026-09-27 00:30:09: 616,898,990 states generated (17,538,027 s/min), 64,265,605 distinct states found (1,631,875 ds/min), 11,863,724 states left on queue.
+Progress(16) at 2026-09-27 00:31:09: 634,328,384 states generated (17,429,394 s/min), 65,831,476 distinct states found (1,565,871 ds/min), 11,941,191 states left on queue.
+Progress(16) at 2026-09-27 00:32:09: 651,987,989 states generated (17,659,605 s/min), 67,158,405 distinct states found (1,326,929 ds/min), 11,850,048 states left on queue.
+Progress(17) at 2026-09-27 00:33:09: 668,835,200 states generated (16,847,211 s/min), 69,019,554 distinct states found (1,861,149 ds/min), 12,085,592 states left on queue.
+Progress(17) at 2026-09-27 00:34:09: 686,146,123 states generated (17,310,923 s/min), 70,768,098 distinct states found (1,748,544 ds/min), 12,226,875 states left on queue.
+Progress(17) at 2026-09-27 00:35:09: 703,336,458 states generated (17,190,335 s/min), 72,447,614 distinct states found (1,679,516 ds/min), 12,332,754 states left on queue.
+Progress(17) at 2026-09-27 00:36:09: 721,046,957 states generated (17,710,499 s/min), 74,125,002 distinct states found (1,677,388 ds/min), 12,417,412 states left on queue.
+Progress(17) at 2026-09-27 00:37:09: 738,591,753 states generated (17,544,796 s/min), 75,753,775 distinct states found (1,628,773 ds/min), 12,495,953 states left on queue.
+Error: when reading the disk (StatePoolReader.run):
+/tmp/nix-shell.WxuUPX/tlc-states-fw_23kzk/26-09-26-23-56-05/7854 (No such file or directory)

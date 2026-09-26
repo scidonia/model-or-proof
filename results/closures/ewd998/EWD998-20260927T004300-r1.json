@@ -1,0 +1,42 @@
+{
+  "artifact": "results/closures/ewd998/EWD998-20260927T004300-r1.lean",
+  "artifact_sha256": "7da46ed41e9d9230cdcc80451a0d479b9ab0c216f4d3432bcf3408d258dd7547",
+  "closure": {
+    "axiom_report": "ok",
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "closed": true,
+    "elaborates": true,
+    "errors": [],
+    "integrity": true,
+    "lean_path": "/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/Cli/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/batteries/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/Qq/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/aesop/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/importGraph/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/plausible/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/mathlib/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/build/lib/lean:/home/gavin/.elan/toolchains/leanprover--lean4---v4.35.0-rc3/lib/lean",
+    "module": "EWD998",
+    "no_progress_rounds": 0,
+    "outside_events": [],
+    "outside_writes": [],
+    "pristine_sha256": "57065d1c09012d744ac277f542851dfeafad0c533bde850eea4e3d00f56fb5ca",
+    "raw_tail": [
+      "Quot.sound",
+      "propext",
+      "resolved EWD998.inv"
+    ],
+    "rounds": 1,
+    "seed_intact": true,
+    "theorem": "EWD998.inv",
+    "timed_out": false,
+    "verdict": true,
+    "watch_blind": null,
+    "withheld": []
+  },
+  "digests_agree": true,
+  "mode": "file",
+  "omp_sessions": "results/omp/EWD998-20260927T004300-r1",
+  "pristine_sha256": "57065d1c09012d744ac277f542851dfeafad0c533bde850eea4e3d00f56fb5ca",
+  "row": "results/proof.jsonl:86",
+  "row_artifact_sha256": "7da46ed41e9d9230cdcc80451a0d479b9ab0c216f4d3432bcf3408d258dd7547",
+  "task": "ewd998",
+  "tier": 2
+}

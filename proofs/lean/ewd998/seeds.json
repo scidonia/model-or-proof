@@ -1,3 +1,6 @@
 {
-  "EWD998.lean": "57065d1c09012d744ac277f542851dfeafad0c533bde850eea4e3d00f56fb5ca"
+  "EWD998.lean": "57065d1c09012d744ac277f542851dfeafad0c533bde850eea4e3d00f56fb5ca",
+  "EWD998Mutant.lean": "41bc56c3b49ce2dcd1f3c7a8d4bdb283e32cffa7d2bf2f1d742daf7e98f357f9",
+  "EWD998N0.lean": "faba7c3430449b6448ba76c3f9431d98ed9aa64f157486cf4a87a3505f71b372",
+  "EWD998Proved.lean": "7da46ed41e9d9230cdcc80451a0d479b9ab0c216f4d3432bcf3408d258dd7547"
 }

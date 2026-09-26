@@ -8,3 +8,7 @@ states/
 .lake/
 proofs/lean/**/.runs/
 results/omp/
+
+# TLC state pools: one private directory per run (the planner's ruling), so a `-cleanup` cannot delete a
+# sibling run's pool mid-enumeration. The shared `states/` above is TLC's default; this is ours.
+.tlc-states/

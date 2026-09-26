@@ -10,9 +10,11 @@ import argparse
 import json
 import os
 import re
+import shutil
 import signal
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -154,7 +156,30 @@ def run_tlc(
     # longer resolve: make the interpreter's own resolution explicit before launching.
     if os.sep in tlc_bin or Path(tlc_bin).exists():
         tlc_bin = str(Path(tlc_bin).resolve())
-    cmd = [tlc_bin, "-workers", str(workers), "-cleanup", "-config", str(config), str(spec)]
+    # The state pool is per *invocation*, not per spec (the planner's ruling: runner soundness, not
+    # scheduling). TLC's default metadir is `<spec's directory>/states/`, shared by every run of that spec,
+    # so one run's `-cleanup` deletes another's pool mid-enumeration — and the victim reads as an instance
+    # hitting a limit rather than as a sibling's sabotage, which is a failure a reader would believe. A
+    # private metadir makes concurrent calibrations safe instead of merely discouraged: no run can reach
+    # another's files even with the same spec.
+    #
+    # It lives under the spec's own directory rather than in `TMPDIR` (the planner's ruling): a directory in
+    # a temporary namespace outlives the run and sits outside everything that cleans up after a task, while
+    # one here is cleared by the same sweep that clears a task's scratch.
+    scratch = spec.parent / ".tlc-states"
+    scratch.mkdir(parents=True, exist_ok=True)
+    metadir = tempfile.mkdtemp(prefix="run-", dir=scratch)
+    # `-cleanup` is deliberately **not** passed. Its only job was removing the metadir, and the harness
+    # already creates a private one per run and removes it in the `finally` below — so the flag was a
+    # deletion whose timing we could not state, and on EWD998 it removed the pool the run was still using:
+    # N=4 died at 75,753,775 states with `StatePoolReader`, N=5 and N=6 with `StatePoolWriter` at ~250k,
+    # while the same N=5 spec without the flag passed sixteen times its with-flag death point. The metadir's
+    # lifetime is ours now, on every exit path.
+    cmd = [
+        tlc_bin, "-workers", str(workers),
+        "-metadir", metadir,
+        "-config", str(config), str(spec),
+    ]
 
     started = time.monotonic()
     proc = subprocess.Popen(
@@ -196,6 +221,10 @@ def run_tlc(
     finally:
         reader.join(timeout=10)
         memory.join(timeout=10)
+        # The pool's removal belongs here rather than to a TLC flag: `finally` runs on the normal path, the
+        # capped path (`TimeoutExpired` above) and an exception, so no sweep leaves a metadir behind and no
+        # removal happens while the run that owns it is still using it.
+        shutil.rmtree(metadir, ignore_errors=True)
 
     wall_clock_s = round(time.monotonic() - started, 3)
     log = "".join(lines)
@@ -222,6 +251,26 @@ def run_tlc(
     }
 
 
+def failure_tail(log: str, limit: int = 12) -> list[str]:
+    """The lines that say *why* a TLC run failed, in TLC's own words (F3's rule for the third path).
+
+    A row recording ``error`` without the reason is not diagnosable from its own record: the only other
+    pointer is ``artifacts.log``, a path a reader holding the row cannot follow. TLC names its failures
+    precisely — ``Lexical error at line …, column …``, ``Invariant … is violated``, ``StatePoolWriter …``,
+    ``*** Errors:`` — so this routes that output into the row rather than inventing a vocabulary.
+
+    A normal successful run has none of these, so an ``error`` with an empty tail is itself evidence: the
+    process died without saying why, which is the case where the log is the only recourse.
+    """
+    markers = ("Error:", "Fatal", "*** Errors", "Lexical error", "error while", "Error ")
+    kept: list[str] = []
+    for line in log.splitlines():
+        stripped = line.strip()
+        if stripped and any(stripped.startswith(marker) for marker in markers):
+            kept.append(stripped)
+    return kept[-limit:]
+
+
 def build_row(
     *,
     task: str,
@@ -246,6 +295,12 @@ def build_row(
         "tier": 1,
         "repetition": repetition,
         "outcome": observation["outcome"],
+        # F3's rule for the third path (the planner's ruling): a TLC row that says `error` carries TLC's own
+        # failure tail, the way file mode carries Lean's output and the oracle carries the provider's
+        # message. `outcome` stays the machine-readable summary — `success`/`violation`/`timeout`/`error` —
+        # and this is the "why" beside it, so a failing calibration can be diagnosed from its own record
+        # rather than only from `artifacts.log`. `None` on a run that did not fail.
+        "error": failure_tail(observation["log"]) if observation["outcome"] == "error" else None,
         "wall_clock_s": observation["wall_clock_s"],
         "startup_s": observation["startup_s"],
         "peak_rss_mb": observation["peak_rss_mb"],

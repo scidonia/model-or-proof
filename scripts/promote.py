@@ -127,9 +127,12 @@ def register_module(lakefile: Path, module: str) -> bool:
     if f'name = "{module}"' in text:
         return False
     text = text.replace("defaultTargets = [", f'defaultTargets = ["{module}", ', 1)
-    entry = f'[[lean_lib]]\nname = "{module}"\n\n'
-    marker = "[[require]]"
-    text = text.replace(marker, entry + marker, 1) if marker in text else text.rstrip() + "\n\n" + entry
+    # The marker is *line-anchored*: the bare string `[[require]]` also occurs inside prose comments (it
+    # did, and an unanchored replace split a comment line in half rather than inserting a table, which the
+    # TOML parser then refused). `\n[[require]]` matches the table and nothing else.
+    entry = f'\n[[lean_lib]]\nname = "{module}"\n'
+    marker = "\n[[require]]"
+    text = text.replace(marker, entry + marker, 1) if marker in text else text.rstrip() + "\n" + entry
     lakefile.write_text(text)
     return True
 
