@@ -1,0 +1,20 @@
+tlc-workers1-cleanup-config/home/gavin/dev/model-or-proof/specs/tla/bakery/BakeryN6.cfg/home/gavin/dev/model-or-proof/specs/tla/bakery/Bakery.tla
+
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 68 and seed 7286818999572070541 with 1 worker on 20 cores with 14247MB heap and 64MB offheap memory (Linux 6.8.0-85-generic amd64, Oracle Corporation 1.8.0_504 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/bakery/Bakery.tla
+Parsing file /tmp/Naturals.tla
+Semantic processing of module Naturals
+Semantic processing of module Bakery
+Starting... (2026-09-26 15:52:04)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-26 15:52:04.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.4E-9
+  based on the actual fingerprints:  val = 1.7E-9
+331903 states generated, 117088 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 14.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 25 and the 95th percentile is 3).
+Finished in 01s at (2026-09-26 15:52:06)

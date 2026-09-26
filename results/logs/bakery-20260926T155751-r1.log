@@ -1,0 +1,25 @@
+tlc-workers1-cleanup-config/home/gavin/dev/model-or-proof/specs/tla/bakery/BakeryN8.cfg/home/gavin/dev/model-or-proof/specs/tla/bakery/Bakery.tla
+
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 55 and seed -2375955511722467475 with 1 worker on 20 cores with 14247MB heap and 64MB offheap memory (Linux 6.8.0-85-generic amd64, Oracle Corporation 1.8.0_504 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/bakery/Bakery.tla
+Parsing file /tmp/Naturals.tla
+Semantic processing of module Naturals
+Semantic processing of module Bakery
+Starting... (2026-09-26 15:53:08)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-26 15:53:08.
+Progress(9) at 2026-09-26 15:53:11: 661,973 states generated (661,973 s/min), 264,081 distinct states found (264,081 ds/min), 183,898 states left on queue.
+Progress(12) at 2026-09-26 15:54:11: 13,972,367 states generated (13,310,394 s/min), 5,281,562 distinct states found (5,017,481 ds/min), 2,561,193 states left on queue.
+Progress(13) at 2026-09-26 15:55:11: 26,368,607 states generated (12,396,240 s/min), 9,461,899 distinct states found (4,180,337 ds/min), 3,450,235 states left on queue.
+Progress(14) at 2026-09-26 15:56:11: 37,521,184 states generated (11,152,577 s/min), 12,944,874 distinct states found (3,482,975 ds/min), 3,390,724 states left on queue.
+Progress(16) at 2026-09-26 15:57:11: 47,166,971 states generated (9,645,787 s/min), 15,846,264 distinct states found (2,901,390 ds/min), 2,080,233 states left on queue.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 3.3E-5
+  based on the actual fingerprints:  val = 5.6E-6
+52462145 states generated, 17092608 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 18.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 31 and the 95th percentile is 4).
+Finished in 04min 43s at (2026-09-26 15:57:51)
