@@ -1,0 +1,20 @@
+{
+  "name": "bakery",
+  "system": "Lamport's bakery algorithm for mutual exclusion (atomic-register, bounded-ticket variant)",
+  "property": {
+    "name": "MutualExclusion",
+    "kind": "safety",
+    "statement": "no two distinct processes are simultaneously in their critical section"
+  },
+  "spec": "specs/tla/bakery/Bakery.tla",
+  "mutant": {
+    "spec": "specs/tla/bakery/BakeryMutant.tla",
+    "config": "specs/tla/bakery/BakeryMutant.cfg"
+  },
+  "instances": [
+    { "param_N": 3, "config": "specs/tla/bakery/Bakery.cfg" }
+  ],
+  "n0": null,
+  "budgets": { "wall_clock_s": 7200, "usd": 50 },
+  "repetitions": 5
+}

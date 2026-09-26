@@ -414,51 +414,151 @@ def test_refutation_against_a_statement_tlc_says_holds_is_a_rig_defect():
     assert row["error"]["kind"] == "rig_refutation", row
 
 
+# --- Scenario 16: the refutation arm must not win by proving the statement; hopelessness is recorded ---
+
+
+class HopelessRefutationModel(NoopModel):
+    """Proof arm closes; refutation arm declares it cannot find a counterexample."""
+
+    def propose(self, goals, history):
+        return "simp"
+
+    def refute(self, goals, history):
+        return "no_witness"
+
+
+class RejectAllProver:
+    """A prover whose cmd() rejects every refutation (the negation-wrap never closes)."""
+
+    def start(self):
+        pass
+
+    def goals(self):
+        return ["⊢ Mutex"]
+
+    def apply(self, tactic):
+        pass
+
+    def cmd(self, command):
+        return {"refuted": False, "messages": ["the negation does not close"]}
+
+    def unclosed(self):
+        return 1
+
+
+class ProofOfStatementModel(NoopModel):
+    """Proof arm closes; refutation arm proposes a proof of the statement, not a refutation."""
+
+    def propose(self, goals, history):
+        return "simp"
+
+    def refute(self, goals, history):
+        return "induction n with | zero => simp | succ n => simp"
+
+
+def test_hopelessness_terminates_the_arm_and_is_recorded():
+    row = run_loop(TwoTacticProver(), HopelessRefutationModel(), arms="proof+refutation", clock=StepClock())
+    assert row["outcome"] == "success", row
+    assert row["refutation"] == "no_witness", row
+
+
+def test_proof_of_the_statement_is_not_a_refutation():
+    """A proposal that proves P is wrapped in ¬P and rejected — the arm cannot win by proving P."""
+    row = run_loop(TwoTacticProver(), ProofOfStatementModel(), arms="proof+refutation", clock=StepClock())
+    assert row["outcome"] != "refuted", row
+
+
+# --- Scenario 17: the OMP session directory is absolute, under the run's session root ---
+
+
+def test_session_dir_is_absolute_under_the_session_root():
+    """The --session-dir we hand OMP is absolute (OMP resolves a relative one against --cwd)."""
+    from harness.model import omp_command
+
+    cmd = omp_command(session_root="results/omp/run1", role="proof")
+    assert "--session-dir" in cmd, cmd
+    value = cmd[cmd.index("--session-dir") + 1]
+    assert Path(value).is_absolute(), value
+    assert value == str((REPO / "results" / "omp" / "run1" / "proof").resolve()), value
+
+
+# --- Scenario 18: the reply is applied whole; a bare `by` is wrapped as `exact by` ---
+
+
+def test_whole_reply_kept_and_bare_by_wrapped_as_exact():
+    from harness.model import extract_tactic
+
+    # A fenced proof with prose around it: fence and prose stripped, the multi-line block kept whole,
+    # and the bare `by` wrapped as `exact by` (a bare `by` is not a standalone tactic).
+    reply = "Here is the proof:\n```lean\nby\n  omega\n```\nThat closes it."
+    assert extract_tactic(reply) == "exact by\n  omega"
+
+
+def test_single_tactic_and_exact_by_pass_through_unchanged():
+    from harness.model import extract_tactic
+
+    assert extract_tactic("induction hs") == "induction hs"
+    assert extract_tactic("exact by\n  omega") == "exact by\n  omega"
+
+
+# --- Scenario 19: the refutation command is not rewritten by the proof-arm wrap ---
+
+
+def test_refutation_command_is_not_rewritten():
+    from harness.model import extract_command, extract_tactic
+
+    reply = "by\n  decide"
+    assert extract_command(reply) == "by\n  decide"  # the refutation arm stays byte-exact (D16)
+    assert extract_tactic(reply) == "exact by\n  decide"  # only the proof arm normalises
+
+
+def test_refutation_command_passes_no_witness_and_example_unchanged():
+    from harness.model import extract_command
+
+    assert extract_command("no_witness") == "no_witness"
+    example = "example : ¬ (n + 0 ≠ n) := by decide"
+    assert extract_command(example) == example
+
+
 # --- Scenario 12: the planning turn (recorded verbatim; empty plan is consumed + re-asked) ---
 
 
 class PlanningModel(NoopModel):
-    """A model with a plan() turn returning the given per-arm plan."""
+    """A model with a plan() turn returning the given per-arm plan, recording every arm it is asked."""
 
     def __init__(self, plans):
         self._plans = dict(plans)
+        self._asked = []
 
     def plan(self, arm, goals, history):
+        self._asked.append(arm)
         return self._plans.get(arm, "")
 
 
 def test_planning_turn_is_recorded_verbatim():
-    row = run_loop(
-        OneTacticProver(),
-        PlanningModel({"proof": "induct then finish", "refutation": "decide search"}),
-        arms="proof+refutation",
-        clock=StepClock(),
-    )
-    assert row["plan"] == {"proof": "induct then finish", "refutation": "decide search"}, row
+    model = PlanningModel({"proof": "induct then finish"})
+    row = run_loop(OneTacticProver(), model, arms="proof+refutation", clock=StepClock())
+    assert row["plan"]["proof"] == "induct then finish", row
+    assert row["plan"]["refutation"] is None, row
+    assert row["plan"]["refutation_reason"], row
+    assert "refutation" not in model._asked, model._asked  # no refutation plan turn
 
 
 class RetryPlanModel(PlanningModel):
     """Returns an empty plan once, then the real plan — the empty plan must be re-asked."""
 
-    def __init__(self, plans):
-        super().__init__(plans)
-        self._asked = {"proof": 0, "refutation": 0}
-
     def plan(self, arm, goals, history):
-        self._asked[arm] += 1
-        if self._asked[arm] == 1:
+        self._asked.append(arm)
+        if self._asked.count(arm) == 1:
             return ""  # empty plan: consumed turn, re-asked with the nudge
         return self._plans.get(arm, "")
 
 
 def test_empty_plan_is_consumed_and_reasked():
-    row = run_loop(
-        OneTacticProver(),
-        RetryPlanModel({"proof": "induct", "refutation": "decide"}),
-        arms="proof+refutation",
-        clock=StepClock(),
-    )
-    assert row["plan"] == {"proof": "induct", "refutation": "decide"}, row
+    model = RetryPlanModel({"proof": "induct"})
+    row = run_loop(OneTacticProver(), model, arms="proof+refutation", clock=StepClock())
+    assert row["plan"]["proof"] == "induct", row
+    assert row["plan"]["refutation"] is None, row
 
 
 # --- Scenario 13: the automation pass is tried first and recorded when it closes ---

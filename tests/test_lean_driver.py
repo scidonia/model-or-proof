@@ -81,3 +81,75 @@ def test_driver_does_not_treat_a_missing_goals_key_as_closed():
     )
     prover.start()
     assert prover.unclosed() > 0  # never "closed" on a response the driver could not read
+
+
+def test_unreadable_completion_status_is_a_transport_refusal():
+    """Scenario 6: no readable proofStatus -> a transport refusal, not a Lean one."""
+    prover = LeanReplProver(
+        Path("x.lean"),
+        ["repl"],
+        responder=_responder({"goals": [], "proofState": 1}),  # no `proofStatus` field
+    )
+    prover.start()
+    assert [f["kind"] for f in prover.failures] == ["transport"], prover.failures
+    assert "status" in prover.failures[0]["message"].lower(), prover.failures
+
+
+def test_unrecognised_status_string_is_a_transport_refusal():
+    """Scenario 6: a proofStatus that is not Completed/Incomplete is the same transport refusal."""
+    prover = LeanReplProver(
+        Path("x.lean"),
+        ["repl"],
+        responder=_responder({"goals": [], "proofStatus": "Weird"}),
+    )
+    prover.start()
+    assert [f["kind"] for f in prover.failures] == ["transport"], prover.failures
+
+
+def test_contains_sorry_judgment_is_a_lean_refusal():
+    """Scenario 7: a recognised 'contains sorry' judgment is a lean refusal, not transport."""
+    prover = LeanReplProver(
+        Path("x.lean"),
+        ["repl"],
+        responder=_responder({"goals": [], "proofStatus": "Incomplete: contains sorry"}),
+    )
+    prover.start()
+    assert [f["kind"] for f in prover.failures] == ["lean"], prover.failures
+    assert "sorry" in prover.failures[0]["message"].lower(), prover.failures
+
+
+def _capturing_responder(seen, response):
+    """A responder that records the payload it is handed, then answers with the fixed response."""
+    def responder(cmd):
+        seen.append(cmd)
+        return response
+    return responder
+
+
+def test_semicolon_sequence_is_handed_over_parenthesised():
+    """Scenario 8: a `;`-sequence reaches the repl parenthesised (Lean's `tactic` category has no `;`)."""
+    seen = []
+    prover = LeanReplProver(
+        Path("x.lean"),
+        ["repl"],
+        responder=_capturing_responder(seen, {"proofStatus": "Incomplete", "goals": ["⊢ True"], "proofState": 0}),
+    )
+    prover.start()
+    seen.clear()
+    prover.apply("skip; skip")
+    assert seen[-1]["tactic"] == "(skip; skip)", seen[-1]
+
+
+def test_plain_and_exact_by_tactics_are_handed_over_unchanged():
+    """Scenario 8: non-`;` tactics (a plain tactic, an `exact by` block) are handed over byte-exact."""
+    seen = []
+    prover = LeanReplProver(
+        Path("x.lean"),
+        ["repl"],
+        responder=_capturing_responder(seen, {"proofStatus": "Incomplete", "goals": ["⊢ True"], "proofState": 0}),
+    )
+    prover.start()
+    seen.clear()
+    prover.apply("skip")
+    prover.apply("exact by\n  omega")
+    assert [c["tactic"] for c in seen] == ["skip", "exact by\n  omega"], seen

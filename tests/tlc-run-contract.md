@@ -14,7 +14,9 @@ completed proof of the property, and a run that was killed must not be reported 
   manifest path.
 - **Given**: `specs/tla/token-ring/TokenRing.tla` and `TokenRing.cfg` with `CONSTANT N = 3`, and an
   empty results directory.
-- **When**: the runner is invoked once for that task.
+- **When**: the runner is invoked once for that task, selecting the `N = 3` instance
+  (`--instance 3` — the task ships a second, `N₀` instance, so the single-instance default no longer
+  applies).
 - **Then**: `results/tlc.jsonl` holds exactly one row with `route: "tlc"`, `outcome: "success"`,
   `tlc.generated = 73`, `tlc.distinct = 36`, `tlc.left = 0`, `tlc.depth = 11`, `tlc.workers = 1`,
   `param_N = 3`, a positive `wall_clock_s`, a `startup_s` no greater than `wall_clock_s`, and a
@@ -51,7 +53,8 @@ completed proof of the property, and a run that was killed must not be reported 
 - **Actor**: the researcher.
 - **Boundary**: the same command line, with a wall-clock cap.
 - **Given**: a stand-in TLC binary that prints a progress line and then sleeps past the cap.
-- **When**: the runner is invoked with `--cap-s 1`.
+- **When**: the runner is invoked with `--cap-s 1` and `--instance 3` (the task ships two instances;
+  the fake binary ignores the spec, but the runner needs an instance selected before it launches).
 - **Then**: the row has `outcome: "timeout"`, `tlc` is null (no completed summary), `states_reached`
   carries the distinct-state count from the last progress line (337 897 in the fixture), and neither
   `success` nor `violation` appears in the row; the log artifact exists.

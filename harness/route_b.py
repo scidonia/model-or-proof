@@ -50,6 +50,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from harness import lean_lex, model as model_constants  # noqa: E402
 from harness.closure import (  # noqa: E402
+    NO_WITNESS,
+    heartbeat,
+    set_heartbeat_label,
     detect_assisted,
     excerpt_of,
     parse_declarations,
@@ -193,6 +196,68 @@ class Baseline:
     matches: bool
 
 
+def run_session_dir(seed: Path, results_dir: Path, mutant: bool, repetition: int) -> Path:
+    """Where this run's OMP sessions live (plans D17/D20): one directory per run, one per role.
+
+    Run-scoped and outside the seed's package so nothing of the repository's context can leak into a
+    prompt, but *inside* the run's own results directory so the transcript a row points at sits beside
+    the row — and so a caller that writes its rows somewhere temporary does not scatter sessions into
+    the repository. The name carries the seed and the second the run started, because a battery of
+    several cases in one invocation must not let two cases share a session directory (the `--session-dir`
+    is a directory, not a session: two runs in one would interleave their transcripts).
+    """
+    stamp = time.strftime("%Y%m%dT%H%M%S")
+    name = f"{seed.stem}{'-mutant' if mutant else ''}-{stamp}-r{repetition}"
+    directory = results_dir / "omp" / name
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
+
+
+def harness_revision(seed: Path, baseline: Baseline) -> dict:
+    """A digest of what this run actually is (plan D17): sources plus the data the prompt reads.
+
+    The harness the run imports (`harness/*.py`), the examples the prompt carries, the seed, and the
+    baseline record — hashed at run start. A row is then attributable even while the tree is dirty (two
+    slices uncommitted), and an iteration comparison cannot silently mix code versions: the digest
+    changes when any of them does.
+    """
+    files: dict[str, str] = {}
+    for source in sorted((REPO / "harness").glob("*.py")):
+        files[relative(source)] = hashlib.sha256(source.read_bytes()).hexdigest()
+    for data in (model_constants.EXAMPLES_PATH, seed, seed.parent / SEEDS_RECORD):
+        if data.is_file():
+            files[relative(data)] = hashlib.sha256(data.read_bytes()).hexdigest()
+    digest = hashlib.sha256("\n".join(f"{name} {value}" for name, value in sorted(files.items())).encode())
+    return {"digest": digest.hexdigest(), "files": files}
+
+
+def record_baseline(seed: Path) -> dict:
+    """Pin a seed as its own baseline: the loud, explicit way to add one (plans D15/D22).
+
+    The experiment's seeds are pinned once and never rewritten; a *new* seed — the capability battery's,
+    for instance — has no record yet, and ``route_b`` refuses (exit 9) to run a seed whose provenance it
+    cannot state. This is the sanctioned way to give it one: the seed's current text is written to
+    ``seeds.json`` and ``baseline/<file>`` beside it, exactly as the committed seeds are recorded, so a
+    later run's baseline check has something real to compare against. It returns what it wrote, and the
+    caller prints it: a pin that happens quietly is a pin nobody can audit.
+    """
+    text = seed.read_text()
+    digest = hashlib.sha256(text.encode()).hexdigest()
+    record_path = seed.parent / SEEDS_RECORD
+    record = json.loads(record_path.read_text()) if record_path.is_file() else {}
+    record[seed.name] = digest
+    record_path.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
+    pristine = seed.parent / BASELINE_DIR / seed.name
+    pristine.parent.mkdir(parents=True, exist_ok=True)
+    pristine.write_text(text)
+    return {
+        "seed": relative(seed),
+        "sha256": digest,
+        "record": relative(record_path),
+        "baseline": relative(pristine),
+    }
+
+
 def load_baseline(seed: Path) -> Baseline:
     """The recorded baseline a run copies, or a refusal saying why there is none (plan D15).
 
@@ -282,6 +347,9 @@ def setup_of(arms: str) -> dict:
             "channel": "cmd",
             "template": getattr(model_constants, "REFUTATION_TEMPLATE", None),
             "instruction": getattr(model_constants, "REFUTATION_INSTRUCTION", None),
+            # The vocabulary the arm answers in (plan D16/D17): the sentinel that ends it when there is
+            # no witness to find, which is the expected answer on a true statement.
+            "no_witness": NO_WITNESS,
         },
     }
 
@@ -331,6 +399,7 @@ def run_lake_build(root: Path) -> dict:
     is a stubbable seam: no scenario runs ``lake``.
     """
     cmd = ["lake", "build"]
+    heartbeat(f"phase: lake build in {root}")
     started = time.monotonic()
     completed = subprocess.run(cmd, cwd=str(root), capture_output=True, text=True)
     result = {
@@ -598,9 +667,80 @@ def repl_identity(provenance: Path = PROVENANCE) -> dict:
     return {"commit": cells["Commit"], "toolchain": cells["Toolchain"]}
 
 
+def run_file_mode(
+    args, *, task: str, results_dir: Path, seed: Path, baseline: Baseline, cap_s: float, cap_usd: float
+) -> int:
+    """One file-mode run per repetition: a tool-using session and the closure oracle (plan D26).
+
+    The working copy is the unit of work, as in tactic mode, but nothing is spliced into a proof state:
+    the session is given a shell and the file, and the oracle's three checks - integrity against the
+    *recorded* seed, elaboration, and the axiom set - decide whether the run closed. The row records
+    `mode: "file"` and the whole `closure` object, so a reader sees the evidence, not just a verdict.
+    """
+    from harness import file_mode, model  # file mode pulls in the transport only when it is used
+
+    swept = sweep_working_copies(seed)
+    if swept:
+        heartbeat(f"phase: swept {len(swept)} stale working copy/copies of {relative(seed)}")
+    setup = {
+        **setup_of(args.arms),
+        "mode": "file",
+        "tier": args.tier,
+        # The invocation the file-mode session actually runs: tools on, approval automatic. The row's
+        # recorded flags must match the command, not the tactic mode's (finding from the D26 split).
+        "omp": model.omp_invocation(tools=file_mode.DEFAULT_TOOLS),
+    }
+    status = 0
+    for repetition in range(1, args.reps + 1):
+        copy = working_copy(baseline, repetition)
+        run_dir = run_session_dir(seed, results_dir, args.mutant, repetition)
+        heartbeat(f"phase: run {relative(seed)} r{repetition} (mode: file)")
+        session = model.OmpFileModel(
+            specification=baseline.text,
+            session_root=run_dir,
+            cwd=copy.parent,
+            examples=model.prompt_examples(),
+            timeout_s=model.TURN_TIMEOUT_S,
+            startup_timeout_s=model.STARTUP_TIMEOUT_S,
+        )
+        try:
+            row = file_mode.run_file(
+                session,
+                task=task,
+                tier=args.tier,
+                repetition=repetition,
+                mutant=args.mutant,
+                working=copy,
+                run_dir=run_dir,
+                seed_path=seed,
+                package=seed.parent,
+                pristine=baseline.text,
+                cap_s=cap_s,
+                cap_usd=cap_usd,
+                setup=setup,
+                statement=file_mode.statement_of(baseline.text),
+            )
+        finally:
+            session.close()
+        append_row(results_dir, "proof", row)
+        print(
+            f"file mode r{repetition}: {row['outcome']} in {row['wall_clock_s']}s "
+            f"(rounds {row['closure']['rounds']}, turns {row['proof']['turns']}, "
+            f"cost ${row['cost_usd']:.4f}) integrity={row['closure']['integrity']} "
+            f"elaborates={row['closure']['elaborates']} axioms={row['closure']['axioms']} "
+            f"seed_intact={row['closure']['seed_intact']}"
+        )
+        if row["outcome"] != "closed":
+            status = EXIT_UNCLOSED_ARTIFACT
+    return status
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="harness.route_b")
-    parser.add_argument("--task", required=True, help="task manifest under tasks/")
+    parser.add_argument(
+        "--task",
+        help="task manifest under tasks/ (required unless --record-baseline)",
+    )
     parser.add_argument(
         "--proof",
         required=True,
@@ -621,6 +761,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--reps", type=int, default=1)
     parser.add_argument(
+        "--mode",
+        default="tactic",
+        choices=("tactic", "file"),
+        help=(
+            "how the proof is closed (plan D26): `tactic` (one tactic per turn, driven by the loop) or "
+            "`file` (a tool-using session edits the working copy; the closure oracle decides). The two "
+            "are different configurations and their rows are never pooled."
+        ),
+    )
+    parser.add_argument(
         "--arms",
         default=HEADLINE_ARMS,
         choices=("proof", HEADLINE_ARMS),
@@ -634,11 +784,33 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="mark the row exploratory (plan D17): a setup that is not the headline one, never pooled",
     )
-    parser.add_argument("--results", required=True)
+    parser.add_argument(
+        "--record-baseline",
+        action="store_true",
+        help=(
+            "pin --proof as its own baseline (seeds.json + baseline/<file>) and exit: the explicit way "
+            "to record a new seed, printing exactly what it wrote (plan D15)"
+        ),
+    )
+    parser.add_argument("--results", help="the results directory (required unless --record-baseline)")
     parser.add_argument("--cap-s", type=float, default=None)
     parser.add_argument("--cap-usd", type=float, default=None)
     parser.add_argument("--repl-bin", default=DEFAULT_REPL_BIN, help="lean-repl executable")
     args = parser.parse_args(argv)
+
+    if args.record_baseline:
+        # No run and no row: the seed is pinned and the tool says what it wrote, loudly enough to audit.
+        # Nothing about the refusal to run an unrecorded seed changes — this is how a seed stops being
+        # unrecorded.
+        recorded = record_baseline(Path(args.proof))
+        print(
+            "recorded {seed} as its own baseline: sha256 {sha256}, record {record}, pristine text "
+            "{baseline}".format(**recorded)
+        )
+        return 0
+    unnamed = [name for name, value in (("--task", args.task), ("--results", args.results)) if not value]
+    if unnamed:
+        parser.error(f"{' and '.join(unnamed)} required for a run")
 
     LeanReplProver, count_unclosed = load_driver()
 
@@ -661,6 +833,19 @@ def main(argv: list[str] | None = None) -> int:
         # baseline, and its package. Both refusals below happen before a turn, so there is no row:
         # nothing was measured, and a refused cell is not an observation.
         baseline = load_baseline(seed)
+        if args.mode == "file":
+            # File mode: the same working copy and the same recorded baseline, but the proof is the
+            # session's to write and the oracle's to check (plan D26) - a different instrument, so a
+            # different run path rather than a branch inside the tactic loop.
+            return run_file_mode(
+                args,
+                task=task,
+                results_dir=results_dir,
+                seed=seed,
+                baseline=baseline,
+                cap_s=cap_s,
+                cap_usd=cap_usd,
+            )
         root = project_root(seed)
         # D13 — the build whose oleans the run will load, run once and outside the measured wall-clock;
         # a build that fails means the oleans are not what the sources say, so nothing is measured.
@@ -687,6 +872,9 @@ def main(argv: list[str] | None = None) -> int:
         # configuration, so the marking is derived from what ran.
         exploratory = bool(args.exploratory) or args.arms != HEADLINE_ARMS
         setup = setup_of(args.arms)
+        # D17: what this run *is* — the harness sources it imports and the data its prompt reads,
+        # digested at run start — so a dirty tree cannot make two rows silently incomparable.
+        setup["harness_revision"] = harness_revision(seed, baseline)
         # D18 — one invocation's working copies, never a pile: the previous runs' copies go before this
         # invocation writes its own, and the artifact of the run that just finished stays for the
         # operator to promote (scripts/promote.py).
@@ -695,6 +883,12 @@ def main(argv: list[str] | None = None) -> int:
         for repetition in range(1, args.reps + 1):
             # A fresh working copy from the baseline: the driver works here, the artifact is this file,
             # and the committed seed is never written (plan D15).
+            # The heartbeat's per-run boundary (plan D24): with several cases or repetitions in one
+            # invocation, stderr says which one is running.
+            # Every line this process prints is this run's (plan D25): a parallel battery reads four
+            # interleaved streams, and the label is what tells them apart.
+            set_heartbeat_label(f"{seed.stem}{'-mutant' if args.mutant else ''}")
+            heartbeat(f"phase: run {relative(seed)} r{repetition}")
             copy = working_copy(baseline, repetition)
             seed_text = copy.read_text()
             # D13, on the same copy the driver loads: an import that still carries a hole refuses the
@@ -709,13 +903,19 @@ def main(argv: list[str] | None = None) -> int:
             specification, shown = specification_of(copy)
             drift = seed_drift(baseline)
             assisted_before = assisted_reasons(baseline, seed_text, shown, drift)
+            # This run's OMP sessions (plans D17/D20): one directory per role, run-scoped and
+            # persisted, so OMP's own transcript is the run's per-turn record. The client owns the
+            # processes; the row owns the paths and ids.
+            sessions = run_session_dir(seed, results_dir, args.mutant, repetition)
+            model_client = OmpModel(specification=specification, session_root=sessions)
             row = run_loop(
                 # `mutant` reaches the driver as well as the loop: a run that closed a false statement
                 # must not leave the verdict spliced into the copy, so the driver refuses to write it
                 # (plan D7).
                 LeanReplProver(copy, [args.repl_bin], mutant=args.mutant),
-                OmpModel(specification=specification),
+                model_client,
                 task=task,
+                mode=args.mode,
                 param_N=param_N,
                 tier=args.tier,
                 repetition=repetition,
@@ -747,7 +947,18 @@ def main(argv: list[str] | None = None) -> int:
                 },
                 "imports": imports,
                 "artifact_sha256": None,
+                # This run's OMP session directory (plan D17): the transcripts are OMP's own record of
+                # every turn, so a run is watchable while it is happening and traceable afterwards.
+                "omp_sessions": relative(sessions),
             }
+            # The transport's account of the sessions it ran: id, transcript file, the model and
+            # thinking level it reports, and the system prompt it actually sent (digested, with
+            # whatever OMP added beyond ours quoted) — so cost is keyed to a session id and the run's
+            # condition is evidence rather than intent (plans D17/D20).
+            row["setup"]["omp"] = {**row["setup"]["omp"], "roles": model_client.identity()}
+            for identity in row["setup"]["omp"]["roles"].values():
+                # Rows name paths relative to the repository, like every other artifact path.
+                identity["session_dir"] = relative(Path(identity["session_dir"]))
             row["prompt"] = {**row["prompt"], "shown": shown}
             if negative_control is not None:
                 negative_control = {**negative_control, "observed": row["mutant"]}

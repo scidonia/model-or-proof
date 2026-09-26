@@ -1,0 +1,74 @@
+{
+  "name": "battery",
+  "system": "the capability battery: eight small Lean statements through the full loop (plan D22)",
+  "budgets": { "wall_clock_s": 600, "usd": 2 },
+  "repetitions": 1,
+  "setup": {
+    "arms": "proof+refutation",
+    "tier": 2,
+    "notes": [
+      "Both arms race: the race is the setup being measured, so the battery never isolates the proof arm (plan D22).",
+      "The model selector, thinking level and prompt are harness/model.py's single source of truth and are recorded per row; nothing here restates them.",
+      "A case's `expected` is the outcome the setup must reach: `closed` for a provable statement, `negative` for the false one, which the refutation arm must witness (the runner passes --mutant for it, which is what declares the statement false)."
+    ]
+  },
+  "cases": [
+    {
+      "name": "add_zero_self",
+      "statement": "n + 0 = n",
+      "seed": "proofs/lean/token-ring/battery/AddZero.lean",
+      "expected": "closed",
+      "exercises": "trivial arithmetic: the automation pass should carry it (omega)"
+    },
+    {
+      "name": "range_length",
+      "statement": "(List.range n).length = n",
+      "seed": "proofs/lean/token-ring/battery/RangeLength.lean",
+      "expected": "closed",
+      "exercises": "simp on a list: automation or one model tactic"
+    },
+    {
+      "name": "gauss_sum",
+      "statement": "2 * (List.range (n + 1)).sum = n * (n + 1)",
+      "seed": "proofs/lean/token-ring/battery/GaussSum.lean",
+      "expected": "closed",
+      "exercises": "induction over Nat with a nonlinear arithmetic finish (the model's work)"
+    },
+    {
+      "name": "reverse_reverse",
+      "statement": "xs.reverse.reverse = xs",
+      "seed": "proofs/lean/token-ring/battery/ReverseReverse.lean",
+      "expected": "closed",
+      "exercises": "induction over a list (the model's work)"
+    },
+    {
+      "name": "range_card",
+      "statement": "(Finset.range n).card = n",
+      "seed": "proofs/lean/token-ring/battery/RangeCard.lean",
+      "expected": "closed",
+      "exercises": "a Finset lookup: automation or the model"
+    },
+    {
+      "name": "le_square_succ",
+      "statement": "n ≤ n * n + 1",
+      "seed": "proofs/lean/token-ring/battery/LeSquareSucc.lean",
+      "expected": "closed",
+      "exercises": "arithmetic with a product: nonlinear, so the pass's linear omega is not enough"
+    },
+    {
+      "name": "if_le",
+      "statement": "(if p then n else 0) ≤ n",
+      "seed": "proofs/lean/token-ring/battery/IfLe.lean",
+      "expected": "closed",
+      "exercises": "a case split on a decidable proposition (the model's work)"
+    },
+    {
+      "name": "add_zero_succ_false",
+      "statement": "n + 0 = n + 1",
+      "seed": "proofs/lean/token-ring/battery/AddZeroSuccFalse.lean",
+      "expected": "negative",
+      "exercises": "the false statement: the refutation arm must exhibit a witness within a small budget, and a cap-burn is a finding (plan D22)",
+      "cap_s": 300
+    }
+  ]
+}

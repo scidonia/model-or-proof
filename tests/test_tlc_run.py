@@ -34,7 +34,7 @@ def rows(tmp_path):
 
 def test_completed_check_yields_success_row(tmp_path):
     """Scenario 1: a completed check yields a success row with TLC's final counts."""
-    proc = run_runner(tmp_path, "--reps", "1")
+    proc = run_runner(tmp_path, "--instance", "3", "--reps", "1")
     assert proc.returncode == 0, proc.stderr
 
     rows_ = rows(tmp_path)
@@ -87,6 +87,8 @@ def test_killed_run_is_a_timeout_not_a_verdict(tmp_path):
     """Scenario 4: a killed run is a timeout, not a verdict."""
     proc = run_runner(
         tmp_path,
+        "--instance",
+        "3",
         "--tlc-bin",
         str(FIXTURES / "fake_tlc_slow.sh"),
         "--cap-s",

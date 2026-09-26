@@ -37,12 +37,38 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol, Sequence
+from typing import Literal, Protocol, Sequence, TypedDict
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from harness import lean_lex  # noqa: E402
 from harness.result import COST_BASIS, compute_basis, compute_cost_usd  # noqa: E402
+
+
+class Failure(TypedDict):
+    """One step the prover refused, and whose fault the refusal was (plan D24).
+
+    ``kind`` is the distinction a reader needs and the flat ``Lean error: …`` could not make:
+
+    * ``"lean"`` — **Lean judged the step and refused it**: an error the repl reported, or a
+      ``proofStatus`` it stated (``Incomplete: …``) — a genuine tactic failure, the model's to fix, and
+      the message carries Lean's own words.
+    * ``"transport"`` — **we could not hand the step to Lean, or could not read what came back**:
+      nothing there to parse (an empty reply), a response carrying no readable goal state, a reply whose
+      ``proofStatus`` is absent or unreadable (nothing in it shows Lean considered the step), or a
+      ``cmd`` answer with no environment. The message is ours and says which. A refusal of this kind is
+      the rig's fault, and recording it as a Lean error teaches the model a false lesson about its own
+      syntax.
+
+    The row-level error kinds (``provider_failure``, ``prover_failure``, …) are unchanged: this is a
+    per-entry marker inside ``proof.failures``. Nor is every fault of ours an entry here: a non-JSON
+    answer, an answer that never arrives, and a repl that exits mid-step are not refusals at all — the
+    driver raises for those, and the loop lands the run's ``prover_failure`` row as it always did. The
+    entries are the steps the driver *did* see answered and refused.
+    """
+
+    kind: Literal["lean", "transport"]
+    message: str
 
 
 class Prover(Protocol):
@@ -92,7 +118,7 @@ class Prover(Protocol):
     def unclosed(self) -> int: ...
 
     tactics: Sequence[str]
-    failures: Sequence[str]
+    failures: Sequence[Failure]
 
 
 # One turn as the model sees it (plan D14): the tactic proposed, the goals it left, and — when the
@@ -112,7 +138,10 @@ class Model(Protocol):
     ``refute`` is the refutation arm's proposal (plan D16): one Lean command, proposed in the same
     history, which the prover's ``cmd`` channel then checks. The arm is named by which method the loop
     calls, so the client assembles the two prompts — "propose a tactic" and "propose a refutation" —
-    and nothing in the loop decides what a refutation looks like.
+    and nothing in the loop decides what a refutation looks like. A port whose model finds no witness
+    returns :data:`NO_WITNESS` instead of a command: hopelessness, which ends that arm without ending
+    the race and is never recorded as a failure (on a true statement there is nothing to find, and the
+    shared pool must not pay for the search).
 
     ``usage()`` carries what the row records beside the token counts: ``input``, ``output``,
     ``cached_input`` and ``cost_usd`` (summed over the session), the configured ``model``,
@@ -124,8 +153,9 @@ class Model(Protocol):
     it intends to proceed, in neutral slots — its own approach, its steps, the end state it expects,
     and any statement it intends to use that the file does not already state. The text is recorded
     verbatim in the row, so it is evidence of how the model reasoned rather than a summary the harness
-    composed. A model port without a ``plan`` turn is a run without one: the loop asks for a plan only
-    when the port has it, and records ``None`` for the arms it could not ask.
+    composed. Only the proof arm is asked (plan D19): the refutation arm's job is one command, so its
+    entry in the row is ``None`` with the reason recorded beside it. A model port without a ``plan`` turn
+    is a run without one: the loop asks for a plan only when the port has it.
     """
 
     def propose(self, goals: Sequence[str], history: Sequence[HistoryEntry]) -> str: ...
@@ -135,6 +165,45 @@ class Model(Protocol):
     def plan(self, arm: str, goals: Sequence[str], history: Sequence[HistoryEntry]) -> str: ...
 
     def usage(self) -> dict: ...
+
+
+# When this process began, for the heartbeat's timestamps: a run is one process (`harness.route_b`, or
+# one per battery case), so a heartbeat line reads as "seconds into this run".
+_HEARTBEAT_ORIGIN = time.monotonic()
+
+# What this process's heartbeat lines are about, when the process is one run among several (a parallel
+# battery): the label is prefixed to every line, so interleaved output from concurrent runs still says
+# which case each line belongs to. Empty for a single run, which needs no attribution.
+_HEARTBEAT_LABEL = ""
+
+
+def set_heartbeat_label(label: str) -> None:
+    """Name this process's run on its heartbeat lines (plans D24/D25).
+
+    One process is one run, so a label set here prefixes every line that process prints — including the
+    model client's turn lines, which do not otherwise name the seed they belong to. A parallel battery
+    sets the case's name, so `sent proof turn 1 …` from four runs at once is still four readable runs.
+    """
+    global _HEARTBEAT_LABEL
+    _HEARTBEAT_LABEL = label
+
+
+def heartbeat(event: str) -> None:
+    """One line of run heartbeat to stderr, timestamped from this process's start (plan D24).
+
+    This is **not** a record — the record is the row, and the per-turn transcript is OMP's own session
+    file — it exists so an *in-flight* run is not a black box. Only outgoing events and phase boundaries
+    are printed, one line each, with a monotonic timestamp: which turn was sent and under what deadline,
+    when it came back and how, and when each phase began. No prompt text, no model output, no token
+    accounting.
+
+    The gap it closes: a wedged turn shows `sent …` with no `ended …` until its deadline fires, which the
+    session transcripts by construction cannot show — they hold *completed* turns, so an empty session
+    directory says only "nothing finished", not "this is what the loop was waiting for". A few lines per
+    run, flushed so it is readable while the run is still stuck.
+    """
+    label = f"{_HEARTBEAT_LABEL} " if _HEARTBEAT_LABEL else ""
+    print(f"[{time.monotonic() - _HEARTBEAT_ORIGIN:9.1f}s] {label}{event}", file=sys.stderr, flush=True)
 
 
 class ProviderError(RuntimeError):
@@ -210,6 +279,22 @@ ARM_REFUTATION = "refutation"
 ARMS_CONFIGURATIONS = ("proof", "proof+refutation")
 
 
+# The refutation arm's standing, as a row records it (plan D16): it produced a witness, it declared it
+# could find none, or it never concluded (no refutation arm configured, or the run ended first). A
+# sentinel rather than a fallback: an arm that cannot refute a true statement must be able to say so and
+# stop, instead of burning the shared pool on a search with no possible payoff.
+NO_WITNESS = "no_witness"
+REFUTED = "refuted"
+
+# What the loop says to the model on the turn after hopelessness: the arm is out of the race, and the
+# reason travels with the history so a reader of the transcript sees why the alternation stopped. The
+# entry's proposal slot is *empty*: `no_witness` is the model's answer about its own search, not a step
+# any prover ran, so it must not appear among the run's applied steps.
+NO_WITNESS_NOTE = (
+    "the refutation arm replied `no_witness`: it can find no witness, its arm has stopped, and the race "
+    "continues on the proof arm"
+)
+
 # What the loop says to a model that answered with no tactic (plan D11). It is carried in the history
 # as that turn's note, so the re-ask is a nudge rather than the identical prompt again — and it never
 # terminates the run: the budget binds long before a model that answers nothing can be called a
@@ -227,6 +312,24 @@ EMPTY_PLAN_NUDGE = "you returned no plan; state your approach, steps, expected e
 # but is not in the pass: a `simp_all` that fails has already simplified the goal. `decide` is here
 # because a goal it closes is exactly the no-induction close §5's vacuousness guard must see.
 AUTOMATION_TACTICS = ("omega", "decide", "aesop", "exact?", "apply?")
+
+# Which arms state a plan before they act (plan D19): the proof arm only. The refutation arm's job is a
+# single command — a witness, or `NO_WITNESS` — and planning a refutation of a true statement is
+# known-useless work that also conflicts with the arm's one-command instruction: asked, its plan turn
+# hung for the full deadline in every observed run, costing minutes and a killed attempt per launch. The
+# planning phase below is driven by this constant rather than by the run's arms, which is what makes the
+# observable structural: a run whose statement is true never spends a planning turn trying to refute it,
+# because no session of any other arm is ever sent a plan prompt.
+PLANNING_ARMS = (ARM_PROOF,)
+
+# Why the row's `plan` carries no refutation entry (plan D19): a reader must see this was decided, not
+# omitted.
+REFUTATION_PLAN_REASON = (
+    "the refutation arm takes no planning turn (plan D19): its job is one command — a witness for the "
+    "negation, or the `no_witness` sentinel — and planning a refutation of a true statement is "
+    "known-useless work that also conflicts with the arm's one-command instruction. When it was asked, "
+    "its plan turn hung for the full deadline in every observed run."
+)
 
 # Every declaration spelling the seed-diff looks for, and the spellings it tolerates in front of one:
 # an attribute or a modifier does not make a declaration a proof step, and a spelling the diff cannot
@@ -675,7 +778,7 @@ def _bill(totals: dict, before: dict, after: dict) -> None:
     )
 
 
-def _new_refusals(prover: Prover, before: Sequence[str]) -> str | None:
+def _new_refusals(prover: Prover, before: Sequence[Failure]) -> str | None:
     """What the prover said about the step that just ran, if it said anything new (plan D14).
 
     Only the driver knows which of the loop's proposals it refused and why: it records the repl's own
@@ -683,7 +786,7 @@ def _new_refusals(prover: Prover, before: Sequence[str]) -> str | None:
     to infer it from a goal state that did not move.
     """
     refused = list(getattr(prover, "failures", ()) or ())
-    return refused[-1] if len(refused) > len(before) else None
+    return refused[-1]["message"] if len(refused) > len(before) else None
 
 
 def _propose(model: Model, arm: str, goals: Sequence[str], history: Sequence[HistoryEntry]) -> str:
@@ -727,6 +830,19 @@ def _automation_pass(prover: Prover) -> str | None:
     return None
 
 
+def _arm_unavailable(arms: str, port: str, action: str) -> dict:
+    """The error row a configured arm that cannot be fielded ends with (plan D16).
+
+    A missing port is a caller's mistake, not an experiment outcome — but by the time the arm's turn
+    comes the run has spent turns, so it is recorded rather than raised (P1's rule: no path past the
+    first turn may lose the row). The message names the port and what it was needed for.
+    """
+    return {
+        "kind": "arm_unavailable",
+        "message": f"the {arms} race needs {port}: the refutation arm has no way to {action}",
+    }
+
+
 def mutant_outcome(outcome: str) -> str | None:
     """How a mutant run ended (protocol §5, plan D7).
 
@@ -765,6 +881,7 @@ def run_loop(
     cap_usd: float = 50.0,
     cap_tokens: int | None = None,
     mutant: bool = False,
+    mode: str = "tactic",
     seed_text: str = "",
     artifact_path: Path | str | None = None,
     assisted_before: Sequence[str] = (),
@@ -800,10 +917,12 @@ def run_loop(
     reader sees what the winner spent and what the loser was doing. A refutation ends the race as
     ``refuted`` — a machine-checked witness, never a model claim (the prover's ``cmd`` decides) — and a
     witness against a statement the caller does not declare false is a rig defect recorded as
-    ``error`` / ``rig_refutation``, the mirror of a mutant that closed. ``setup`` is the configuration
-    that produced the row (plan D17; the model, thinking level, prompt and arm configuration), the
-    loop adding the arm keys it owns, and ``exploratory`` marks a run whose setup is not the headline
-    one, so exploratory rows are never pooled with it.
+    ``error`` / ``rig_refutation``, the mirror of a mutant that closed. An arm that declares
+    **hopelessness** (the model returns :data:`NO_WITNESS`) leaves the race cleanly: the row's
+    ``refutation`` records the standing, the arm takes no further turns, and the proof arm carries on.
+    ``setup`` is the configuration that produced the row (plan D17; the model, thinking level, prompt
+    and arm configuration), the loop adding the arm keys it owns, and ``exploratory`` marks a run whose
+    setup is not the headline one, so exploratory rows are never pooled with it.
 
     Before the race, each configured arm is asked to **plan** (plan D19) — once per arm, recorded
     verbatim in ``plan`` — and before every proof-arm turn the loop tries the cheap automation pass
@@ -826,6 +945,9 @@ def run_loop(
         raise ValueError(f"arms must be one of {ARMS_CONFIGURATIONS}, not {arms!r}")
     started = clock()
     error: dict | None = None
+    # The phases, on the heartbeat (plan D24): a stalled run says which phase it reached, so an operator
+    # reading stderr never has to infer it from process tables.
+    heartbeat("phase: prover start")
     try:
         prover.start()
     except ProverError as failure:
@@ -847,13 +969,21 @@ def run_loop(
     fallback = False
     totals = _arm_totals(arms)
     automation_closed: str | None = None
-    # The planning turn (plan D19): one per arm, before that arm acts, recorded verbatim. A model port
-    # without a `plan` turn is a run without one — the entries stay None rather than the harness
-    # inventing a plan it never received — and the phase spends from the run's own pool, so a model that
-    # never plans ends the run on the budget instead of looping forever.
+    # The refutation arm's standing and whether it is still in the race (plan D16). Hopelessness — the
+    # model returning :data:`NO_WITNESS` — retires the arm: a true statement gives it nothing to find,
+    # and letting it keep proposing would spend the shared pool on a search that cannot pay off (the
+    # live defect this closes: $0.0111 on the arm against $0.0016 on the proof arm for one true goal).
+    refutation_standing: str | None = None
+    refutation_retired = False
+    # The planning turn (plan D19): one per run, for the proof arm only (see `PLANNING_ARMS`), before
+    # that arm acts, recorded verbatim. A model port without a `plan` turn is a run without one — the
+    # entries stay None rather than the harness inventing a plan it never received — and the phase spends
+    # from the run's own pool, so a model that never plans ends the run on the budget instead of looping
+    # forever.
     plans: dict[str, str | None] = {arm: None for arm in arm_order(arms)}
     if callable(getattr(model, "plan", None)):
-        for plan_arm in arm_order(arms):
+        for plan_arm in (arm for arm in arm_order(arms) if arm in PLANNING_ARMS):
+            heartbeat(f"phase: planning, {plan_arm} arm")
             while error is None:
                 usage = model.usage()
                 fallback = fallback or bool(usage.get("is_fallback", False))
@@ -888,6 +1018,7 @@ def run_loop(
                 break
     # A driver failure is what ends the loop when it happens; the row below carries the turns, tokens
     # and dollars spent up to it (ticket P1).
+    heartbeat(f"phase: race ({arms})")
     while error is None and budget_exceeded is None:
         unclosed = prover.unclosed()
         if unclosed == 0:
@@ -901,8 +1032,10 @@ def run_loop(
             break
 
         # The race alternates (plan D16): the proof arm on odd turns, the refutation arm on even ones,
-        # so the arm that acts is a function of the turn number and each is billed for its own.
-        arm = arm_of(turns + 1, arms)
+        # so the arm that acts is a function of the turn number and each is billed for its own. Once the
+        # refutation arm has declared hopelessness it is out, and every remaining turn is the proof
+        # arm's.
+        arm = ARM_PROOF if refutation_retired else arm_of(turns + 1, arms)
         if arm == ARM_PROOF:
             # The cheap automation pass runs before the model is asked (plan D19), and closes the run
             # when it can: the goal is closed, no model turn is spent, and `automation_closed` names the
@@ -917,23 +1050,14 @@ def run_loop(
             if automation_closed is not None:
                 outcome = "success"
                 break
-        elif not callable(getattr(model, "refute", None)) or not callable(
-            getattr(prover, "cmd", None)
-        ):
-            # The refutation arm's turn has come and the ports behind it are not there: a run that
-            # cannot propose a witness or have one checked is not a race, and saying so is this row's
-            # business rather than a traceback's — the arm was configured, so the row records why it
-            # could not be fielded and the exit code says the run is not a result.
-            missing = "Model.refute()" if not callable(getattr(model, "refute", None)) else "Prover.cmd()"
+        elif not callable(getattr(model, "refute", None)):
+            # The refutation arm's turn has come and the model cannot even propose: the arm is
+            # unfieldable, and saying so is this row's business rather than a traceback's — the arm was
+            # configured, so the row records why it could not be fielded and the exit code says the run
+            # is not a result. `Prover.cmd` is checked later, once a command is actually in hand: an arm
+            # that declares hopelessness never needs it.
             outcome = "error"
-            error = {
-                "kind": "arm_unavailable",
-                "message": (
-                    f"the {arms} race needs {missing}: the refutation arm has no way to "
-                    f"{'propose' if missing.startswith('Model') else 'have a witness machine-checked in'} "
-                    "the turn it is due, and no witness can be claimed without it"
-                ),
-            }
+            error = _arm_unavailable(arms, "Model.refute()", "propose a refutation in the turn it is due")
             break
         try:
             proposal = _propose(model, arm, prover.goals(), history)
@@ -959,6 +1083,22 @@ def run_loop(
             totals[arm]["empty_turns"] += 1
             history.append(("", prover.goals(), EMPTY_REPLY_NUDGE))
             continue
+        if arm == ARM_REFUTATION and proposal == NO_WITNESS:
+            # Hopelessness (plan D16): the arm declares it can find no witness, and that ends the arm —
+            # not the race, and never as a failure. Its turn was consumed and billed like any other (the
+            # model answered), the reason travels with the history, and the row's `refutation` records
+            # the standing. Nothing is sent to the prover: the sentinel is the model's word about its own
+            # search, not a command, and no verdict is claimed from it.
+            refutation_standing = NO_WITNESS
+            refutation_retired = True
+            history.append(("", prover.goals(), NO_WITNESS_NOTE))
+            continue
+        if arm == ARM_REFUTATION and not callable(getattr(prover, "cmd", None)):
+            # A command is in hand and nothing can check it: no witness can be claimed without the
+            # prover's verdict, so the run is not a race and the row says so rather than raising.
+            outcome = "error"
+            error = _arm_unavailable(arms, "Prover.cmd()", "have a witness machine-checked in the turn it is due")
+            break
         before = list(getattr(prover, "failures", ()) or ())
         try:
             if arm == ARM_PROOF:
@@ -981,6 +1121,7 @@ def run_loop(
                 # machine-checked (plan D16), so the row can record it as a result.
                 witness = {"command": proposal, "witness": verdict.get("witness")}
                 totals[arm]["witness"] = witness
+                refutation_standing = REFUTED
                 if mutant:
                     outcome = "refuted"
                 else:
@@ -1116,11 +1257,25 @@ def run_loop(
         "proof_s": proof_s,
         "compute_usd": compute_cost_usd(wall_clock_s),
         "mutant": mutant_observation,
+        # Which instrument produced this row (plan D26): the per-file mode closes the *file* through the
+        # closure oracle, the tactic mode closes it one tactic per turn. The two are different
+        # configurations and are never pooled — R≥5 cells and the Route A comparison are defined against
+        # per-file rows — so the row states which one it is rather than leaving a reader to infer it.
+        "mode": mode,
         "arms": {"order": arm_order(arms), **totals},
+        # The refutation arm's standing (plan D16): the witness it was accepted on, the hopelessness it
+        # declared, or nothing when it never concluded. Never a failure: an arm that finds no witness on
+        # a true statement has done its job, and the row says which of the three it was.
+        "refutation": refutation_standing,
         # The plans the arms stated before they acted (plan D19), verbatim: evidence of how the model
-        # reasoned, one entry per configured arm, `None` for an arm whose plan the port could not be
-        # asked for.
-        "plan": plans,
+        # reasoned. `proof` is the one planning turn a run takes, and `None` means the port had no
+        # `plan` turn to ask; `refutation` is always `None`, with the reason beside it, because that arm
+        # takes no planning turn at all (D19).
+        "plan": {
+            "proof": plans.get(ARM_PROOF),
+            "refutation": plans.get(ARM_REFUTATION),
+            "refutation_reason": REFUTATION_PLAN_REASON if ARM_REFUTATION in arm_order(arms) else None,
+        },
         # The setup that produced the row (plan D17): the caller's configuration — model, thinking
         # level, prompt, refutation templates — with the arm configuration the loop owns overriding it,
         # so an iterated run is distinguishable from the one before it. `exploratory` marks a run whose

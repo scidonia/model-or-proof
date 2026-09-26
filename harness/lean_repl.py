@@ -56,7 +56,12 @@ from typing import Callable, Sequence
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from harness.closure import ProverError, SeedAlreadyClosedError, declaration_matches  # noqa: E402
+from harness.closure import (  # noqa: E402
+    Failure,
+    ProverError,
+    SeedAlreadyClosedError,
+    declaration_matches,
+)
 from harness.lean_lex import count_holes, is_identifier_char, skip_noncode  # noqa: E402
 
 # `repl` holds the goal state in memory and the loop drives it turn by turn, so a step that hangs
@@ -119,6 +124,20 @@ def _goals_of(response: object) -> list[str]:
         if not isinstance(goal, str):
             raise LeanReplError(f"lean-repl goal is not a string: {goal!r}")
     return list(goals)
+
+
+def _status_of(response: dict) -> str | None:
+    """The repl's own verdict on the state, when it stated one the driver can read (finding P1.2).
+
+    ``proofStatus`` is Lean's judgment when the repl sends a string the driver recognises —
+    ``Completed``, or an ``Incomplete: …`` naming what is left. A missing key, or a value that is not a
+    readable status, is *not* a judgment: nothing in such a response shows Lean considered the step, so
+    recording it as a Lean refusal would blame the model for the rig's inability to read the answer.
+    """
+    status = response.get("proofStatus")
+    if isinstance(status, str) and status.startswith(("Completed", "Incomplete")):
+        return status
+    return None
 
 
 def _closed_by(response: dict) -> bool:
@@ -435,7 +454,8 @@ class LeanReplProver:
 
         self.seed_text = ""  # the artifact as the run found it
         self.tactics: list[str] = []  # accepted tactics, in order: the script the artifact carries
-        self.failures: list[str] = []  # refused answers, with the repl's reason: the row reads this
+        # Refused answers, each with its kind and the reason verbatim: the row reads this (plan D24).
+        self.failures: list[Failure] = []
 
         self._process: subprocess.Popen | None = None
         self._stdin = None
@@ -554,20 +574,32 @@ class LeanReplProver:
         try:
             goals = _goals_of(response)
         except LeanReplError as unreadable:
-            self._reject(describing, str(unreadable))
+            self._reject(describing, str(unreadable), kind="transport")
             return
         if goals:
             self._goals = goals
             if isinstance(response.get("proofState"), int):
                 self._proof_state = int(response["proofState"])
             return
-        self._reject(
-            describing, f"the repl reports {response.get('proofStatus')!r}, not a closed proof"
-        )
+        status = _status_of(response)
+        if status is None:
+            # No readable verdict: the rig could not tell what happened, so this is not Lean refusing
+            # the step (finding P1.2).
+            self._reject(
+                describing,
+                f"the repl's answer states no readable proof status: {response!r}",
+                kind="transport",
+            )
+            return
+        self._reject(describing, f"the repl reports {status!r}, not a closed proof", kind="lean")
 
-    def _reject(self, describing: str, reason: str) -> None:
-        """Record a refused answer and hold the run open: ``unclosed()`` must stay positive."""
-        self.failures.append(f"{describing}: {reason}")
+    def _reject(self, describing: str, reason: str, *, kind: str) -> None:
+        """Record a refused answer and hold the run open: ``unclosed()`` must stay positive.
+
+        ``kind`` is whose refusal it is (plan D24): ``"lean"`` when Lean judged the step,
+        ``"transport"`` when the step never reached it.
+        """
+        self.failures.append({"kind": kind, "message": f"{describing}: {reason}"})
         self._goals = [NOT_CLOSED_GOAL]
 
     def _adopt_env(self, response: dict) -> None:
@@ -596,31 +628,68 @@ class LeanReplProver:
         a tactic that "closes" the goal with ``sorry`` or a metavariable, and an answer the driver
         cannot read as a goal state all leave the proof state where it was, so the loop's next turn
         sees the same goal; each is recorded in ``failures``.
+
+        A reply carrying a ``;`` is handed over **parenthesised**. The repl parses this field with
+        Lean's ``tactic`` category (``REPL/Snapshots.lean``: ``runParserCategory … `tactic``), and ``;``
+        belongs to ``tacticSeq``, not to ``tactic`` — so a model's perfectly valid ``t1; t2`` used to
+        come back as ``expected end of input`` at the ``;``, a *transport* refusal recorded as if Lean
+        had rejected the proof (measured live: ``'skip; skip'`` fails at 1:4, ``'(skip; skip)'`` runs,
+        and ``'skip <;> skip'`` runs because ``<;>`` *is* in the category). Parentheses change no
+        semantics; the reply itself stays verbatim everywhere it is recorded, and only what the repl is
+        handed is wrapped.
         """
         if self._proof_state is None:
             raise LeanReplError("apply() before start()")
+        if not tactic.strip():
+            # Nothing to hand over. The loop never applies an empty reply (D11 consumes and re-asks
+            # it), so this is a guard rather than a path — but if it is ever reached, the refusal is the
+            # rig's, not Lean's, and must be recorded as such (plan D24).
+            self.failures.append(
+                {"kind": "transport", "message": "the reply was empty: nothing to hand Lean"}
+            )
+            return
+        sent = f"({tactic})" if ";" in tactic else tactic
         response = self._ask(
-            {"tactic": tactic, "proofState": self._proof_state},
+            {"tactic": sent, "proofState": self._proof_state},
             self.step_timeout_s,
-            f"applying {tactic!r}",
+            f"applying {sent!r}",
         )
         if "message" in response:
-            self.failures.append(f"{tactic!r}: {' '.join(str(response['message']).split())}")
+            self.failures.append(
+                {"kind": "lean", "message": f"{sent!r}: {' '.join(str(response['message']).split())}"}
+            )
             return
         try:
             goals = _goals_of(response)
         except LeanReplError as unreadable:
-            self.failures.append(f"{tactic!r}: {unreadable}")
+            self.failures.append({"kind": "transport", "message": f"{sent!r}: {unreadable}"})
             return
         if not goals and not _closed_by(response):
             # The close-guard (plan D6): no goals, but not the repl's word that the proof is closed.
             # That is its shape both for a tactic it recovered from as a `sorry` goal and for a proof
             # that still ends in one, so the state stays where it was and the loop cannot read this as
             # closure; the message, when the repl sent one, is the only account of what went wrong.
-            status = response.get("proofStatus")
+            status = _status_of(response)
             errors = _errors_in(response)
+            if status is None and not errors:
+                # Nothing here shows Lean considered the tactic: an unreadable answer is the rig's
+                # failure to read the repl, not the model's bad tactic (finding P1.2).
+                self.failures.append(
+                    {
+                        "kind": "transport",
+                        "message": (
+                            f"{sent!r}: the repl's answer states no readable proof status: {response!r}"
+                        ),
+                    }
+                )
+                return
             detail = f" — {' '.join(errors[0].split())}" if errors else ""
-            self.failures.append(f"{tactic!r}: the repl reports {status!r}, not a closed proof{detail}")
+            self.failures.append(
+                {
+                    "kind": "lean",
+                    "message": f"{sent!r}: the repl reports {status!r}, not a closed proof{detail}",
+                }
+            )
             return
         if not isinstance(response.get("proofState"), int):
             raise LeanReplError(f"the repl's answer to {tactic!r} carries no proof state: {response!r}")
@@ -684,10 +753,12 @@ class LeanReplProver:
         sorries = response.get("sorries")
         holes = sorries if isinstance(sorries, list) else []
         errors = _errors_in(response)
+        kind = "lean"
         if "message" in response:
             reason: str | None = f"the repl refused the command: {response['message']}"
         elif _env_of(response) is None:
             reason = f"the repl's answer carries no environment: {response!r}"
+            kind = "transport"  # nothing to run the command against: we could not hand it over
         elif errors:
             reason = f"the command errors: {'; '.join(errors)}"
         elif holes:
@@ -695,7 +766,7 @@ class LeanReplProver:
         else:
             reason = None
         if reason is not None:
-            self.failures.append(f"{command!r}: {reason}")
+            self.failures.append({"kind": kind, "message": f"{command!r}: {reason}"})
         else:
             self._adopt_env(response)
         return {

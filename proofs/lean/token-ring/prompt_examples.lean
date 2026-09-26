@@ -26,11 +26,18 @@ The examples, and what each one teaches:
 
 namespace PromptExamples
 
--- 1. Induction over `Nat`; the arithmetic is left to `simp` and `omega`.
+-- 1. Induction over `Nat`: `simp` splits the successor's range and `nlinarith` does the arithmetic
+-- with the induction hypothesis.
 theorem sum_first_n (n : Nat) : 2 * (List.range (n + 1)).sum = n * (n + 1) := by
   induction n with
   | zero => simp
-  | succ n ih => simp [List.range_succ, ih]; omega
+  | succ n ih =>
+    -- the successor's range is the previous range plus the new last index, stated for *this* index so
+    -- the induction hypothesis stays usable
+    have step : List.range (n + 1 + 1) = List.range (n + 1) ++ [n + 1] := List.range_succ
+    rw [step, List.sum_append]
+    simp only [List.sum_cons, List.sum_nil]
+    nlinarith
 
 -- 2. The step needs a case split on the induction hypothesis before `omega` can finish.
 theorem even_or_odd (n : Nat) : (∃ k, n = 2 * k) ∨ (∃ k, n = 2 * k + 1) := by
@@ -47,7 +54,7 @@ theorem mem_append {α : Type} (a : α) (xs ys : List α) :
     a ∈ xs ++ ys ↔ a ∈ xs ∨ a ∈ ys := by
   induction xs with
   | nil => simp
-  | cons x xs ih => simp [ih]
+  | cons x xs ih => simp [ih, or_assoc]
 
 -- 4. A cardinality goal over a finite set: the library's own bound closes it in one step.
 theorem card_filter_le {α : Type} [DecidableEq α] (s : Finset α) (p : α → Prop)

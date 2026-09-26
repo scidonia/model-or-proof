@@ -142,18 +142,18 @@ and break the scenario; stubs ignore `harness.closure.AUTOMATION_TACTICS`.
   reference semantics says holds is the mirror of the mutant-closed defect, and fails loudly.
 - **Why**: §5's "a rig that reports success on a mutant is broken" has a symmetric inverse for refutation.
 
-## Scenario 12 — the planning turn is recorded verbatim; an empty plan is consumed and re-asked
+## Scenario 12 — the proof arm plans; the refutation arm does not (an empty plan is re-asked)
 
 - **Actor**: the researcher.
 - **Boundary**: `harness.closure.run_loop(…, arms="proof+refutation")`, with a model that has a
   `plan(arm, goals, history)` turn.
-- **Given**: a model returning per-arm plans, and a model returning `""` once per arm before the real
-  plan.
+- **Given**: a model returning a proof plan, and a model returning `""` once before the real plan.
 - **When**: the loop runs.
-- **Then**: `row["plan"] == {"proof": <text>, "refutation": <text>}` in both cases — the plan is recorded
-  verbatim, and an empty plan is a consumed turn re-asked with the nudge, not a failure.
-- **Why**: the plan is evidence of how the model reasons (D19); losing an empty plan would silently drop
-  a model call.
+- **Then**: `row["plan"]["proof"]` is the plan verbatim, `row["plan"]["refutation"] is None` with a
+  non-empty `refutation_reason`, and the model's `plan()` is never asked for the `"refutation"` arm; the
+  proof plan's empty reply is a consumed turn re-asked with the nudge.
+- **Why**: a plan to refute a true statement is known-useless work and conflicts with the arm's
+  one-command instruction (D19); the refutation arm's decision is a single command, not a plan.
 
 ## Scenario 13 — the automation pass runs first and is recorded when it closes
 
@@ -186,6 +186,62 @@ and break the scenario; stubs ignore `harness.closure.AUTOMATION_TACTICS`.
 - **Why**: the experiment's central distinction — a model-guessed helper is the loop's work, a
   human-supplied one is `assisted` (D19).
 
+## Scenario 16 — the refutation arm must not win by proving the statement; hopelessness is recorded
+
+- **Actor**: the researcher.
+- **Boundary**: `harness.closure.run_loop(…, arms="proof+refutation")`.
+- **Given**: a model whose `refute()` returns the sentinel `"no_witness"`, and a model whose `refute()`
+  returns a *proof of the statement* while the prover's `cmd()` rejects it (the negation-wrap does not
+  close).
+- **When**: the loop runs each, the proof arm closing the true statement.
+- **Then**: the first records `outcome: "success"` with `refutation: "no_witness"` (the arm terminates
+  cleanly, the race continues on the proof arm); the second records `outcome != "refuted"` — a proposal
+  that proves `P` is wrapped in `¬ P` and rejected, so the arm cannot win by proving the thing it must
+  refute.
+- **Why**: on true statements the arm must be able to declare it cannot find a counterexample, and it must
+  never be credited with a refutation for proving the statement (D16).
+
+## Scenario 17 — the OMP session directory is absolute, under the run's session root
+
+- **Actor**: the harness (a run_loop/route_b caller).
+- **Boundary**: `harness.model.omp_command(session_root, role)`.
+- **Given**: a *relative* `session_root` (`results/omp/run1`) while the process cwd is the repository.
+- **When**: `omp_command` builds the command.
+- **Then**: the `--session-dir` value is **absolute**, equals `<session_root resolved>/<role>` — the same
+  path the port creates for that role.
+- **Why**: OMP resolves a relative `--session-dir` against its `--cwd`, silently moving the run's
+  transcript outside the durable run directory (the empty-repo-dir bug); a scenario may not drive a real
+  model, so the absolute-path property is the pin.
+
+## Scenario 18 — the reply is applied whole; a bare `by` is wrapped as `exact by`
+
+- **Actor**: the loop (extracting a tactic from a model reply).
+- **Boundary**: `harness.model.extract_tactic(reply)`.
+- **Given**: a reply that is a fenced proof with prose around it (`Here is the proof:\n```lean\nby\n  omega\n```\nThat closes it.`).
+- **When**: the tactic is extracted.
+- **Then**: the fence and surrounding prose are stripped, the multi-line block is kept **whole** (not
+  truncated to its first line), and the bare `by` is wrapped as `exact by\n  omega` — a bare `by` is not
+  a standalone tactic (`expected tactic`), so the wrap is the same syntactic normalisation as D16's
+  refutation wrap. A single tactic (`induction hs`) and an already-formed `exact by …` pass through
+  unchanged.
+- **Why**: the whole-reply path must apply the proof the model wrote, not one line of it; silently
+  truncating a multi-line sequence to its first line would drop the closing lines with no failure recorded.
+
+## Scenario 19 — the refutation command is not rewritten by the proof-arm wrap
+
+- **Actor**: the loop (extracting a refutation command vs a proof tactic).
+- **Boundary**: `harness.model.extract_command(reply)` vs `harness.model.extract_tactic(reply)`.
+- **Given**: a `by`-led reply (`by\n  decide`).
+- **When**: each is extracted.
+- **Then**: `extract_command` leaves it **byte-exact** (`by\n  decide`); `extract_tactic` wraps it
+  (`exact by\n  decide`). `no_witness` and a full `example : … := by …` command pass through
+  `extract_command` unchanged.
+- **Why**: the `exact by` wrap is **proof-arm-only** — `refute()` routes through `extract_command`
+  (fence-only), so the negative control's behaviour is unchanged by the whole-reply iteration. This is a
+  **behavioural** pin (the wrap does not reach the refutation channel), not a byte-identity claim: the
+  batch also rewrote the refutation prompt in an earlier ticket, so byte-identity across the batch is not
+  what this scenario claims.
+
 ## Expected failure before implementation
 
 The row keys `startup_s`/`proof_s`/`resolvedModelIsFallback`/`error`/`mutant`/`assisted` do not
@@ -203,5 +259,22 @@ are the escapes they now pin):
   `harness/closure.py:446` (`Path(artifact_path).read_text()`), before route_b's guard — the row was lost.
 - S7 mutant closed — reconstructed, labelled in `/tmp/mutant_closed_prefix_repro.py`: pre-fix `run_loop`
   escaped with `MutantClosedError` (protocol §5's rig-broken message) — no row.
+
+Fail-first evidence for S12/S17/S18/S19 — **expected reds, to be recovered against the pre-change code**
+(temporary revert of the specific change, not `git show HEAD`, which predates the whole batch and only
+ImportErrors). The reds actually recorded at the time (S17 `TypeError: session_root`; S18 `ImportError:
+extract_tactic`; S19 first-run green) are scaffolding, not the behaviour failure, and do not count:
+
+- S17 — the pre-`.resolve()` `omp_command` emits a relative `--session-dir`; expected red: `assert
+  Path(value).is_absolute()` fails.
+- S18 — the pre-wrap extraction returns `by\n  omega`; expected red: `assert extract_tactic(reply) ==
+  "exact by\n  omega"` fails.
+- S19 — the pre-split `refute()` routes through `extract_tactic` and wraps; expected red: `assert
+  extract_command(reply) == "by\n  decide"` fails (it returns `exact by\n  decide`).
+- S12 (D19 update) — the pre-D19 loop asks the refutation arm for a plan; expected red: `assert
+  "refutation" not in model._asked` fails.
+
+Each recovered red is observed and recorded in `docs/red-run-evidence.md` before the scenario is counted
+as protective.
 
 Run with: `nix develop -c pytest tests/test_route_b_row.py`

@@ -1,0 +1,22 @@
+name = "bakery"
+# Matches `lean-toolchain` (elan's pin), and `lake-manifest.json` here is `proofs/lean/token-ring/`'s
+# resolved lock file copied verbatim: the same Mathlib revision (`v4.35.0-rc3`) is required, so this
+# second package needs no `lake update` of its own.
+
+# The Route B artifacts, one seed per tier (protocol §2): the model + the general theorem, and the
+# mutant that must not close (the negative control, plan D7). `BakeryN0` joins the list when Bakery's
+# `N₀` is calibrated (plan D23 rung 1; `tasks/bakery.json`'s `n0` is still null), and until then there
+# is nothing for it to state. `defaultTargets` has to precede the `[[…]]` tables below: after
+# `[[require]]` starts, a bare key belongs to that dependency table.
+defaultTargets = ["Bakery", "BakeryMutant"]
+
+[[lean_lib]]
+name = "Bakery"
+
+[[lean_lib]]
+name = "BakeryMutant"
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "v4.35.0-rc3"

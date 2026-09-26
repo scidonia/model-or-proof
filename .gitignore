@@ -6,4 +6,5 @@ __pycache__/
 .venv/
 states/
 .lake/
-proofs/lean/*/.runs/
+proofs/lean/**/.runs/
+results/omp/

@@ -64,10 +64,53 @@ the repl process — the plan's "a scripted lean-repl responder, no real Lean").
 - **Why**: a missing `goals` key must not degrade to "no goals"; the driver must refuse rather than
   guess.
 
+## Scenario 6 — an unreadable completion status is a transport refusal, not a Lean one
+
+- **Actor**: the loop, reading the refusals the driver records.
+- **Boundary**: the same driver (`LeanReplProver`, `responder=…`, `start()`, `failures`).
+- **Given**: a responder returning `{"goals": [], "proofState": 1}` — no `proofStatus` field — or a
+  `proofStatus` that is not a string starting `Completed`/`Incomplete` (e.g. `"Weird"`).
+- **When**: the driver starts.
+- **Then**: `failures` records one entry with `kind == "transport"`, whose message names the unreadable
+  status.
+- **Why**: an unreadable completion is the rig's fault, not a Lean rejection of a tactic — recording it
+  as `lean` teaches the model a false lesson about its own syntax.
+
+## Scenario 7 — a recognised "contains sorry" judgment is a lean refusal
+
+- **Actor**: the loop.
+- **Boundary**: the same driver.
+- **Given**: a responder returning `{"goals": [], "proofStatus": "Incomplete: contains sorry"}`.
+- **When**: the driver starts.
+- **Then**: `failures` records one entry with `kind == "lean"`, carrying the "not a closed proof"
+  judgment (and the first error when the repl sent one).
+- **Why**: `contains sorry` is a recognised Lean judgment — the proof is incomplete, which is the model's
+  work, not a transport fault.
+
+## Scenario 8 — a `;`-sequence is handed over parenthesised; other tactics unchanged
+
+- **Actor**: the driver, applying a tactic.
+- **Boundary**: `LeanReplProver(…, responder=…).apply(tactic)`, with a responder that captures the payload.
+- **Given**: `"skip; skip"`, `"skip"`, and `"exact by\n  omega"`.
+- **When**: each is applied.
+- **Then**: the repl receives `{"tactic": "(skip; skip)", …}` for the `;`-sequence, and the others
+  byte-exact (`"skip"`, `"exact by\n  omega"`).
+- **Why**: Lean's `tactic` category does not include `;` (it lives in `tacticSeq`), so `t1; t2` dies at
+  the `;`; the parenthesised form parses and runs (probe-backed: `(skip; skip)` runs where `skip; skip`
+  dies at `expected end of input`). Parentheses change no semantics; only what the repl is handed is
+  wrapped, and the reply itself stays verbatim in transcript and history.
+
 ## Expected failure before implementation
 
 `harness.lean_repl` does not exist → `ModuleNotFoundError` for all five scenarios (the "does not exist
 yet" row). Observed red run (step-4 coder): `ModuleNotFoundError: No module named 'harness.lean_repl'`
 — collection error, scenarios not collected.
+
+Scenarios 6–8 landed **after** their fixes, so their first observed run was green; the genuine reds are
+recovered against the pre-change code (temporary revert) and recorded here:
+- S6/S7 — the pre-`_status_of` code recorded an unreadable answer as `Lean error: …`; expected red:
+  `assert [f["kind"] …] == ["transport"]` fails (it is `["lean"]`).
+- S8 — the pre-parenthesisation code handed `skip; skip` over verbatim; expected red:
+  `assert seen[-1]["tactic"] == "(skip; skip)"` fails (it is `"skip; skip"`).
 
 Run with: `nix develop -c pytest tests/test_lean_driver.py`
