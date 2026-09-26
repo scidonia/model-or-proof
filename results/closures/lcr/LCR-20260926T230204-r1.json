@@ -1,0 +1,47 @@
+{
+  "artifact": "results/closures/lcr/LCR-20260926T230204-r1.lean",
+  "artifact_sha256": "706ec6f34c8523ef84f37ec6a909cfc54a91d3e878a0596abef195347cca9ea6",
+  "closure": {
+    "axiom_report": "ok",
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "closed": true,
+    "elaborates": true,
+    "errors": [],
+    "integrity": true,
+    "lean_path": "/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/Cli/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/batteries/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/Qq/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/aesop/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/importGraph/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/plausible/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/mathlib/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/build/lib/lean:/home/gavin/.elan/toolchains/leanprover--lean4---v4.35.0-rc3/lib/lean",
+    "module": "LCR",
+    "no_progress_rounds": 0,
+    "outside_events": [
+      "CREATE proofs/lean/lcr/Counterexample.lean",
+      "MODIFY proofs/lean/lcr/Counterexample.lean",
+      "DELETE proofs/lean/lcr/Counterexample.lean",
+      "CREATE proofs/lean/lcr/Axioms.lean",
+      "MODIFY proofs/lean/lcr/Axioms.lean",
+      "DELETE proofs/lean/lcr/Axioms.lean"
+    ],
+    "outside_writes": [],
+    "pristine_sha256": "f8a6dcebc328ee4b843ef488c0e3ae63da35b99df76d41ba9634de88cd44c102",
+    "raw_tail": [
+      "Quot.sound",
+      "propext",
+      "resolved LCR.unique_leader"
+    ],
+    "rounds": 1,
+    "seed_intact": true,
+    "theorem": "LCR.unique_leader",
+    "timed_out": false,
+    "verdict": false,
+    "watch_blind": null
+  },
+  "digests_agree": true,
+  "mode": "file",
+  "pristine_sha256": "f8a6dcebc328ee4b843ef488c0e3ae63da35b99df76d41ba9634de88cd44c102",
+  "row": "results/proof.jsonl:71",
+  "row_artifact_sha256": "706ec6f34c8523ef84f37ec6a909cfc54a91d3e878a0596abef195347cca9ea6",
+  "task": "lcr",
+  "tier": 2
+}

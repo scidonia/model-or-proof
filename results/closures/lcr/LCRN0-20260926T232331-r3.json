@@ -1,0 +1,41 @@
+{
+  "artifact": "results/closures/lcr/LCRN0-20260926T232331-r3.lean",
+  "artifact_sha256": "bc88e8a1dd266ae4a26184b7d57ff7e7fe11579378edb61996c3ce5e73e1c681",
+  "closure": {
+    "axiom_report": "ok",
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "closed": true,
+    "elaborates": true,
+    "errors": [],
+    "integrity": true,
+    "lean_path": "/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/Cli/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/batteries/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/Qq/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/aesop/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/importGraph/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/plausible/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/mathlib/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/build/lib/lean:/home/gavin/.elan/toolchains/leanprover--lean4---v4.35.0-rc3/lib/lean",
+    "module": "LCRN0",
+    "no_progress_rounds": 0,
+    "outside_events": [],
+    "outside_writes": [],
+    "pristine_sha256": "3b239bbb81c3c8532236cf3052a0d1d2a7629b0308952c4276040b212cf51ee5",
+    "raw_tail": [
+      "Quot.sound",
+      "propext",
+      "resolved LCRN0.unique_leader_n0"
+    ],
+    "rounds": 1,
+    "seed_intact": true,
+    "theorem": "LCRN0.unique_leader_n0",
+    "timed_out": false,
+    "verdict": true,
+    "watch_blind": null
+  },
+  "digests_agree": true,
+  "mode": "file",
+  "omp_sessions": "results/omp/LCRN0-20260926T232331-r3",
+  "pristine_sha256": "3b239bbb81c3c8532236cf3052a0d1d2a7629b0308952c4276040b212cf51ee5",
+  "row": "results/proof.jsonl:75",
+  "row_artifact_sha256": "bc88e8a1dd266ae4a26184b7d57ff7e7fe11579378edb61996c3ce5e73e1c681",
+  "task": "lcr",
+  "tier": 1
+}
