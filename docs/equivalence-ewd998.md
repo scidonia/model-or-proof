@@ -200,6 +200,22 @@ two mutations that look alike.
   without the flag. So the value survives, and what changed is the ground it stands on. The manifest holds
   it; this audit now states the basis.
 
+- **The flag comparison, both arms.** The same N=4 instance was run three times *with* `-cleanup` and died
+  each time — 201,981 / 43,634,504 / 75,753,775 distinct states, `StatePoolReader` or `StatePoolWriter` — and
+  once *without* it, completing 248,006,200 states in 2 h 36 min. That pair is a death-versus-completion
+  comparison rather than a bare `timeout`, and it is the finding in its strongest form.
+
+- **The `timeout` row and the uncapped completion are one run's two faces.** The same instance takes
+  2 h 36 min to finish and is cut off at 2 h, which is precisely what `n₀ = 3` means: the tool reaches those
+  states and the cap is what stops the record from counting them. Reading the pair together states the
+  definition rather than an accident.
+
+- **The clean pass stops at N=4 deliberately.** N=5 and N=6 were flagged-only runs, both dying far short of
+  completion (235,260 and 258,428 states). Their clean rows would restate that neither completes inside the
+  cap, which §11 decision 3 already excludes and N=4's pair already establishes, at a cost of about four
+  hours of host time. So the sweep's clean rows are N=3 and N=4 only, and that is a decision recorded here
+  rather than a gap a reader has to interpret.
+
 - **The `-cleanup` finding (fixed).** `run_tlc` passed `-cleanup` unconditionally, and it removed the state
   pool *a run was still using* — N=4 died at 75.7M states and N=5/N=6 at ~250k, while the same N=5 spec
   without the flag passed sixteen times its with-flag death point. Bakery (238.8M) and token-ring (289.4M)
