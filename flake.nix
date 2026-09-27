@@ -20,6 +20,10 @@
           z3 # SMT solver available to the prover side
           inotify-tools # file mode's boundary is observed, not enforced (no unprivileged userns here): its
                         # events are the evidence that the shell wrote outside the working copy
+          # Paper typesetting: TeX Live, so the paper builds from its source through the dev shell
+          # like every other artifact here — offline, no package mirror needed. pgfplots is not in
+          # the medium scheme and the paper's cost figure is drawn with it.
+          (texliveMedium.withPackages (ps: [ ps.pgfplots ]))
         ];
       };
     };
