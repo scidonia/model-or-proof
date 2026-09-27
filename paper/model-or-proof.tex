@@ -5,6 +5,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
+\usepackage{array}
 \usepackage{graphicx}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
@@ -241,7 +242,7 @@ millidollars}. The IJCAR papers report lines, and we do not convert lines into d
 \begin{table}[htbp]
 \centering
 \small
-\begin{tabular}{@{}p{0.30\textwidth}p{0.62\textwidth}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.30\textwidth}>{\raggedright\arraybackslash}p{0.62\textwidth}@{}}
 \toprule
 Reading & Result \\
 \midrule
@@ -404,5 +405,34 @@ Goedel-LM.
 \newblock arXiv:2502.07640.
 
 \end{thebibliography}
+
+\appendix
+\section{Data provenance}
+
+Every figure in \S4 is recomputable from rows committed in the repository; none is estimated. The
+paper builds from \texttt{paper/model-or-proof.tex} through the repository's dev shell
+(\texttt{nix develop -c latexmk -pdf}), so the artifact is produced from its source like everything
+else here.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.32\textwidth}>{\raggedright\arraybackslash}p{0.60\textwidth}@{}}
+\toprule
+Figure & Source \\
+\midrule
+Route~A rows & \texttt{results/tlc.jsonl}, with logs under \texttt{results/logs/} \\
+Route~B rows & \texttt{results/proof.jsonl}; closure copies under \texttt{results/closures/<task>/} \\
+Human comparators & \texttt{results/human.jsonl}; quotes pinned in \texttt{docs/human-baseline.md} \\
+Method and decisions & \texttt{docs/protocol.md} \\
+Closure criterion & \texttt{harness/closure\_oracle.py}, \texttt{tools/checker/PROVENANCE.md} \\
+Equivalence audits & \texttt{docs/equivalence-\{token-ring,bakery,lcr,ewd998\}.md} \\
+Full measured matrix & \texttt{wiki/comparison-matrix.md}, which also carries the two queries that
+recompute \S4.1 and the Route~A rows \\
+\bottomrule
+\end{tabular}
+\caption{Where each figure comes from. The matrix in \texttt{wiki/} exists so the numbers here can
+be checked against the data rather than trusted as typeset.}
+\end{table}
 
 \end{document}
