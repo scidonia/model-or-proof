@@ -35,8 +35,8 @@ artifact --- can close that gap, and at what cost.
 Across four concurrent algorithms (token-ring mutual exclusion, Lamport's Bakery, LCR leader election
 and EWD998 termination detection) the loop closed every task's general theorem, each with a negative
 control demonstrating that the rig detects a weakened model. \textbf{The headline claim is supported on
-4 of 4 tasks: the loop proves the general theorem inside a 2\,h / \$50 budget, by two to three orders of
-magnitude, where TLC cannot answer at any budget.} The same-claim cost comparison is 2--2 and turns on
+4 of 4 tasks: the loop proves the general theorem inside a 2\,h / \$50 budget, its worst cell median
+using 6.2\% of the clock and 0.0012\% of the money, where TLC cannot answer at any budget.} The same-claim cost comparison is 2--2 and turns on
 where each instance falls relative to its own crossover rather than on the methods: TLC is faster on two
 tasks, the loop on two, and cost totals favour the loop on three of four. Every closure cost under a
 millicent of a dollar, and every proof total --- general theorem plus corollary --- under
@@ -67,6 +67,39 @@ would replace, on the same specification.
 Our question is therefore: \emph{can a loop close general theorems for concurrent systems, at what
 wall-clock and dollar cost, and how does that compare with what TLC costs on the same claim?}
 
+\section{Prior work}
+
+Comparing TLC with proof on one specification is not new, and every published comparison pays for the
+proof in human time. The TLA\textsuperscript{+} Trifecta paper~\cite{trifecta} applies TLC, Apalache and
+TLAPS to EWD998: TLC finds 1.3 million distinct states in 42\,s at $N=3$ and 219 million in about
+50 minutes at $N=4$, Apalache checks an inductive invariant at $N=100$ in 20\,s, and the TLAPS
+invariance proof took one person-day and about 230 lines, with safety plus refinement at about 110 and
+liveness at 245. Pastry~\cite{pastry} is the extreme case: TLC spent more than a month over
+1\,952\,882\,411 states without a counterexample, and the authors conclude that interactive proof effort
+``is too high to scale to more complete P2P protocols''. The IJCAR 2010 TLAPS papers~\cite{tlaps-ijcar}
+report proof sizes with no time figure at all: Peterson about 130 lines, Bakery 800, Paxos 550 to
+``somewhat over 1000''. Reports from industry have the same shape: ten AWS systems, specifications of
+102--939 lines, two to three weeks of tool learning and 0--3 bugs each~\cite{aws}; seL4 at about
+20 person-years and 480{,}000 lines of proof~\cite{sel4}. That a model checker settles an instance while
+a proof settles the theorem is the standard framing of the two methods~\cite{clarke-wing}, and it is the
+framing used here.
+
+What has changed is the price of proof search. Work on AI provers measures how often a model closes
+benchmark problems~\cite{deepseek-prover-v2,kimina-prover,goedel-prover}; it does not price a closed
+theorem against the model checker it would replace, on the same specification. \textbf{No published work
+compares an AI-driven proof loop's wall-clock and dollar cost against TLC's runtime for the same
+specification}, and that is the comparison reported below.
+
+The prior art those figures come from is committed here at pinned provenance: the EWD998 specification
+with both TLAPS proofs (\texttt{tlaplus/Examples} at \texttt{3dfe0087}, \texttt{specs/tla/ewd998/}), the
+IJCAR 2010 modules (\texttt{tlaplus/tlapm} at \texttt{7824dab5}, \texttt{specs/tla/ijcar2010/}), and the
+publication-era revision of EWD998 that reproduces the published TLC figures
+(\texttt{specs/tla/ewd998-paper/}). The imported proofs are \emph{not} machine-checked here ---
+\texttt{tlapm} is not in the dev shell and is invoked nowhere in this repository --- so the effort
+figures are cited data marked \texttt{machine\_checked: false}, never a measured arm (\S5.3). Two
+disagreements between the published counts and the committed artifacts are recorded rather than
+reconciled.
+
 \section{Method}
 
 \subsection{Two routes, two tiers}
@@ -79,7 +112,7 @@ $N$. \textbf{Tier~1} is that theorem's corollary, instantiated at the calibrated
 tier~1 is comparable with Route~A, because only tier~1 proves the same claim.
 
 $N_0$ is fixed by a stated rule: \textbf{the largest $N$ whose TLC run completes inside the 2\,h
-per-run cap.} That definition matters in \S\ref{sec:findings}.
+per-run cap.} That definition is what fixes EWD998's $N_0$ (\S5.1).
 
 \subsection{The closure criterion}
 
@@ -99,7 +132,9 @@ A \emph{closed} verdict comes from three checks run by code the candidate cannot
 The third is load-bearing and its implementation matters. \texttt{\#print axioms} is \emph{syntax},
 syntax is an environment extension a candidate can install, and it crosses imports --- in testing, a
 candidate rewrote the command into text of its own and the real report never ran. An API query cannot
-be reached that way.
+be reached that way. Both attacks that defeated the first form of this check --- a candidate printing a
+fake axiom report, and a candidate redefining \texttt{\#print axioms} in its own syntax --- were found
+by an independent reviewer rather than by the loop, and both now fail closed.
 
 Around those three: the bytes checked are one immutable snapshot taken once per round and never
 re-read, so the verdict, the result row and the durable closure copy all derive from the same bytes;
@@ -162,10 +197,23 @@ tier-1 cost                         & \$0.00023 & \$0.00048 & \$0.00042 & \$0.00
 negative control                    & TLC \texttt{violation} & \texttt{fail\_to\_close} & \texttt{fail\_to\_close} & \texttt{fail\_to\_close} \\
 \bottomrule
 \end{tabular}
-\caption{The measured matrix. Tier-2 figures are cell medians ($n = 6, 5, 5, 5$ respectively);
-ranges are wide --- token-ring's spans 62.9--1021.8\,s --- so no figure is quoted without its range.
-Route~A at $N_0$ is a single deterministic run except EWD998, whose six runs give the median shown.}
+\caption{The measured matrix. Tier-2 figures are medians over the runs that closed, each quoted with
+its closure count against non-mutant attempts: $6/8$, $5/7$, $5/5$, $5/5$ for token-ring, Bakery, LCR
+and EWD998 (tier~1: $7/8$, $5/5$, $5/5$, $6/6$). The five non-closures are three provider faults, one
+budget \texttt{timeout}, and one unclosed run whose row records no kind; mutant controls are separate
+runs and never attempts. Ranges are wide --- token-ring's spans 62.9--1021.8\,s --- so no figure is
+quoted without its range. Route~A at $N_0$ is a single deterministic run except EWD998, whose six runs
+give the median shown.}
 \end{table}
+
+\noindent
+EWD998's $N_0 = 3$ is the cap's value rather than a convergence artifact. Its instance search first
+looked like one: every failing invocation of $N=4$--$6$ carried TLC's \texttt{-cleanup}, which deletes
+the state pool mid-enumeration, and without it \textbf{$N{=}4$ completes} --- 248{,}006{,}200 distinct
+states, depth 104, 2\,h\,36\,min, exit~0. That clean run finishes outside the 2\,h per-run cap, so the
+stated rule of \S3.1 selects $N_0 = 3$ on its own authority: removing the flag changed the ground of the
+value, not the value. The flag is also not a general cause of failure --- Bakery reached 238{,}803{,}200
+distinct states and token-ring 289{,}406{,}976 \emph{with} it in place.
 
 \subsection{Same-claim cost, counted honestly}
 
@@ -207,11 +255,13 @@ totals are kinder to the proof --- cheaper on three of four; only LCR favours TL
 \legend{Route A (TLC at $N_0$), Route B (theorem $+$ corollary)}
 \end{axis}
 \end{tikzpicture}
-\caption{The same claim, both routes, log scale. \textbf{No crossing appears, and that is the finding:}
-the proof total exceeds TLC on all four tasks, because every $N_0$ was chosen by the loop's budget
-rather than at the instance where the routes trade places. The margin narrows where a task's state
-curve is steep (token-ring, 5.8$\times$) and widens where it is shallow (LCR, 118.7$\times$). A task
-calibrated so that $N_0$ sits at its own crossing is the experiment this plot shows is still missing.}
+\caption{The same claim, both routes, log scale. \textbf{The routes trade places rather than one
+dominating}: the loop is cheaper on token-ring (5.8$\times$) and Bakery (9.3$\times$), TLC is cheaper on
+EWD998 (7.5$\times$) and LCR (118.7$\times$). Which way a task falls follows its calibration, not the
+methods: every $N_0$ is the instance the rule of \S3.1 selected --- and for LCR the 2\,h cap never bound,
+so the sweep's extent set it --- rather than the instance where the two routes cross. A task calibrated
+so that both routes are under pressure at the same instance is the experiment this plot shows is still
+missing.}
 \end{figure}
 
 \subsection{Against published human effort}
@@ -236,8 +286,9 @@ provenance, marked \texttt{machine\_checked: false}, and never pooled with eithe
 
 \noindent
 Only EWD998 has a published person-day figure, so the human comparison is one number against one
-number: a person-day against \textbf{143--521 seconds} of loop time and \textbf{under 1.5
-millidollars}. The IJCAR papers report lines, and we do not convert lines into days.
+number: a person-day against EWD998's \textbf{274.3\,seconds} of loop time (theorem plus corollary),
+the widest of the four tasks' totals being Bakery's \textbf{521.0\,seconds}, and every total
+\textbf{under 1.5 millidollars}. The IJCAR papers report lines, and we do not convert lines into days.
 
 \subsection{The verdict, against each reading of ``replacement''}
 
@@ -249,8 +300,9 @@ millidollars}. The IJCAR papers report lines, and we do not convert lines into d
 Reading & Result \\
 \midrule
 \textbf{General theorem inside budget $B$} &
-\textbf{Supported, 4 of 4.} Worst case 162.0\,s $=$ \textbf{2.2\%} of the 2\,h cap, and \$0.00062
-$=$ \textbf{0.0012\%} of the \$50 cap. TLC's coverage of this tier is 0 of 4 at any budget. \\
+\textbf{Supported, 4 of 4.} Worst cell median 444.4\,s $=$ \textbf{6.2\%} of the 2\,h cap, and the
+largest tier-2 cost \$0.00062 $=$ \textbf{0.0012\%} of the \$50 cap. TLC's coverage of this tier is
+0 of 4 at any budget. \\
 \addlinespace
 \textbf{Cost parity at the bounded tier ($K$)} &
 \textbf{2--2}: $K = 0.171\,/\,0.107\,/\,7.53\,/\,118.7$. \\
@@ -264,52 +316,13 @@ four \emph{bounded} instances and zero of the general tier. \\
 rather than one chosen for the reader.}
 \end{table}
 
-\section{What we learned that we did not set out to learn}
-\label{sec:findings}
-
-\paragraph{A harness flag cost us a wrong calibration, and how we found it is the more useful result.}
-EWD998's instance search kept failing at $N=4$--$6$ while other tasks completed at far larger state
-counts. We formed four hypotheses; three died on evidence.
-
-\begin{itemize}
-\item \emph{The failure is deterministic.} False. The two $N{=}4$ attempts died at
-      \textbf{43{,}634{,}504} and \textbf{75{,}753{,}775} distinct states --- different counts.
-\item \emph{Our flag is the whole cause.} Half true, and the surviving half mattered. Every failing
-      invocation carried TLC's \texttt{-cleanup}, which deletes the state pool mid-enumeration.
-      Without it, \textbf{$N{=}4$ completes} --- 248{,}006{,}200 distinct states, depth 104,
-      2\,h\,36\,min, exit~0 --- where the flagged runs died. But Bakery completed at 238{,}803{,}200
-      states and token-ring at 289{,}406{,}976 \emph{with} the flag in place, so the flag is
-      \textbf{necessary but not sufficient}: it kills this specification's runs and not others'.
-\item \emph{A deep frontier breaks the disk queue.} False. Bakery held \textbf{234{,}890{,}583} states
-      on queue and ran to its cap without error.
-\end{itemize}
-
-\noindent
-The discipline that separated them is worth stating plainly: \textbf{the surviving hypothesis was the
-one checked against the other tasks' logs before being believed.} The three that died were each
-asserted from a single observation --- one run compared against its own log, one failure mode
-generalised from one task, one intuition about frontier depth. In a measurement programme, a claim that
-has not been checked against an independent arm is a hypothesis, not a result.
-
-\paragraph{And the calibration value did not change.} $N_0 = 3$ stands --- but for a different reason
-than it was first set. The flag made it an artifact of our invocation; the 2\,h cap makes it a property
-of the stated rule, since $N{=}4$ needs 2\,h\,36\,min. The number is the same and the ground is now
-sound. We report it that way rather than as a confirmation.
-
-\paragraph{Rigour about our own tooling.} Our closure oracle --- the thing that decides whether a file
-counts as proved --- had \textbf{two soundness holes found in a single day}, both by an independent
-reviewer rather than by the loop, and both now failing closed: one let a candidate print a fake axiom
-report; the other let a candidate \emph{redefine} \texttt{\#print axioms} in its own syntax so the
-check never ran. Neither was visible to a passing test suite. A verification loop is a piece of
-software, and it earns trust the same way the proofs do.
-
 \section{Limitations}
 
 These bound the claims, and we would rather state them than have them found.
 
 \begin{enumerate}
 \item \textbf{Different claims per row.} Route~A's row proves a bounded instance; Route~B's tier~2
-      proves arbitrary $N$. Only the same-claim pairs of \S4.2 compare like with like.
+      proves arbitrary $N$. Only the same-claim pairs of \S5.2 compare like with like.
 \item \textbf{The equivalence is audited, not proved.} Lean-model $\equiv$
       TLA\textsuperscript{+}-semantics is a hand audit per task. A modelling slip would make the
       theorem true about the wrong thing.
@@ -317,26 +330,32 @@ These bound the claims, and we would rather state them than have them found.
       implementation.
 \item \textbf{Safety only.} Liveness is out of scope. The published EWD998 figures split on exactly
       that line (1 person-day invariance, $<$1 person-day liveness).
-\item \textbf{No pair was measured at a crossover.} Every $N_0$ was chosen by the loop's budget, not
-      by where the two routes trade places --- which is \emph{why} \S4.2 splits. The cost shape
-      (TLC exponential, proof flat) is measured; the crossover itself is extrapolated.
+\item \textbf{No pair was measured at a crossover.} Every $N_0$ came from the calibration rule of \S3.1
+      --- the largest instance Route~A completes inside the 2\,h cap --- not from where the two routes
+      trade places, and for LCR that cap never bound, so the sweep's extent stands in its place. That
+      is \emph{why} \S5.2 splits. The cost shape (TLC exponential, proof flat) is measured; the
+      crossover itself is extrapolated.
 \item \textbf{Small task set.} Four algorithms, eight settled cells. Not a sampled population.
-\item \textbf{Different precision across tasks.} Three tasks have $R \ge 5$ cells; EWD998's are single
-      runs, so its figures are existence proofs. Since EWD998 anchors the human comparison, that
-      matters.
+\item \textbf{Different precision across tasks.} Every cell has $R \ge 5$ closures on a single seed
+      digest, but the counts differ --- LCR and EWD998 closed 5 of 5 non-mutant attempts, token-ring
+      6 of 8 (one 2\,h \texttt{timeout}), Bakery 5 of 7 (two provider faults) --- and the quoted
+      medians are over closures rather than pass rates over attempts. Since EWD998 anchors the human
+      comparison, its 5 of 5 is the one that matters most.
 \item \textbf{Stochastic costs.} Each row is one sample; verdicts are deterministic given an artifact,
       costs are distributions. Medians carry ranges for that reason.
 \item \textbf{Cost basis.} Tokens at list price, compute at a stated host rate, researcher time not
       costed. Both components are reported separately and never merged.
-\item \textbf{Our own tooling is young}, as \S\ref{sec:findings} records.
+\item \textbf{Our own tooling is young.} The closure oracle is software: the two attacks that defeated
+      its first form (\S3.2) were found by review, not by the loop.
 \end{enumerate}
 
 \section{Conclusion}
 
 An AI proof loop closes general theorems for real concurrent algorithms, at a cost of seconds to
-seventeen minutes and under a millicent, inside a budget two to three orders of magnitude larger than
-what it uses. \textbf{That answers a question TLC cannot be asked} --- arbitrary $N$ rather than a
-bounded instance --- and it does so with a mechanically checked artifact rather than a generated one.
+seventeen minutes and under a millicent, inside a budget it barely touches --- the worst cell median
+uses 6.2\% of the 2\,h clock and 0.0012\% of the \$50. \textbf{That answers a question TLC cannot be
+asked} --- arbitrary $N$ rather than a bounded instance --- and it does so with a mechanically checked
+artifact rather than a generated one.
 
 It does not make model checking obsolete. On the same bounded claim, TLC is faster on two of four
 tasks, and it checks the specification's semantics directly rather than a ported model whose
@@ -406,12 +425,33 @@ Goedel-LM.
 \newblock Goedel-Prover: A Frontier Model for Open-Source Automated Theorem Proving.
 \newblock arXiv:2502.07640.
 
+\bibitem{pastry}
+T.~Lu, S.~Merz, and C.~Weidenbach.
+\newblock Towards Verification of the Pastry Protocol using TLA\textsuperscript{+}.
+\newblock In \emph{FORTE 2011}. \url{https://members.loria.fr/SMerz/papers/forte2011pastry.pdf}
+
+\bibitem{aws}
+C.~Newcombe, T.~Rath, F.~Zhang, B.~Munteanu, M.~Brooker, and M.~Deardeuff.
+\newblock How Amazon Web Services Uses Formal Methods.
+\newblock \emph{Communications of the ACM}, 58(4):66--73, 2015.
+
+\bibitem{sel4}
+G.~Klein, K.~Elphinstone, G.~Heiser, J.~Andronick, D.~Cock, P.~Derrin, D.~Elkaduwe, K.~Engelhardt,
+R.~Kolanski, M.~Norrish, T.~Sewell, H.~Tuch, and S.~Winwood.
+\newblock seL4: Formal Verification of an OS Kernel.
+\newblock In \emph{SOSP 2009}, pages 207--220.
+
+\bibitem{clarke-wing}
+E.~M.~Clarke and J.~M.~Wing.
+\newblock Formal Methods: State of the Art and Future Directions.
+\newblock \emph{ACM Computing Surveys}, 28(4):626--643, 1996.
+
 \end{thebibliography}
 
 \appendix
 \section{Data provenance}
 
-Every figure in \S4 is recomputable from rows committed in the repository; none is estimated. The
+Every figure in \S5 is recomputable from rows committed in the repository; none is estimated. The
 paper builds from \texttt{paper/model-or-proof.tex} through the repository's dev shell
 (\texttt{nix develop -c latexmk -pdf}), so the artifact is produced from its source like everything
 else here.
@@ -430,7 +470,7 @@ Method and decisions & \texttt{docs/protocol.md} \\
 Closure criterion & \texttt{harness/closure\_oracle.py}, \texttt{tools/checker/PROVENANCE.md} \\
 Equivalence audits & \texttt{docs/equivalence-\{token-ring,bakery,lcr,ewd998\}.md} \\
 Full measured matrix & \texttt{wiki/comparison-matrix.md}, which also carries the two queries that
-recompute \S4.1 and the Route~A rows \\
+recompute \S5.1 and the Route~A rows \\
 \bottomrule
 \end{tabular}
 \caption{Where each figure comes from. The matrix in \texttt{wiki/} exists so the numbers here can
