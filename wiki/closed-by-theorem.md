@@ -4,9 +4,11 @@ Every theorem this repository has closed with an AI proof loop, what it cost in 
 dollars, and how it compares with TLC and with published human work.
 
 **Status:** results as of 2026-09-26 / 2026-09-27. Four tasks — `token-ring`, `bakery`, `lcr`,
-`ewd998` — have closed their theorem, with `ewd998`'s calibration still held at `n₀ = 3` pending a
-clean sweep, for the reason §7 gives (its `n₀` is an artifact of the harness's own invocation, not a
-tool boundary). Every number below traces to a row or artifact named in *Provenance*.
+`ewd998` — have closed their theorem, and **all four same-claim pairs against TLC are measured**.
+EWD998's `n₀ = 3` is confirmed on better ground than it was set: the pattern that made it look like a
+harness artifact was real — `-cleanup` killed its N=4/5/6 outright, and N=4 completes cleanly in
+2h 36min without the flag — but the 2 h cap still bounds `n₀`, so the value rests on the cap rather
+than on the flag. Every number below traces to a row or artifact named in *Provenance*.
 
 **How a closure is established.** An AI proof loop runs in file mode: the prover receives the seed
 plus a shell. A CLOSED verdict comes from three checks run by code the candidate cannot reach —
@@ -168,23 +170,27 @@ every `N₀` was set by the loop's budget. That is a gap in the task set, not in
 
 ## 7. Pending
 
-**`ewd998`'s theorem and corollary have closed** — 1009.5 s and 101.2 s. What remains is its
-**calibration**, which is *held* rather than set: the value `n₀ = 3` is an artifact of the harness's
-own TLC invocation. `-cleanup` deletes the state pool mid-enumeration, uniquely on this task — the flag
-is **necessary but not sufficient**, since bakery completed at 238,803,200 states and token-ring at
-289,406,976 *with* the flag, while without it `ewd998`'s N=5 passes 16× the count at which it died with
-the flag. The fix is landed and verified — the flag dropped, the per-run metadir removed from Python in
-a `finally` — and two clean runs are in flight at N=4 and N=5. When a clean sweep lands, the
-`N₀`-dependent artifacts (the corollary's statement, its baseline, the manifest, the audit) are revisited
-in one pass; `ewd998`'s corollary figure in §1 is provisional in a way the other three are not.
+**EWD998's calibration is resolved, and its `n₀ = 3` stands on better ground than it was set.**
 
-All four file-mode fixes the review's cluster produced have landed: the TLC `error` tail, per-run
-`metadir` isolation, the closure copy, and the in-progress copy.
+The pattern that made the value look like a harness artifact was real: TLC's `-cleanup` deletes the
+state pool mid-enumeration and killed EWD998's N=4/5/6 outright, at 201,981 / 43.6M / 75.7M states —
+uniquely on this task, since bakery completed at 238,803,200 states and token-ring at 289,406,976
+*with* the flag in place. Without it, **N=4 completes**: 248,006,200 distinct states at depth 104 in
+2h 36min, exit 0.
 
-**The measurement the task set still lacks** is a pair taken *at* a crossover (§6). Every `N₀` so far was
-chosen to fit the loop's budget, so no task has an arm on each side of where the two routes trade places
-— which is why the three measured pairs split: two favour the proof, one favours TLC. Turning the cost
-shape into a number needs a task calibrated to cross its own crossover.
+So the flag's victims were ours, and the fix is landed and verified. But §11 decision 3 defines `n₀`
+as the largest `N` whose TLC run completes *inside* the 2 h cap, and 2h 36min is outside it. **The
+value is therefore 3 on the cap's authority rather than on the flag's** — the same number, a sound
+reason, and the revision that matters.
+
+**What remains is measurement discipline rather than a blocked value:** the clean runs were invoked
+directly rather than through `harness.tlc_run`, so they wrote no row, and the calibration should be
+re-run through the runner so the record quotes `results/tlc.jsonl` rather than a scratch log.
+
+**And the measurement the task set still lacks** is a pair taken *at* a crossover (§6). Every `N₀`
+so far was chosen to fit a budget, which is why the four pairs split as they do. EWD998's comes
+closest — `K` = 2.85, splitting on the resource — but by accident of a small instance rather than by
+calibration. Paxos is ruled as the task that fixes that, with `n₀` set at the crossing.
 
 ## 8. Verdict against the three readings of "replacement"
 
@@ -218,12 +224,19 @@ enumeration. This reading is about replacement of the *question*, and it is met 
 |---|---|---|---|---|
 | token-ring (N=23) | 837.938 s | 38.5 s | **0.046** | proof, 21.7× |
 | bakery (N=9) | 4,847.749 s | 76.6 s | **0.016** | proof, 63.3× |
+| **ewd998 (N=3)** | **35.484 s**, $0.00197 | **101.217 s**, $0.00062 | **2.85** | **TLC on time, proof on cost** |
 | lcr (N=10) | 2.670 s | 101.0 s | **37.8** | TLC, 37.8× |
 
-`K < 1` on two tasks and `K ≫ 1` on one, and the reason is not the method: `N₀` is set by the loop's
-budget, not by the task's crossover (§6). `K = 1`, the strict reading, is met in sign on two of three
-and missed on the third — and the honest statement is that a pair measured at a budget-chosen instance
-reports where that instance happened to fall, not a property of the two routes.
+**`ewd998`'s pair is the closest to parity in the set**, and the only one that splits: TLC is 2.85×
+faster, while the proof is 3.2× cheaper ($0.00062 against $0.00197). That is what a pair measured
+near a crossover looks like — the two resources trade rather than one route dominating — and it is
+also the *smallest* instance of the four, because `n₀` is capped at what TLC settles inside two
+hours (§11 decision 3) and N=4 needs 2h 36min.
+
+`K < 1` on two tasks, `K ≈ 1` on one and `K ≫ 1` on another, and the reason is not the method: `N₀` is
+set by the loop's budget, not by the task's crossover (§6). Two pairs favour the proof, one splits on
+the resource and one favours TLC — so a pair measured at a budget-chosen instance reports where that
+instance happened to fall, not a property of the two routes.
 
 ### Reading 3 — coverage under a fixed budget
 
@@ -259,6 +272,7 @@ set is four tasks rather than a sampled population.
 | Route A, lcr N=10 | `results/tlc.jsonl` — `task=lcr, param_N=10`: 2.670 s / $0.00015 / 177,147 distinct |
 | Route A, token-ring N=3 | `results/tlc.jsonl` — 5 runs, 0.656–0.669 s, 36 distinct; the mutant `violation` at 23 distinct |
 | EWD998 (Route B) | `results/proof.jsonl` — `task=ewd998, mode=file`: tier 2 `closed` 1009.538 s / $0.000814, tier 1 `closed` 101.217 s / $0.00062086, tier 2 `mutant=true` `no_progress` 572.665 s |
+| Route A, ewd998 N=3 | `results/tlc.jsonl` — five runs, 35.484–44.249 s, $0.00197–$0.00246, 1,520,618 distinct each; the N=4 completion (248,006,200 distinct, depth 104, 2h 36min, exit 0) is in the calibration log, not yet a row |
 | Human prior art | `results/human.jsonl` — quotes and pinned sources; `machine_checked: false` throughout |
 | The equivalence audits | `docs/equivalence-token-ring.md`, `docs/equivalence-bakery.md`, `docs/equivalence-lcr.md`, `docs/equivalence-ewd998.md` |
 | The closure check | `harness/closure_oracle.py` and `tools/checker/` (whose `PROVENANCE.md` records the interference experiment) |
