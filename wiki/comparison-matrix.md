@@ -206,7 +206,54 @@ Protocol §3 names three readings and §11 decision 1 makes **reading 2 the head
 
 ---
 
-## Provenance
+## 8. Reproducing any figure here
+
+Every number above is recomputable from the committed rows. Commands assume the dev shell
+(`nix develop -c …`), which pins TLC, pytest and the toolchain.
+
+**The whole suite** — 72 scenarios, including the closure oracle's three checks and both mutants:
+
+```bash
+nix develop -c pytest
+```
+
+**Every Route B cell, with n, median and range** — the query §4's table came from:
+
+```bash
+python3 -c "
+import json, statistics as st
+rows=[json.loads(l) for l in open('results/proof.jsonl') if json.loads(l).get('mode')=='file']
+for t in ('token-ring','bakery','lcr','ewd998'):
+    for tier in (2,1):
+        rs=[r for r in rows if r['task']==t and r.get('tier')==tier and r.get('outcome')=='closed']
+        w=sorted(r['wall_clock_s'] for r in rs)
+        print(t, tier, len(rs), st.median(w), min(w), max(w))
+"
+```
+
+**A Route A row's two faces** — the nested `tlc` object carries the counts, the top level the timing and
+cost:
+
+```bash
+python3 -c "
+import json
+for r in (json.loads(l) for l in open('results/tlc.jsonl')):
+    if r.get('task')=='bakery' and r.get('param_N')==9:
+        print(r['outcome'], r['wall_clock_s'], r['states_reached'], r['tlc'])
+"
+```
+
+**The closure criterion itself**, for a reviewer who would rather test the oracle than trust it:
+`harness/closure_oracle.py` implements the three checks and `tools/checker/PROVENANCE.md` records the
+interference experiment that forced the axiom query to read Lean's API instead of parsing
+`#print axioms`.
+
+**What the repository cannot reproduce: the model's stochastic side.** Each Route B row is one sample,
+so re-running a cell yields different times and token counts. The *verdicts* are reproducible — the
+oracle is deterministic given the artifact — but the *costs* are distributions, which is why medians are
+quoted with ranges and why no figure here is a single run's.
+
+## 9. Provenance
 
 | Figure | Source |
 |---|---|
