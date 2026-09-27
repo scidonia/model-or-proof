@@ -15,6 +15,9 @@ it is the contract of the experiment.
   and a scripted model; whether a real model picks good tactics is an eval, not a scenario.
 - TLC is a local tool and may be invoked by a scenario (specs at `N=3` run in about a second).
 - Every new or changed scenario is observed failing before the code that satisfies it; the failure is
+- Resource-heavy TLC calibration, diagnostic reachability witnesses, and live AI cells are explicit
+  measured acceptance runs, not full-suite fixtures. Keep pytest fast and deterministic with
+  structural contract checks; preserve the real result rows, trace logs, and provenance separately.
   reported, not asserted from memory.
 
 ## Layout
