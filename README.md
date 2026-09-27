@@ -15,7 +15,8 @@ all four.
 (21.7× and 63.3× as marginal ratios), while LCR's favours TLC by 37.8×, because its state curve is
 shallow enough that its crossover sits above the instance its budget allowed. The comparison point is
 the crossover, not the calibrated instance. The three-way comparison (TLC / AI closure loop / published
-human) lives in [wiki/closed-by-theorem.md](wiki/closed-by-theorem.md), with the full narrative in
+human) lives in [wiki/closed-by-theorem.md](wiki/closed-by-theorem.md), with the full matrix of measured
+rows in [wiki/comparison-matrix.md](wiki/comparison-matrix.md) and the narrative in
 `wiki/token-ring-route-a-vs-route-b.md` (Bakery §9, LCR §10).
 Cost varies by task — the theorem medians span 104.8 s to 1009.5 s — so medians are quoted
 with their ranges rather than as a single price.
