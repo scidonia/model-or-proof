@@ -164,6 +164,15 @@ Three candidate readings, all reported rather than one being chosen for the read
     input config, and actual trace path beside the witness. The diagnostic rows/trace are kept separate
     from the measured Route A/B cells and **do not replace** the mutant, which tests a different failure.
     Without the witness, the positive invariant row is not accepted as a meaningful comparison.
+11. **Feasibility checkpoints are not terminal acceptance.** Contracts for later stages are authored
+    before implementation and may remain red at a TLC-only calibration checkpoint if the promised Lean
+    model and two-layer audit do not exist yet. Record the expected failure and the checkpoint's measured
+    rows; neither a placeholder artifact nor a skipped test makes this a successful full task. Before a
+    terminal accepted result, the applicable scenarios and full suite must pass. If calibration proves
+    the task nonviable, only the planner may replace impossible later-stage scenarios with contracts for
+    the actual one-layer audit and explicit nonviability finding, observing the changed scenarios fail
+    first. Eligibility for a fast live TLC scenario is not an obligation to duplicate an existing
+    measured calibration row in the test suite.
 
 ## 5. Negative controls (mandatory, per task)
 
