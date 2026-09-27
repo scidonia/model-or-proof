@@ -13,12 +13,13 @@ it is the contract of the experiment.
   looks wrong goes back to the planner.
 - A scenario never reaches the network or a model. The closure loop is exercised against a stub prover
   and a scripted model; whether a real model picks good tactics is an eval, not a scenario.
-- TLC is a local tool and may be invoked by a scenario (specs at `N=3` run in about a second).
+- TLC is a local tool and may be invoked by a scenario only for a known-fast instance
+  (token-ring at `N=3` runs in about a second); do not assume that Paxos at `N=3` is fast.
 - Every new or changed scenario is observed failing before the code that satisfies it; the failure is
+  reported, not asserted from memory.
 - Resource-heavy TLC calibration, diagnostic reachability witnesses, and live AI cells are explicit
   measured acceptance runs, not full-suite fixtures. Keep pytest fast and deterministic with
   structural contract checks; preserve the real result rows, trace logs, and provenance separately.
-  reported, not asserted from memory.
 
 ## Layout
 
