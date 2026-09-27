@@ -95,8 +95,11 @@ in this matrix was measured at a crossover**, so the ratios report where each in
 
 **Two calibration facts worth carrying.**
 
-- **`lcr`'s first eight rows are `error`, not measurements** — a harness defect at the time, retained
-  rather than deleted. The eight successes that follow are the calibration.
+- **`lcr`'s first eight rows are `error`, not measurements.** TLC resolved `Naturals` to a stale
+  `/tmp/Naturals.tla` rather than the spec's own module and died in 0.26 s: `Parsing file
+  /tmp/Naturals.tla` … `Error: Parsing or semantic analysis failed.` The eight successes that follow are
+  the calibration. The rows are retained rather than deleted — they are what a mis-resolved search path
+  looks like — and their `error` field is empty only because they predate the error-tail fix.
 - **`ewd998`'s N=4 – N=6 `error` rows are harness-caused, and now explained.** All carried TLC's
   `-cleanup` flag, which deletes the state pool mid-enumeration. Without it N=4 **completes**: 248,006,200
   distinct states, depth 104, 2 h 36 min, exit 0. The flag's victims were ours. `n₀` remains 3 because
