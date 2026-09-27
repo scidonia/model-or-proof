@@ -132,8 +132,13 @@ Three candidate readings, all reported rather than one being chosen for the read
    audited against it statement by statement; the audit is committed as `docs/equivalence-<task>.md`
    with a line correspondence table. The prover model may be idiomatic — it may not strengthen the
    assumptions or weaken the goal.
-2. **Instance agreement.** For each task, `N₀` is fixed before the runs: the largest `N` for which
-   Route A completes inside the time budget in a calibration run. Both tiers are evaluated at that `N₀`.
+2. **Instance agreement.** For each task, `N₀` is fixed before the headline runs: normally the largest
+   `N` for which Route A completes inside the time budget in calibration. Both tiers are evaluated at
+   that `N₀`. **Paxos agreement is the pre-registered crossover exception:** its `N₀` is chosen by the
+   adjacent under-cap, witnessed TLC/Route-B same-claim crossing rule in
+   `plans/2026-09-27-paxos-agreement.md` §D3. Its measured cap boundary is recorded separately as
+   `n_cap` (or `null` if not established); a timed-out row cannot be the crossing. The exception and
+   ballot bound appear in `tasks/paxos.json` so they can be read without reconstructing this decision.
 3. **Both routes are falsifiable on the same mutant** (§5). If they disagree on a mutant, the task is
    mis-specified and its numbers are discarded until fixed.
 4. **Fixed machine and versions.** Single host, no concurrent load; tools pinned by the repo's nix
@@ -153,6 +158,12 @@ Three candidate readings, all reported rather than one being chosen for the read
 9. **Auxiliary invariants are data, not noise.** If Route B needs an inductive invariant that the TLA+
    spec states only implicitly, that is recorded as `auxiliary_invariants` with its size — it is part
    of the real cost of the proof route.
+10. **Bounded non-vacuity witness.** When a finite projection or bound could make an invariant true by
+    preventing the behavior under test, preserve a reachable-behavior counterexample to a separate
+    diagnostic predicate for every compared instance. State the instance, property, parameter bounds,
+    input config, and actual trace path beside the witness. The diagnostic rows/trace are kept separate
+    from the measured Route A/B cells and **do not replace** the mutant, which tests a different failure.
+    Without the witness, the positive invariant row is not accepted as a meaningful comparison.
 
 ## 5. Negative controls (mandatory, per task)
 
@@ -314,13 +325,13 @@ CommunityModules modules from the spec's own directory, with no library-path plu
   per row so a re-run can be attributed.
 - **Machine variance.** Wall-clock is host-specific; CPU seconds and state counts are reported alongside.
 
-## 11. Decisions (settled 2026-09-25)
+## 11. Decisions (settled 2026-09-25; Paxos exception preregistered 2026-09-27)
 
 | # | Question | Decision |
 | --- | --- | --- |
 | 1 | Headline reading of "replacement" | **Tier 2: the general theorem within budget `B`**, where TLC cannot answer at any budget. The bounded-tier ratio `K` and the coverage reading are also reported, as secondary. `B` = the per-run cap in row 3; the headline claim is stated per task *and* per task family. |
 | 2 | Model matrix | **One model** for the closure loop, one selector for the whole experiment, thinking level fixed by the harness and recorded per row. A matrix is a follow-up experiment, not this one. |
-| 3 | Budgets | Route B per run: **2 h wall-clock and $50 of model spend**, whichever binds first. Route A per run: the same 2 h wall-clock cap. `N₀` per task = the largest `N` whose TLC run completes inside that cap in calibration. |
+| 3 | Budgets | Route B per run: **2 h wall-clock and $50 of model spend**, whichever binds first. Route A per run: the same 2 h wall-clock cap. `N₀` per task normally = the largest `N` whose TLC run completes inside that cap in calibration. **Paxos agreement exception (§4.2):** select its witnessed, under-cap `N₀` at the measured wall-clock crossover on the theorem-plus-corollary total by the predeclared rule in `plans/2026-09-27-paxos-agreement.md` §D3; record the largest completed cap value separately as measured `n_cap` or `null` if not established. If the crossing is unreachable under the cap, report nonviability instead of substituting a budget-edge `N₀`. |
 | 4 | Liveness | **Out of P1–P2.** Safety invariants only until P3, then at most one fairness-dependent liveness task, with the fairness assumption stated on both sides. |
 | 5 | Human role | **Specification and lemma *statements* are human; every proof tactic comes from the loop.** Supplying the inductive invariant is out: a run that receives it is `assisted` and reported separately. |
 | 6 | Task-set composition | **EWD998 (Safra termination detection) is a must-have**, because published TLC, Apalache and TLAPS numbers exist for it (§1a) and it therefore calibrates our rig against external data. It joins the P2 set alongside two-phase commit/Paxos agreement, LCR leader election, and cache coherence. One instance where TLC genuinely dies (no completion inside 2 h) is required. |
