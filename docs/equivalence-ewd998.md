@@ -182,13 +182,45 @@ two mutations that look alike.
   planner's ruling, Main's authorisation), `instances` lists `N = 3..6`, and `mutant` names the two mutant
   files.
 - **Done:** the mutant, both sides, verified against TLC (§4).
-- **Done:** per-`N` configs generated (`EWD998N3.cfg`..`EWD998N6.cfg`) and the calibration run through them:
-  N=3 completes in 35.7 s with 1,520,618 states; N=4 does not complete, failing after 2,506.9 s at 75,753,775
-  states with `Error: when reading the disk (StatePoolReader.run)`. **`n0` is therefore 3**, set in
-  `tasks/ewd998.json`.
-- **Open, and separate from the above:** whether that N=4 failure is *deterministic*. A repeat in the same
-  storage mode is running; if it completes, the earlier failure was not deterministic, which is a TLC
-  property that would matter before trusting any large calibration.
+- **Done:** per-`N` configs generated (`EWD998N3.cfg`..`EWD998N6.cfg`) and the calibration run through them.
+  **`n₀` is 3**, and the basis matters more than the value:
+
+  * **N=3** completes in 35.7 s with 1,520,618 distinct states, and has done so five times under the
+    flag-resolved invocation — identical counts, which is how the `-cleanup` removal was verified.
+  * **N=4** *completes* — but in **2 h 36 min**, 248,006,200 distinct states at depth 104, `EXIT=0`. That is
+    outside Route A's 2 h cap, and §11 decision 3 defines `n₀` as *the largest N whose run completes **inside
+    that cap***. So N=4 is a completion and not an `N₀`: possible, but never inside the budget.
+  * N=5 was still running at 7.2 hours with 643,097,823 distinct states and a *growing* queue when it was
+    stopped (49 GB of pool, no cap since it was invoked directly), so it cannot set `n₀` either way. It is
+    evidence about the spec's size rather than about calibration.
+
+  **The earlier `n₀ = 3` was right by accident and is right on the merits now.** It was first set from N=4
+  failing at 75,753,775 states and 2,506.9 s with `Error: when reading the disk (StatePoolReader.run)` — but
+  that failure was `run_tlc` passing `-cleanup`, not the tool: the same instance completes in 2 h 36 min
+  without the flag. So the value survives, and what changed is the ground it stands on. The manifest holds
+  it; this audit now states the basis.
+
+- **The `-cleanup` finding (fixed).** `run_tlc` passed `-cleanup` unconditionally, and it removed the state
+  pool *a run was still using* — N=4 died at 75.7M states and N=5/N=6 at ~250k, while the same N=5 spec
+  without the flag passed sixteen times its with-flag death point. Bakery (238.8M) and token-ring (289.4M)
+  completed *with* the flag, so it is a two-factor interaction rather than a flag bug. The flag is no longer
+  passed; the metadir is created per run and removed in a `finally`, so its lifetime is stated in our code
+  rather than delegated.
+
+- **Ordinary churn is not the failure.** An `inotifywait` watch on N=4's metadir recorded 29,794 `DELETE`
+  events — TLC rotating its own pool files — and the run completed regardless. The watch's value is the
+  distinction: rotation is harmless, `-cleanup`'s removal was not.
+
+- **Fingerprint collision probability is a caveat on the 248M count.** TLC reported
+  `calculated (optimistic): .033` against `based on the actual fingerprints: 7.0E-8` — the second is the
+  figure that applies, and it is small, but a count of that size carries it and the audit should say so
+  rather than leave it in the log.
+
+- **The recorded evidence should be a row, not a log.** The N=4 completion above rests on a `/tmp` log,
+  because the no-flag runs were invoked directly rather than through `harness.tlc_run`, which is why
+  `results/tlc.jsonl` has no new EWD998 rows. When the sweep re-runs through the runner for the record,
+  N=4 should reproduce and land properly; the same standard the error-tail fix set applies to our own
+  calibration.
 - **Filed, not yet done:** raising TLC's direct-memory ceiling from `run_tlc`'s command line. The comparison
   "the tool cannot do N=4" versus "this storage mode cannot" is not reachable through TLC's own flags —
   `-fp N` is the fingerprint size (all of 0, 1, 2 still start `MSBDiskFPSet`), and `-fpmem 0.7` left the JVM's
