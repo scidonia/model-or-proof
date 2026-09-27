@@ -13,8 +13,10 @@ it is the contract of the experiment.
   looks wrong goes back to the planner.
 - A scenario never reaches the network or a model. The closure loop is exercised against a stub prover
   and a scripted model; whether a real model picks good tactics is an eval, not a scenario.
-- TLC is a local tool and may be invoked by a scenario only for a known-fast instance
-  (token-ring at `N=3` runs in about a second); do not assume that Paxos at `N=3` is fast.
+- TLC is local but a scenario may invoke it only after its **exact task/config** was timed and found
+  fast enough for the full suite (token-ring at `N=3`: measured 0.656–0.669 s in
+  `wiki/comparison-matrix.md` §3). An untimed instance is ineligible for pytest; `N=3` alone says
+  nothing about Paxos's runtime.
 - Every new or changed scenario is observed failing before the code that satisfies it; the failure is
   reported, not asserted from memory.
 - Resource-heavy TLC calibration, diagnostic reachability witnesses, and live AI cells are explicit
