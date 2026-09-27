@@ -35,3 +35,14 @@ nix develop -c python -m harness.tlc_run --task tasks/paxos-witness.json --resul
 | 6 | 1 | `NoChoice` | `specs/tla/paxos/PaxosN6Witness.cfg` | `results/paxos-witness/tlc.jsonl:5` (param_N=6) | `results/paxos-witness/logs/paxos-witness-20260927T231113-r1.log` | 11 | `Chosen("v1")`: ballot-0 `2b` votes from acceptors 1,2,3,4 — 4 of 6, a strict majority | `violation` (4.924 s) |
 | 7 | 1 | `NoChoice` | `specs/tla/paxos/PaxosN7Witness.cfg` | `results/paxos-witness/tlc.jsonl:6` (param_N=7) | `results/paxos-witness/logs/paxos-witness-20260927T231144-r1.log` | 11 | `Chosen("v1")`: ballot-0 `2b` votes from acceptors 1,2,3,4 — 4 of 7, a strict majority | `violation` (31.179 s) |
 | 8 | 1 | `NoChoice` | `specs/tla/paxos/PaxosN8Witness.cfg` | none written | none written | — | — | **not run to completion**: started 23:12, stopped by hand at 23:14 once it was off the sweep's path; it wrote no row and no log, and that run is not evidence of anything |
+
+## Scope of this file
+
+One witness per **measured positive instance**: the sweep runs N=2,3,4,… in order under the 7200 s cap and stops at the first observed timeout (plan D1 as revised). Every instance with a positive row — success *or* timeout — gets its witness check; a configured instance above the first timeout gets none, because it is never compared and §4.10 asks for a witness for each *compared* instance. `tasks/paxos-witness.json` keeps the same instance list as `tasks/paxos.json` regardless, so the two manifests stay in lockstep and `tests/test_paxos_projection.py:23-53` holds.
+
+## Provenance of the measured module text
+
+The module bytes named by every row above are the committed bytes: `specs/tla/paxos/PaxosFinite.tla` and `PaxosFiniteMutant.tla` were **not** edited at any point during the sweep, and the witness configs differ from their positive configs only in the invariant name (verified by diff). No `ASSUME` was added: the accepted domain `N ≥ 2`, `B ≥ 1` is carried by the instance family and by the planner-owned contract test over every configured `N` and `B`, not by a constant-level assertion inside the projection (planner decision on the D1 wording). The imported `specs/tla/ijcar2010/paxos/Paxos.tla` and `Consensus.tla` remain byte-identical to their pinned blobs
+(`git hash-object` → `bdec77b86eb79d31069f33df725e8cce14acc18c` and `41be40c6a8e11f92bcedd1cc715a8e7d36d5ca41`, 530 and 22 lines).
+
+**Known gap, for the planner rather than for this task:** `harness/tlc_run.py` records `artifacts.spec` and `artifacts.config` as paths only, with no digest of the module, so a row cannot be tied to the exact text that produced it without this file's word for it.
