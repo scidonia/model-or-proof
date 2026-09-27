@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 # Stated host rate for the compute component of Route A and Route B (docs/protocol.md §6).
@@ -26,8 +27,23 @@ def compute_basis(wall_clock_s: float) -> str:
     )
 
 
-def append_row(results_dir: Path | str, route: str, row: dict) -> Path:
-    """Append one result row to results/<route>.jsonl and return the file's path."""
+def append_row(results_dir: Path | str, route: str, row: dict, *, load_before=None) -> Path:
+    """Append one result row to results/<route>.jsonl and return the file's path.
+
+    The row carries the host load pair (the planner's ruling). D10 requires measurement rows on an
+    unloaded host and nothing enforced or evidenced it: two overlapping runs inflate both cells and the
+    inflation presents as ordinary spread, which is a wrong row no reader can detect. The pair makes a
+    load-affected row *detectable* — evidence, not enforcement, so D10 stays the rule and the row says
+    what a reader needs to judge it.
+
+    ``before`` comes from the caller, which knows when the run began; ``after`` is sampled here, at the
+    one point every route passes through. ``None`` in either slot means *not recorded* — a row written
+    before the field existed — and never "no load".
+    """
+    row.setdefault(
+        "load",
+        {"before": load_before, "after": [round(value, 2) for value in os.getloadavg()]},
+    )
     results_dir = Path(results_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
     path = results_dir / f"{route}.jsonl"

@@ -255,6 +255,10 @@ and break the scenario; stubs ignore `harness.closure.AUTOMATION_TACTICS`.
 
 ## Expected failure before implementation
 
+The row's `load` field is `{"before": [f64; 3] | null, "after": [f64; 3]}`, filled by `append_row` for
+every row; `before: null` means the row was written before the field existed, never "the host was idle".
+`after` is never null — `append_row` always samples it.
+
 The row keys `startup_s`/`proof_s`/`resolvedModelIsFallback`/`error`/`mutant`/`assisted` do not
 exist yet → `KeyError` on the returned row; `detect_assisted`/`ProviderError`/`ProverError` do not exist
 yet → `AttributeError`/`ImportError`; the `mutant`/`seed_text`/`artifact_path`/`arms` keyword arguments

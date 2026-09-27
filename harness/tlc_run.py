@@ -371,6 +371,9 @@ def main(argv: list[str] | None = None) -> int:
     logs_dir.mkdir(parents=True, exist_ok=True)
 
     for repetition in range(1, args.reps + 1):
+        # The host load at the run's start (planner's ruling): a concurrent TLC inflates a Route A row the
+        # same way it inflates a Route B one, and a reader cannot tell from the row alone. Paired at append.
+        load_before = [round(value, 2) for value in os.getloadavg()]
         observation = run_tlc(spec, config, tlc_bin=args.tlc_bin, cap_s=cap_s, workers=args.workers)
         observation["workers"] = args.workers
         stamp = time.strftime("%Y%m%dT%H%M%S")
@@ -390,7 +393,7 @@ def main(argv: list[str] | None = None) -> int:
             log_path=log_path,
             negative_control=negative_control,
         )
-        append_row(results_dir, "tlc", row)
+        append_row(results_dir, "tlc", row, load_before=load_before)
         print(
             f"{task}{'-mutant' if args.mutant else ''} r{repetition}: {row['outcome']} "
             f"in {row['wall_clock_s']}s"

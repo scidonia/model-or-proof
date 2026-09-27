@@ -29,10 +29,10 @@ for concurrent-system verification — and at what wall-clock and dollar differe
 | Route A wall-clock at `n₀` | **837.938 s** (8 workers) | **4,847.749 s** | **2.670 s** | **36.4 s** (median of 6) |
 | Route A cost at `n₀` | **$0.04655** | **$0.26932** | **$0.00015** | **$0.00203** |
 | Route A distinct states | 289,406,976 | 238,803,200 | 177,147 | 1,520,618 |
-| **Route B tier 2** (general `N`) | **closed**, n=6, median **104.8 s** | **closed**, n=5, median **444.4 s** | **closed**, n=5, median **216.0 s** | **closed**, n=1, **1009.5 s** |
+| **Route B tier 2** (general `N`) | **closed**, n=6, median **104.8 s** | **closed**, n=5, median **444.4 s** | **closed**, n=5, median **216.0 s** | **closed**, n=5, median **162.0 s** |
 | tier-2 cost median | **$0.00033** | **$0.00062** | **$0.00044** | **$0.00081** |
 | tier-2 range | 62.9 – 1021.8 s | 79.7 – 610.1 s | 148.0 – 970.8 s | — |
-| **Route B tier 1** (corollary at `n₀`) | **closed**, n=7, median **38.5 s** | **closed**, n=5, median **76.6 s** | **closed**, n=5, median **101.0 s** | **closed**, n=1, **101.2 s** |
+| **Route B tier 1** (corollary at `n₀`) | **closed**, n=7, median **38.5 s** | **closed**, n=5, median **76.6 s** | **closed**, n=5, median **101.0 s** | **closed**, n=6, median **112.3 s** |
 | tier-1 cost median | **$0.00023** | **$0.00048** | **$0.00042** | **$0.00062** |
 | tier-1 range | 25.1 – 64.8 s | 64.7 – 88.4 s | 79.2 – 178.7 s | — |
 | **Mutant control** | TLC `violation` (23 states, depth 5) | `no_progress` → `fail_to_close`, 273.2 s | `no_progress` → `fail_to_close`, 502.7 s | `no_progress` → `fail_to_close`, 572.7 s |
@@ -55,12 +55,12 @@ so the totals below are the honest comparison and the marginal ratios are the fo
 |---|---|---|---|---|---|---|
 | token-ring (N=23) | 837.938 s / $0.04655 | 104.8 s / $0.00033 | 38.5 s / $0.00023 | **143.4 s / $0.00056** | **0.171** / 0.012 | proof, **5.8×** |
 | bakery (N=9) | 4,847.749 s / $0.26932 | 444.4 s / $0.00062 | 76.6 s / $0.00048 | **521.0 s / $0.00110** | **0.107** / 0.004 | proof, **9.3×** |
-| ewd998 (N=3) | 36.4 s / $0.00202 | 1009.5 s / $0.00081 | 101.2 s / $0.00062 | **1,110.8 s / $0.00143** | **30.5** / 0.709 | **TLC, 30.5×** |
+| ewd998 (N=3) | 36.4 s / $0.00202 | 162.0 s / $0.00047 | 112.3 s / $0.00051 | **274.3 s / $0.00098** | **7.53** / 0.485 | **TLC, 7.5×** |
 | lcr (N=10) | 2.670 s / $0.00015 | 216.0 s / $0.00044 | 101.0 s / $0.00042 | **317.0 s / $0.00086** | **118.7** / 5.82 | **TLC, 118.7×** |
 
 **Marginal ratios, for reference — and they mislead in both directions.** Corollary ÷ Route A gives
 0.046 / 0.016 / 2.78 / 37.8, which **overstates** the proof's wall-clock advantage (21.7× → 5.8× at
-token-ring, 63.3× → 9.3× at bakery) and **understates** TLC's (2.78× → 30.5× at EWD998, 37.8× → 118.7×
+token-ring, 63.3× → 9.3× at bakery) and **understates** TLC's (2.78× → 7.53× at EWD998, 37.8× → 118.7×
 at lcr). The theorem is reusable across every instance of its claim, so its cost must be paid once
 before any corollary exists.
 
@@ -113,8 +113,7 @@ where each instance happened to fall.
 
 ## 4. Route B detail (`results/proof.jsonl`, file mode)
 
-**Cells.** A cell is R ≥ 5 runs sharing one seed digest. `n=1` marks EWD998, which is an existence proof
-rather than a distribution.
+**Cells.** A cell is R ≥ 5 runs sharing one seed digest. All eight are now at R ≥ 5, across four tasks.
 
 | Task | tier | n | median | min | max | cost median | turns |
 |---|---|---|---|---|---|---|---|
@@ -124,7 +123,7 @@ rather than a distribution.
 | bakery | 1 | 5 | 76.6 s | 64.7 s | 88.4 s | $0.00048 | 1 |
 | lcr | 2 | 5 | 216.0 s | 148.0 s | 970.8 s | $0.00044 | 1 |
 | lcr | 1 | 5 | 101.0 s | 79.2 s | 178.7 s | $0.00042 | 1 |
-| ewd998 | 2 | 1 | 1009.5 s | — | — | $0.00081 | 1 |
+| ewd998 | 2 | 5 | 162.0 s | 69.0 s | 1009.5 s | $0.00047 | 1 |
 | ewd998 | 1 | 1 | 101.2 s | — | — | $0.00062 | 1 |
 
 **Non-closures, all retained.** Three harness `error` rows (token-ring tier 1 at 416.2 s; bakery tier 2

@@ -30,13 +30,13 @@ different configurations are never pooled. See `wiki/token-ring-route-a-vs-route
 | **bakery** | 1 | `MutualExclusion` at N=9 (corollary) | 5 | **76.6 s** | 64.7 – 88.4 | **$0.00048** | $0.00039 – $0.00068 |
 | **lcr** | 2 | at most one leader, **arbitrary N** | 5 | **216.0 s** | 148.0 – 970.8 | **$0.00044** | $0.00034 – $0.00086 |
 | **lcr** | 1 | leader uniqueness at N=10 (corollary) | 5 | **101.0 s** | 79.2 – 178.7 | **$0.00042** | $0.00038 – $0.00077 |
-| **ewd998** | 2 | invariance for **arbitrary N** | 1 | **1009.5 s** | — | **$0.00081** | — |
-| **ewd998** | 1 | invariance at N=3 (corollary) | 1 | **101.2 s** | — | **$0.00062** | — |
+| **ewd998** | 2 | invariance for **arbitrary N** | 5 | **162.0 s** | 69.0 – 1009.5 | **$0.00047** | $0.00032 – $0.00081 |
+| **ewd998** | 1 | invariance at N=3 (corollary) | 6 | **112.3 s** | 75.3 – 155.9 | **$0.00051** | $0.00044 – $0.00062 |
 
-**`ewd998`'s cells are single runs, not yet rates.** The other three tasks have R ≥ 5 per cell; `ewd998`
-has one closure each, so its two figures are existence proofs rather than distributions and are not
-comparable in precision with the rows above. Its calibration is also held (§7), so its corollary may be
-restated at a different `N₀` — its 101.2 s is at N=3, the value under revision.
+**All eight cells are at R ≥ 5.** `ewd998`'s were single runs until its repetitions landed; with six
+corollary closures (median 112.3 s) and five theorem closures (median 162.0 s) it now has the same shape
+as the other three tasks. Its calibration is settled (§7) — `n₀` = 3 confirmed on the cap's authority —
+so the corollary is stated at N=3 permanently rather than provisionally.
 
 **Tier 1 is a corollary**: the general theorem instantiated at the task's calibrated `N₀`. Its cost is
 consistently a fraction of the theorem's — token-ring 2.7×, bakery 5.8×, lcr 2.1× cheaper in
@@ -209,7 +209,7 @@ Every task closed its general theorem inside both caps:
 | token-ring | 104.8 s (median of 6) | 1.5% | $0.00033 | 0.0007% |
 | lcr | 216.0 s (median of 5) | 3.0% | $0.00044 | 0.0009% |
 | bakery | 444.4 s (median of 5) | 6.2% | $0.00062 | 0.0012% |
-| ewd998 | 1009.5 s (1 run) | 14.0% | $0.00081 | 0.0016% |
+| ewd998 | 162.0 s (median of 5) | 2.2% | $0.00047 | 0.0009% |
 
 The side TLC cannot reach is not a cost question: no budget settles `Mutex` for arbitrary `N` by
 enumeration. This reading is about replacement of the *question*, and it is met on all four tasks.
@@ -224,13 +224,13 @@ enumeration. This reading is about replacement of the *question*, and it is met 
 |---|---|---|---|---|---|---|
 | token-ring (N=23) | 837.938 s | 104.8 s | 38.5 s | **143.4 s** | **0.171** | proof, **5.8×** |
 | bakery (N=9) | 4,847.749 s | 444.4 s | 76.6 s | **521.0 s** | **0.107** | proof, **9.3×** |
-| ewd998 (N=3) | 36.4 s | 1009.5 s | 101.2 s | **1,110.8 s** | **30.5** | **TLC, 30.5×** |
+| ewd998 (N=3) | 36.4 s | 162.0 s | 112.3 s | **274.3 s** | **7.53** | **TLC, 7.5×** |
 | lcr (N=10) | 2.670 s | 216.0 s | 101.0 s | **317.0 s** | **118.7** | **TLC, 118.7×** |
 
 **The total is the honest figure, and the corollary alone misleads in both directions.** Corollary ÷
 Route A reads 0.046 / 0.016 / 2.78 / 37.8, which **overstates** the proof's wall-clock advantage — 21.7×
 becomes 5.8× at token-ring and 63.3× becomes 9.3× at bakery — and **understates** TLC's, where 2.78×
-becomes 30.5× at ewd998 and 37.8× becomes 118.7× at lcr. A general theorem's cost is paid once and its
+becomes 7.53× at ewd998 and 37.8× becomes 118.7× at lcr. A general theorem's cost is paid once and its
 corollaries are cheap; quoting the cheap part alone answers a different question from the one asked.
 
 **On cost the totals are kinder to the proof than on wall-clock:** token-ring $0.00056 against $0.04655

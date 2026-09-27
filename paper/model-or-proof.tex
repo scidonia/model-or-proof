@@ -154,15 +154,15 @@ Route~A wall-clock                  & 837.9\,s (8 workers) & 4{,}847.7\,s & 2.7\
 Route~A cost                        & \$0.04655 & \$0.26932 & \$0.00015 & \$0.00202 \\
 Route~A distinct states             & 289{,}406{,}976 & 238{,}803{,}200 & 177{,}147 & 1{,}520{,}618 \\
 \midrule
-\textbf{tier 2} (general $N$)       & \textbf{closed} 104.8\,s & \textbf{closed} 444.4\,s & \textbf{closed} 216.0\,s & \textbf{closed} 1009.5\,s \\
-tier-2 cost                         & \$0.00033 & \$0.00062 & \$0.00044 & \$0.00081 \\
-\textbf{tier 1} (corollary)         & \textbf{closed} 38.5\,s & \textbf{closed} 76.6\,s & \textbf{closed} 101.0\,s & \textbf{closed} 101.2\,s \\
-tier-1 cost                         & \$0.00023 & \$0.00048 & \$0.00042 & \$0.00062 \\
+\textbf{tier 2} (general $N$)       & \textbf{closed} 104.8\,s & \textbf{closed} 444.4\,s & \textbf{closed} 216.0\,s & \textbf{closed} 162.0\,s \\
+tier-2 cost                         & \$0.00033 & \$0.00062 & \$0.00044 & \$0.00047 \\
+\textbf{tier 1} (corollary)         & \textbf{closed} 38.5\,s & \textbf{closed} 76.6\,s & \textbf{closed} 101.0\,s & \textbf{closed} 112.3\,s \\
+tier-1 cost                         & \$0.00023 & \$0.00048 & \$0.00042 & \$0.00051 \\
 \midrule
 negative control                    & TLC \texttt{violation} & \texttt{fail\_to\_close} & \texttt{fail\_to\_close} & \texttt{fail\_to\_close} \\
 \bottomrule
 \end{tabular}
-\caption{The measured matrix. Tier-2 figures are cell medians ($n = 6, 5, 5, 1$ respectively);
+\caption{The measured matrix. Tier-2 figures are cell medians ($n = 6, 5, 5, 5$ respectively);
 ranges are wide --- token-ring's spans 62.9--1021.8\,s --- so no figure is quoted without its range.
 Route~A at $N_0$ is a single deterministic run except EWD998, whose six runs give the median shown.}
 \end{table}
@@ -182,7 +182,7 @@ Task & Route~A & theorem & corollary & \textbf{proof total} & \textbf{$K$} & fav
 \midrule
 token-ring ($N{=}23$) & 837.938\,s & 104.8\,s & 38.5\,s & \textbf{143.4\,s} & \textbf{0.171} & proof, 5.8$\times$ \\
 Bakery ($N{=}9$)      & 4{,}847.749\,s & 444.4\,s & 76.6\,s & \textbf{521.0\,s} & \textbf{0.107} & proof, 9.3$\times$ \\
-EWD998 ($N{=}3$)      & 36.4\,s & 1009.5\,s & 101.2\,s & \textbf{1{,}110.8\,s} & \textbf{30.5} & \textbf{TLC, 30.5$\times$} \\
+EWD998 ($N{=}3$)      & 36.4\,s & 162.0\,s & 112.3\,s & \textbf{274.3\,s} & \textbf{7.53} & \textbf{TLC, 7.5$\times$} \\
 LCR ($N{=}10$)        & 2.670\,s & 216.0\,s & 101.0\,s & \textbf{317.0\,s} & \textbf{118.7} & \textbf{TLC, 118.7$\times$} \\
 \bottomrule
 \end{tabular}
@@ -203,13 +203,15 @@ totals are kinder to the proof --- cheaper on three of four; only LCR favours TL
   ymin=1, ymax=20000,
 ]
 \addplot coordinates {(token-ring,837.938) (Bakery,4847.749) (EWD998,36.4) (LCR,2.670)};
-\addplot coordinates {(token-ring,143.4) (Bakery,521.0) (EWD998,1110.8) (LCR,317.0)};
+\addplot coordinates {(token-ring,143.4) (Bakery,521.0) (EWD998,274.3) (LCR,317.0)};
 \legend{Route A (TLC at $N_0$), Route B (theorem $+$ corollary)}
 \end{axis}
 \end{tikzpicture}
-\caption{The same claim, both routes, log scale. The two routes cross between Bakery and EWD998.
-The crossover is a property of each task's instance relative to its own state curve, not of the
-methods --- which is why the ratios split rather than agreeing.}
+\caption{The same claim, both routes, log scale. \textbf{No crossing appears, and that is the finding:}
+the proof total exceeds TLC on all four tasks, because every $N_0$ was chosen by the loop's budget
+rather than at the instance where the routes trade places. The margin narrows where a task's state
+curve is steep (token-ring, 5.8$\times$) and widens where it is shallow (LCR, 118.7$\times$). A task
+calibrated so that $N_0$ sits at its own crossing is the experiment this plot shows is still missing.}
 \end{figure}
 
 \subsection{Against published human effort}
@@ -234,7 +236,7 @@ provenance, marked \texttt{machine\_checked: false}, and never pooled with eithe
 
 \noindent
 Only EWD998 has a published person-day figure, so the human comparison is one number against one
-number: a person-day against \textbf{143--1111 seconds} of loop time and \textbf{under 1.5
+number: a person-day against \textbf{143--521 seconds} of loop time and \textbf{under 1.5
 millidollars}. The IJCAR papers report lines, and we do not convert lines into days.
 
 \subsection{The verdict, against each reading of ``replacement''}
@@ -247,11 +249,11 @@ millidollars}. The IJCAR papers report lines, and we do not convert lines into d
 Reading & Result \\
 \midrule
 \textbf{General theorem inside budget $B$} &
-\textbf{Supported, 4 of 4.} Worst case 1009.5\,s $=$ \textbf{14.0\%} of the 2\,h cap, and \$0.00081
-$=$ \textbf{0.0016\%} of the \$50 cap. TLC's coverage of this tier is 0 of 4 at any budget. \\
+\textbf{Supported, 4 of 4.} Worst case 162.0\,s $=$ \textbf{2.2\%} of the 2\,h cap, and \$0.00062
+$=$ \textbf{0.0012\%} of the \$50 cap. TLC's coverage of this tier is 0 of 4 at any budget. \\
 \addlinespace
 \textbf{Cost parity at the bounded tier ($K$)} &
-\textbf{2--2}: $K = 0.171\,/\,0.107\,/\,30.5\,/\,118.7$. \\
+\textbf{2--2}: $K = 0.171\,/\,0.107\,/\,7.53\,/\,118.7$. \\
 \addlinespace
 \textbf{Coverage under a fixed budget} &
 Counts equal at 4 of 4, claims not equal: the loop settles four \emph{general} theorems; TLC settles

@@ -36,6 +36,7 @@ run writes its own (plan D18) and left in place afterwards, because that artifac
 from __future__ import annotations
 
 import argparse
+import os
 import hashlib
 import json
 import re
@@ -784,6 +785,9 @@ def run_file_mode(
             timeout_s=model.PROVIDER_TIMEOUT_S,
             startup_timeout_s=model.STARTUP_TIMEOUT_S,
         )
+        # The host load at the run's start (planner's ruling): paired in `append_row` with the load at
+        # its end, so a row taken under contention says so instead of reading as ordinary spread.
+        load_before = [round(value, 2) for value in os.getloadavg()]
         try:
             row = file_mode.run_file(
                 session,
@@ -803,7 +807,7 @@ def run_file_mode(
             )
         finally:
             session.close()
-        rows_path = append_row(results_dir, "proof", row)
+        rows_path = append_row(results_dir, "proof", row, load_before=load_before)
         # F6: the closure's bytes and the sidecar that binds them to this row, written the moment the row
         # exists — before anything can sweep `.runs/`.
         sidecar = write_closure_sidecar(rows_path, row, task=task, results_dir=results_dir)
@@ -1013,6 +1017,8 @@ def main(argv: list[str] | None = None) -> int:
             # processes; the row owns the paths and ids.
             sessions = run_session_dir(seed, results_dir, args.mutant, repetition)
             model_client = OmpModel(specification=specification, session_root=sessions)
+            # As above: the run's starting load, paired with the ending one in `append_row`.
+            load_before = [round(value, 2) for value in os.getloadavg()]
             row = run_loop(
                 # `mutant` reaches the driver as well as the loop: a run that closed a false statement
                 # must not leave the verdict spliced into the copy, so the driver refuses to write it
@@ -1116,7 +1122,7 @@ def main(argv: list[str] | None = None) -> int:
                     exit_code,
                     EXIT_BY_ERROR_KIND.get(row["error"]["kind"], EXIT_UNCLASSIFIED_ERROR),
                 )
-            append_row(results_dir, "proof", row)
+            append_row(results_dir, "proof", row, load_before=load_before)
             print(
                 f"{task}{'-mutant' if args.mutant else ''} r{repetition}: {row['outcome']} in "
                 f"{row['wall_clock_s']}s (startup {row['startup_s']}s, proof {row['proof_s']}s), "
