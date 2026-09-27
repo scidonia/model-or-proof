@@ -44,28 +44,32 @@ a like-for-like cost comparison — §3 handles it separately.
 
 ---
 
-## 2. The same-claim pairs (`K` = Route B ÷ Route A)
+## 2. The same-claim pairs — theorem plus instantiation
 
-Both arms prove the same claim at the same instance. `K` < 1 favours the proof.
+Both arms settle the same claim at the same instance. **The proof's true cost is the general theorem
+*plus* its corollary**, since the corollary is the trivial instantiation of it. A corollary-only figure
+answers "what does instantiation cost *given* the theorem", not "what does settling this claim cost" —
+so the totals below are the honest comparison and the marginal ratios are the footnote.
 
-| Task | Route A | Route B (corollary) | wall-clock `K` | cost `K` | favours |
-|---|---|---|---|---|---|
-| token-ring (N=23) | 837.938 s / $0.04655 | 38.5 s / $0.00023 | **0.046** | 0.0050 | proof, 21.7× / 202× |
-| bakery (N=9) | 4,847.749 s / $0.26932 | 76.6 s / $0.00048 | **0.016** | 0.0018 | proof, 63.3× / 565× |
-| **ewd998 (N=3)** | **36.4 s / $0.00203** | **101.2 s / $0.00062** | **2.78** | **0.31** | **splits** — TLC faster, proof cheaper |
-| lcr (N=10) | 2.670 s / $0.00015 | 101.0 s / $0.00042 | **37.8** | 2.87 | TLC, 37.8× |
+| Task | Route A at `n₀` | theorem | corollary | **proof total** | **`K` (total)** | favours |
+|---|---|---|---|---|---|---|
+| token-ring (N=23) | 837.938 s / $0.04655 | 104.8 s / $0.00033 | 38.5 s / $0.00023 | **143.4 s / $0.00056** | **0.171** / 0.012 | proof, **5.8×** |
+| bakery (N=9) | 4,847.749 s / $0.26932 | 444.4 s / $0.00062 | 76.6 s / $0.00048 | **521.0 s / $0.00110** | **0.107** / 0.004 | proof, **9.3×** |
+| ewd998 (N=3) | 36.4 s / $0.00202 | 1009.5 s / $0.00081 | 101.2 s / $0.00062 | **1,110.8 s / $0.00143** | **30.5** / 0.709 | **TLC, 30.5×** |
+| lcr (N=10) | 2.670 s / $0.00015 | 216.0 s / $0.00044 | 101.0 s / $0.00042 | **317.0 s / $0.00086** | **118.7** / 5.82 | **TLC, 118.7×** |
 
-**Marginal, not from-scratch.** A corollary is the trivial instantiation of the theorem, which cost
-104.8 / 444.4 / 216.0 / 1009.5 s respectively. The defensible total is theorem **plus** instantiation:
+**Marginal ratios, for reference — and they mislead in both directions.** Corollary ÷ Route A gives
+0.046 / 0.016 / 2.78 / 37.8, which **overstates** the proof's wall-clock advantage (21.7× → 5.8× at
+token-ring, 63.3× → 9.3× at bakery) and **understates** TLC's (2.78× → 30.5× at EWD998, 37.8× → 118.7×
+at lcr). The theorem is reusable across every instance of its claim, so its cost must be paid once
+before any corollary exists.
 
-| Task | proof total | Route A | ratio |
-|---|---|---|---|
-| token-ring | ~143 s / ~$0.00056 | 837.938 s / $0.04655 | 5.8× faster, 84× cheaper |
-| bakery | ~521 s / ~$0.00110 | 4,847.749 s / $0.26932 | 9.3× faster, 246× cheaper |
+**On wall-clock the totals split 2–2. On cost, three of four favour the proof** (only lcr's does not,
+and it favours TLC on both resources).
 
 **The disagreement is the finding, not a defect.** `n₀` is chosen to fit the loop's budget, not to sit at
-the task's crossover. Two pairs favour the proof, one splits on the resource, one favours TLC. **No pair
-in this matrix was measured at a crossover**, so the ratios report where each instance happened to fall.
+the task's crossover, and **no pair in this matrix was measured at a crossover** — so the ratios report
+where each instance happened to fall.
 
 ---
 
@@ -172,7 +176,7 @@ Protocol §3 names three readings and §11 decision 1 makes **reading 2 the head
 | Reading | Statement | Result |
 |---|---|---|
 | **2 (headline)** | Route B proves the tier-2 theorem within budget `B`, where Route A cannot answer at any cost | **Supported, 4 of 4.** Worst case 1009.5 s = 14.0% of the 2 h cap and $0.00081 = 0.0016% of the $50 cap. Route A's coverage of tier 2 is 0 of 4 at any budget. |
-| **1** | Route B settles the tier-1 question within a factor `K` of Route A | **`K` = 0.046 / 0.016 / 2.78 / 37.8.** Two favour the proof, one splits, one favours TLC. |
+| **1** | Route B settles the tier-1 question within a factor `K` of Route A | **Totals: `K` = 0.171 / 0.107 / 30.5 / 118.7** — two favour the proof (5.8×, 9.3×) and two favour TLC (30.5×, 118.7×). Corollary-only ratios (0.046 / 0.016 / 2.78 / 37.8) overstate the proof's advantage and understate TLC's, because the general theorem's cost must be paid before any corollary exists — see §2. |
 | **3** | Coverage under a fixed budget | **Counts equal at 4 of 4, claims not equal.** Route B settles four general theorems; Route A settles four bounded instances and 0 of 4 at the general tier. |
 
 ---

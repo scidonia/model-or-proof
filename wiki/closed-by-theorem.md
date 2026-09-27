@@ -220,23 +220,27 @@ enumeration. This reading is about replacement of the *question*, and it is met 
 
 **Reported as measured, and it goes both ways.** `K` = Route B ÷ Route A on the same claim:
 
-| Task | Route A | Route B (corollary) | `K` | Favours |
-|---|---|---|---|---|
-| token-ring (N=23) | 837.938 s | 38.5 s | **0.046** | proof, 21.7× |
-| bakery (N=9) | 4,847.749 s | 76.6 s | **0.016** | proof, 63.3× |
-| **ewd998 (N=3)** | **36.4 s**, $0.00203 | **101.217 s**, $0.00062 | **2.78** | **TLC on time, proof on cost** |
-| lcr (N=10) | 2.670 s | 101.0 s | **37.8** | TLC, 37.8× |
+| Task | Route A at `n₀` | theorem | corollary | **proof total** | **`K` (total)** | Favours |
+|---|---|---|---|---|---|---|
+| token-ring (N=23) | 837.938 s | 104.8 s | 38.5 s | **143.4 s** | **0.171** | proof, **5.8×** |
+| bakery (N=9) | 4,847.749 s | 444.4 s | 76.6 s | **521.0 s** | **0.107** | proof, **9.3×** |
+| ewd998 (N=3) | 36.4 s | 1009.5 s | 101.2 s | **1,110.8 s** | **30.5** | **TLC, 30.5×** |
+| lcr (N=10) | 2.670 s | 216.0 s | 101.0 s | **317.0 s** | **118.7** | **TLC, 118.7×** |
 
-**`ewd998`'s pair is the closest to parity in the set**, and the only one that splits: TLC is 2.78×
-faster, while the proof is 3.2× cheaper ($0.00062 against $0.00203). That is what a pair measured
-near a crossover looks like — the two resources trade rather than one route dominating — and it is
-also the *smallest* instance of the four, because `n₀` is capped at what TLC settles inside two
-hours (§11 decision 3) and N=4 needs 2h 36min.
+**The total is the honest figure, and the corollary alone misleads in both directions.** Corollary ÷
+Route A reads 0.046 / 0.016 / 2.78 / 37.8, which **overstates** the proof's wall-clock advantage — 21.7×
+becomes 5.8× at token-ring and 63.3× becomes 9.3× at bakery — and **understates** TLC's, where 2.78×
+becomes 30.5× at ewd998 and 37.8× becomes 118.7× at lcr. A general theorem's cost is paid once and its
+corollaries are cheap; quoting the cheap part alone answers a different question from the one asked.
 
-`K < 1` on two tasks, `K ≈ 1` on one and `K ≫ 1` on another, and the reason is not the method: `N₀` is
-set by the loop's budget, not by the task's crossover (§6). Two pairs favour the proof, one splits on
-the resource and one favours TLC — so a pair measured at a budget-chosen instance reports where that
-instance happened to fall, not a property of the two routes.
+**On cost the totals are kinder to the proof than on wall-clock:** token-ring $0.00056 against $0.04655
+(84× cheaper), bakery $0.00110 against $0.26932 (246×), ewd998 $0.00143 against $0.00202 (1.4×), lcr
+$0.00086 against $0.00015 — the one pair where TLC is cheaper on both resources.
+
+`K < 1` on two tasks and `K ≫ 1` on two, and the reason is not the method: `N₀` is set by the loop's
+budget, not by the task's crossover (§6). Two pairs favour the proof and two favour TLC once the general
+theorem's cost is counted — so a pair measured at a budget-chosen instance reports where that instance
+happened to fall, not a property of the two routes.
 
 ### Reading 3 — coverage under a fixed budget
 
