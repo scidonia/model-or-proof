@@ -246,7 +246,8 @@ are asserted by `tests/human-baseline-contract.md`.
   lines that contain the same phrases; the parser must take the last summary after the run ends, never
   a progress line. This is an observed hazard, and a scenario covers it.
 - Determinism: with `-workers 1`, generated/distinct/depth repeat exactly across runs. The fingerprint
-  seed printed in the banner varies between runs; it is recorded, and pinned with `-fp`/`-seed` where
+  polynomial index and seed printed in the banner vary between runs; both are recorded, and pinned with
+  `-fp`/`-seed` where
   TLC accepts it.
 - Timeout policy: on timeout the run is recorded as `timeout` with states reached so far, and the
   property is *not* reported as refuted or established.

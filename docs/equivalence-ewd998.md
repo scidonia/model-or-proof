@@ -239,7 +239,8 @@ two mutations that look alike.
   calibration.
 - **Filed, not yet done:** raising TLC's direct-memory ceiling from `run_tlc`'s command line. The comparison
   "the tool cannot do N=4" versus "this storage mode cannot" is not reachable through TLC's own flags —
-  `-fp N` is the fingerprint size (all of 0, 1, 2 still start `MSBDiskFPSet`), and `-fpmem 0.7` left the JVM's
+  `-fp N` selects the Nth FP64 irreducible polynomial (0..130; the fingerprint *width* is `-fpbits`), and
+  `-fpmem 0.7` left the JVM's
   64 MB direct-memory default unchanged — so it needs `-XX:MaxDirectMemorySize` or whatever the wrapper
   honours, confirmed by reading the header's `offheap memory` figure back.
 - `TerminationDetection` remains the *task*'s property for the deferred refinement rung, deliberately not
