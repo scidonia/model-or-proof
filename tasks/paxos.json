@@ -1,0 +1,35 @@
+{
+  "name": "paxos",
+  "system": "Paxos agreement (IJCAR source, finite TLC ballot projection)",
+  "property": {
+    "name": "Consistency",
+    "kind": "safety",
+    "statement": "no two distinct values are chosen"
+  },
+  "spec": "specs/tla/paxos/PaxosFinite.tla",
+  "mutant": {
+    "spec": "specs/tla/paxos/PaxosFiniteMutant.tla",
+    "config": "specs/tla/paxos/PaxosMutant.cfg"
+  },
+  "instances": [
+    {"param_N": 2, "config": "specs/tla/paxos/PaxosN2.cfg"},
+    {"param_N": 3, "config": "specs/tla/paxos/PaxosN3.cfg"},
+    {"param_N": 4, "config": "specs/tla/paxos/PaxosN4.cfg"},
+    {"param_N": 5, "config": "specs/tla/paxos/PaxosN5.cfg"},
+    {"param_N": 6, "config": "specs/tla/paxos/PaxosN6.cfg"},
+    {"param_N": 7, "config": "specs/tla/paxos/PaxosN7.cfg"},
+    {"param_N": 8, "config": "specs/tla/paxos/PaxosN8.cfg"}
+  ],
+  "n0": null,
+  "calibration": {
+    "n0_rule": "first adjacent under-cap successful TLC pair that brackets median theorem+own-corollary totals; select log-nearest N>=3 within factor 2, require a chosen-value witness at each N",
+    "ballot_bound": 1,
+    "n_cap": null,
+    "status": "unmeasured"
+  },
+  "budgets": {
+    "wall_clock_s": 7200,
+    "usd": 50
+  },
+  "repetitions": 5
+}

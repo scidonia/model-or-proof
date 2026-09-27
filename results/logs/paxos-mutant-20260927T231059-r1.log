@@ -1,0 +1,135 @@
+tlc-workers1-metadir/home/gavin/dev/model-or-proof/specs/tla/paxos/.tlc-states/run-8fim8hdm-config/home/gavin/dev/model-or-proof/specs/tla/paxos/PaxosMutant.cfg/home/gavin/dev/model-or-proof/specs/tla/paxos/PaxosFiniteMutant.tla
+
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 112 and seed -6730006281999691425 with 1 worker on 20 cores with 14247MB heap and 64MB offheap memory (Linux 6.8.0-85-generic amd64, Oracle Corporation 1.8.0_504 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/paxos/PaxosFiniteMutant.tla
+Parsing file /tmp/Integers.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module PaxosFiniteMutant
+Starting... (2026-09-27 23:10:58)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-27 23:10:58.
+Error: Invariant Consistency is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ msgs = {}
+/\ maxVBal = <<-1, -1, -1>>
+/\ maxVal = <<"NoValue", "NoValue", "NoValue">>
+/\ maxBal = <<-1, -1, -1>>
+
+State 2: <Phase1a line 69, col 15 to line 71, col 54 of module PaxosFiniteMutant>
+/\ msgs = {[type |-> "1a", bal |-> 0]}
+/\ maxVBal = <<-1, -1, -1>>
+/\ maxVal = <<"NoValue", "NoValue", "NoValue">>
+/\ maxBal = <<-1, -1, -1>>
+
+State 3: <Phase1a line 69, col 15 to line 71, col 54 of module PaxosFiniteMutant>
+/\ msgs = {[type |-> "1a", bal |-> 0], [type |-> "1a", bal |-> 1]}
+/\ maxVBal = <<-1, -1, -1>>
+/\ maxVal = <<"NoValue", "NoValue", "NoValue">>
+/\ maxBal = <<-1, -1, -1>>
+
+State 4: <Phase1b line 82, col 3 to line 88, col 37 of module PaxosFiniteMutant>
+/\ msgs = { [type |-> "1a", bal |-> 0],
+  [type |-> "1a", bal |-> 1],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 1] }
+/\ maxVBal = <<-1, -1, -1>>
+/\ maxVal = <<"NoValue", "NoValue", "NoValue">>
+/\ maxBal = <<0, -1, -1>>
+
+State 5: <Phase2a line 99, col 3 to line 110, col 42 of module PaxosFiniteMutant>
+/\ msgs = { [type |-> "1a", bal |-> 0],
+  [type |-> "1a", bal |-> 1],
+  [type |-> "2a", bal |-> 0, val |-> "v1"],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 1] }
+/\ maxVBal = <<-1, -1, -1>>
+/\ maxVal = <<"NoValue", "NoValue", "NoValue">>
+/\ maxBal = <<0, -1, -1>>
+
+State 6: <Phase1b line 82, col 3 to line 88, col 37 of module PaxosFiniteMutant>
+/\ msgs = { [type |-> "1a", bal |-> 0],
+  [type |-> "1a", bal |-> 1],
+  [type |-> "2a", bal |-> 0, val |-> "v1"],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 1],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 1, acc |-> 1] }
+/\ maxVBal = <<-1, -1, -1>>
+/\ maxVal = <<"NoValue", "NoValue", "NoValue">>
+/\ maxBal = <<1, -1, -1>>
+
+State 7: <Phase2a line 99, col 3 to line 110, col 42 of module PaxosFiniteMutant>
+/\ msgs = { [type |-> "1a", bal |-> 0],
+  [type |-> "1a", bal |-> 1],
+  [type |-> "2a", bal |-> 0, val |-> "v1"],
+  [type |-> "2a", bal |-> 1, val |-> "v0"],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 1],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 1, acc |-> 1] }
+/\ maxVBal = <<-1, -1, -1>>
+/\ maxVal = <<"NoValue", "NoValue", "NoValue">>
+/\ maxBal = <<1, -1, -1>>
+
+State 8: <Phase2b line 119, col 3 to line 125, col 45 of module PaxosFiniteMutant>
+/\ msgs = { [type |-> "1a", bal |-> 0],
+  [type |-> "1a", bal |-> 1],
+  [type |-> "2a", bal |-> 0, val |-> "v1"],
+  [type |-> "2a", bal |-> 1, val |-> "v0"],
+  [type |-> "2b", bal |-> 1, acc |-> 1, val |-> "v0"],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 1],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 1, acc |-> 1] }
+/\ maxVBal = <<1, -1, -1>>
+/\ maxVal = <<"v0", "NoValue", "NoValue">>
+/\ maxBal = <<1, -1, -1>>
+
+State 9: <Phase2b line 119, col 3 to line 125, col 45 of module PaxosFiniteMutant>
+/\ msgs = { [type |-> "1a", bal |-> 0],
+  [type |-> "1a", bal |-> 1],
+  [type |-> "2a", bal |-> 0, val |-> "v1"],
+  [type |-> "2a", bal |-> 1, val |-> "v0"],
+  [type |-> "2b", bal |-> 0, acc |-> 2, val |-> "v1"],
+  [type |-> "2b", bal |-> 1, acc |-> 1, val |-> "v0"],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 1],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 1, acc |-> 1] }
+/\ maxVBal = <<1, 0, -1>>
+/\ maxVal = <<"v0", "v1", "NoValue">>
+/\ maxBal = <<1, 0, -1>>
+
+State 10: <Phase2b line 119, col 3 to line 125, col 45 of module PaxosFiniteMutant>
+/\ msgs = { [type |-> "1a", bal |-> 0],
+  [type |-> "1a", bal |-> 1],
+  [type |-> "2a", bal |-> 0, val |-> "v1"],
+  [type |-> "2a", bal |-> 1, val |-> "v0"],
+  [type |-> "2b", bal |-> 0, acc |-> 2, val |-> "v1"],
+  [type |-> "2b", bal |-> 1, acc |-> 1, val |-> "v0"],
+  [type |-> "2b", bal |-> 1, acc |-> 2, val |-> "v0"],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 1],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 1, acc |-> 1] }
+/\ maxVBal = <<1, 1, -1>>
+/\ maxVal = <<"v0", "v0", "NoValue">>
+/\ maxBal = <<1, 1, -1>>
+
+State 11: <Phase2b line 119, col 3 to line 125, col 45 of module PaxosFiniteMutant>
+/\ msgs = { [type |-> "1a", bal |-> 0],
+  [type |-> "1a", bal |-> 1],
+  [type |-> "2a", bal |-> 0, val |-> "v1"],
+  [type |-> "2a", bal |-> 1, val |-> "v0"],
+  [type |-> "2b", bal |-> 0, acc |-> 2, val |-> "v1"],
+  [type |-> "2b", bal |-> 0, acc |-> 3, val |-> "v1"],
+  [type |-> "2b", bal |-> 1, acc |-> 1, val |-> "v0"],
+  [type |-> "2b", bal |-> 1, acc |-> 2, val |-> "v0"],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 1],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 1, acc |-> 1] }
+/\ maxVBal = <<1, 1, 0>>
+/\ maxVal = <<"v0", "v0", "v1">>
+/\ maxBal = <<1, 1, 0>>
+
+22632 states generated, 5198 distinct states found, 2288 states left on queue.
+The depth of the complete state graph search is 11.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 9 and the 95th percentile is 5).
+Finished in 00s at (2026-09-27 23:10:59)

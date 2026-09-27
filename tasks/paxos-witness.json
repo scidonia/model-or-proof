@@ -1,0 +1,25 @@
+{
+  "name": "paxos-witness",
+  "system": "Paxos agreement non-vacuity witness (finite TLC ballot projection, intentionally false NoChoice)",
+  "property": {
+    "name": "NoChoice",
+    "kind": "diagnostic",
+    "statement": "no value has been chosen: intentionally false, used only to obtain a reachable-decision trace"
+  },
+  "spec": "specs/tla/paxos/PaxosFinite.tla",
+  "instances": [
+    {"param_N": 2, "config": "specs/tla/paxos/PaxosN2Witness.cfg"},
+    {"param_N": 3, "config": "specs/tla/paxos/PaxosN3Witness.cfg"},
+    {"param_N": 4, "config": "specs/tla/paxos/PaxosN4Witness.cfg"},
+    {"param_N": 5, "config": "specs/tla/paxos/PaxosN5Witness.cfg"},
+    {"param_N": 6, "config": "specs/tla/paxos/PaxosN6Witness.cfg"},
+    {"param_N": 7, "config": "specs/tla/paxos/PaxosN7Witness.cfg"},
+    {"param_N": 8, "config": "specs/tla/paxos/PaxosN8Witness.cfg"}
+  ],
+  "n0": null,
+  "budgets": {
+    "wall_clock_s": 7200,
+    "usd": 50
+  },
+  "repetitions": 1
+}

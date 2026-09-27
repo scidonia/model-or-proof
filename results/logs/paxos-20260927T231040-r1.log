@@ -1,0 +1,31 @@
+tlc-workers1-metadir/home/gavin/dev/model-or-proof/specs/tla/paxos/.tlc-states/run-deq_l62a-config/home/gavin/dev/model-or-proof/specs/tla/paxos/PaxosN5.cfg/home/gavin/dev/model-or-proof/specs/tla/paxos/PaxosFinite.tla
+
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 56 and seed -8036432052181894872 with 1 worker on 20 cores with 14247MB heap and 64MB offheap memory (Linux 6.8.0-85-generic amd64, Oracle Corporation 1.8.0_504 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/paxos/PaxosFinite.tla
+Parsing file /tmp/Integers.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module PaxosFinite
+Starting... (2026-09-27 23:08:31)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-27 23:08:32.
+Progress(11) at 2026-09-27 23:08:35: 76,975 states generated (76,975 s/min), 19,923 distinct states found (19,923 ds/min), 10,838 states left on queue.
+Progress(17) at 2026-09-27 23:09:35: 2,024,910 states generated (1,947,935 s/min), 366,176 distinct states found (346,253 ds/min), 130,449 states left on queue.
+Progress(20) at 2026-09-27 23:10:35: 4,681,503 states generated (2,656,593 s/min), 679,436 distinct states found (313,260 ds/min), 42,716 states left on queue.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.7E-7
+  based on the actual fingerprints:  val = 1.9E-7
+5041259 states generated, 701505 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 25.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 11 and the 95th percentile is 4).
+Finished in 02min 08s at (2026-09-27 23:10:40)
