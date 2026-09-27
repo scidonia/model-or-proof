@@ -18,7 +18,8 @@ the crossover, not the calibrated instance. The three-way comparison (TLC / AI c
 human) lives in [wiki/closed-by-theorem.md](wiki/closed-by-theorem.md), with the full matrix of measured
 rows in [wiki/comparison-matrix.md](wiki/comparison-matrix.md), the narrative in
 `wiki/token-ring-route-a-vs-route-b.md` (Bakery §9, LCR §10), and the write-up as a paper in
-[WHITEPAPER.md](WHITEPAPER.md).
+[paper/model-or-proof.pdf](paper/model-or-proof.pdf) (source `paper/model-or-proof.tex`, prose version
+[WHITEPAPER.md](WHITEPAPER.md)).
 Cost varies by task — the theorem medians span 104.8 s to 1009.5 s — so medians are quoted
 with their ranges rather than as a single price.
 
