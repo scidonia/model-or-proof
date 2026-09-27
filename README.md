@@ -16,8 +16,9 @@ all four.
 shallow enough that its crossover sits above the instance its budget allowed. The comparison point is
 the crossover, not the calibrated instance. The three-way comparison (TLC / AI closure loop / published
 human) lives in [wiki/closed-by-theorem.md](wiki/closed-by-theorem.md), with the full matrix of measured
-rows in [wiki/comparison-matrix.md](wiki/comparison-matrix.md) and the narrative in
-`wiki/token-ring-route-a-vs-route-b.md` (Bakery §9, LCR §10).
+rows in [wiki/comparison-matrix.md](wiki/comparison-matrix.md), the narrative in
+`wiki/token-ring-route-a-vs-route-b.md` (Bakery §9, LCR §10), and the write-up as a paper in
+[WHITEPAPER.md](WHITEPAPER.md).
 Cost varies by task — the theorem medians span 104.8 s to 1009.5 s — so medians are quoted
 with their ranges rather than as a single price.
 
@@ -91,7 +92,7 @@ Lean-specialised prover model — none is reachable from this host's providers.
 | Harness (both routes) + behavior contracts | **built** — both runners, the closure oracle, the mutant controls, guard 72 green; see [plans/](plans/) |
 | Lean 4 + Mathlib provisioning (elan, Mathlib oleans) and the closure loop | **working** — Route B closes general theorems on four tasks |
 | **P2 task set**: two-phase commit/Paxos, LCR election, cache coherence | **LCR complete** — spec, Lean model, both mutants, audit, `n₀` = 10, both cells closed; two-phase commit/Paxos and cache coherence planned |
-| Results, analysis, write-up in `wiki/` | **landed** — [wiki/closed-by-theorem.md](wiki/closed-by-theorem.md) for the closures, costs and comparisons; `wiki/token-ring-route-a-vs-route-b.md` §1–§10 for the full narrative. EWD998 closed; its `n₀` is held at 3 pending a clean sweep (the value is an artifact of the harness's TLC invocation, now fixed) |
+| Results, analysis, write-up in `wiki/` | **landed** — [WHITEPAPER.md](WHITEPAPER.md) for the write-up, [wiki/closed-by-theorem.md](wiki/closed-by-theorem.md) for the closures, costs and comparisons, [wiki/comparison-matrix.md](wiki/comparison-matrix.md) for every measured row, and `wiki/token-ring-route-a-vs-route-b.md` §1–§10 for the full narrative. EWD998 closed; its `n₀` = 3 is confirmed on the cap's authority — the clean N=4 run completes in 2 h 36 min, outside the 2 h cap, so the value is the cap's rather than an artifact of the now-fixed `-cleanup` flag |
 
 ## The TLA+ side, already measured
 
