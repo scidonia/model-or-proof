@@ -189,7 +189,7 @@ re-run through the runner so the record quotes `results/tlc.jsonl` rather than a
 
 **And the measurement the task set still lacks** is a pair taken *at* a crossover (§6). Every `N₀`
 so far was chosen to fit a budget, which is why the four pairs split as they do. EWD998's comes
-closest — `K` = 2.85, splitting on the resource — but by accident of a small instance rather than by
+closest — `K` = 2.78, splitting on the resource — but by accident of a small instance rather than by
 calibration. Paxos is ruled as the task that fixes that, with `n₀` set at the crossing.
 
 ## 8. Verdict against the three readings of "replacement"
@@ -224,11 +224,11 @@ enumeration. This reading is about replacement of the *question*, and it is met 
 |---|---|---|---|---|
 | token-ring (N=23) | 837.938 s | 38.5 s | **0.046** | proof, 21.7× |
 | bakery (N=9) | 4,847.749 s | 76.6 s | **0.016** | proof, 63.3× |
-| **ewd998 (N=3)** | **35.484 s**, $0.00197 | **101.217 s**, $0.00062 | **2.85** | **TLC on time, proof on cost** |
+| **ewd998 (N=3)** | **36.4 s**, $0.00203 | **101.217 s**, $0.00062 | **2.78** | **TLC on time, proof on cost** |
 | lcr (N=10) | 2.670 s | 101.0 s | **37.8** | TLC, 37.8× |
 
-**`ewd998`'s pair is the closest to parity in the set**, and the only one that splits: TLC is 2.85×
-faster, while the proof is 3.2× cheaper ($0.00062 against $0.00197). That is what a pair measured
+**`ewd998`'s pair is the closest to parity in the set**, and the only one that splits: TLC is 2.78×
+faster, while the proof is 3.2× cheaper ($0.00062 against $0.00203). That is what a pair measured
 near a crossover looks like — the two resources trade rather than one route dominating — and it is
 also the *smallest* instance of the four, because `n₀` is capped at what TLC settles inside two
 hours (§11 decision 3) and N=4 needs 2h 36min.
@@ -272,7 +272,7 @@ set is four tasks rather than a sampled population.
 | Route A, lcr N=10 | `results/tlc.jsonl` — `task=lcr, param_N=10`: 2.670 s / $0.00015 / 177,147 distinct |
 | Route A, token-ring N=3 | `results/tlc.jsonl` — 5 runs, 0.656–0.669 s, 36 distinct; the mutant `violation` at 23 distinct |
 | EWD998 (Route B) | `results/proof.jsonl` — `task=ewd998, mode=file`: tier 2 `closed` 1009.538 s / $0.000814, tier 1 `closed` 101.217 s / $0.00062086, tier 2 `mutant=true` `no_progress` 572.665 s |
-| Route A, ewd998 N=3 | `results/tlc.jsonl` — five runs, 35.484–44.249 s, $0.00197–$0.00246, 1,520,618 distinct each; the N=4 completion (248,006,200 distinct, depth 104, 2h 36min, exit 0) is in the calibration log, not yet a row |
+| Route A, ewd998 N=3 | `results/tlc.jsonl` — six runs, 35.484–44.249 s, $0.00197–$0.00246, 1,520,618 distinct each; the N=4 completion (248,006,200 distinct, depth 104, 2h 36min, exit 0) is in the calibration log, not yet a row |
 | Human prior art | `results/human.jsonl` — quotes and pinned sources; `machine_checked: false` throughout |
 | The equivalence audits | `docs/equivalence-token-ring.md`, `docs/equivalence-bakery.md`, `docs/equivalence-lcr.md`, `docs/equivalence-ewd998.md` |
 | The closure check | `harness/closure_oracle.py` and `tools/checker/` (whose `PROVENANCE.md` records the interference experiment) |

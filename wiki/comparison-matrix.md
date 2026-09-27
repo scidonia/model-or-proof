@@ -26,8 +26,8 @@ for concurrent-system verification — and at what wall-clock and dollar differe
 |---|---|---|---|---|
 | **Property** | `Mutex` | `MutualExclusion` | at most one leader | invariance |
 | **Route A `n₀`** | 23 | 9 | 10 | 3 |
-| Route A wall-clock at `n₀` | **837.938 s** (8 workers) | **4,847.749 s** | **2.670 s** | **35.484 s** |
-| Route A cost at `n₀` | **$0.04655** | **$0.26932** | **$0.00015** | **$0.00197** |
+| Route A wall-clock at `n₀` | **837.938 s** (8 workers) | **4,847.749 s** | **2.670 s** | **36.4 s** (median of 6) |
+| Route A cost at `n₀` | **$0.04655** | **$0.26932** | **$0.00015** | **$0.00203** |
 | Route A distinct states | 289,406,976 | 238,803,200 | 177,147 | 1,520,618 |
 | **Route B tier 2** (general `N`) | **closed**, n=6, median **104.8 s** | **closed**, n=5, median **444.4 s** | **closed**, n=5, median **216.0 s** | **closed**, n=1, **1009.5 s** |
 | tier-2 cost median | **$0.00033** | **$0.00062** | **$0.00044** | **$0.00081** |
@@ -52,7 +52,7 @@ Both arms prove the same claim at the same instance. `K` < 1 favours the proof.
 |---|---|---|---|---|---|
 | token-ring (N=23) | 837.938 s / $0.04655 | 38.5 s / $0.00023 | **0.046** | 0.0050 | proof, 21.7× / 202× |
 | bakery (N=9) | 4,847.749 s / $0.26932 | 76.6 s / $0.00048 | **0.016** | 0.0018 | proof, 63.3× / 565× |
-| **ewd998 (N=3)** | **35.484 s / $0.00197** | **101.2 s / $0.00062** | **2.85** | **0.31** | **splits** — TLC faster, proof cheaper |
+| **ewd998 (N=3)** | **36.4 s / $0.00203** | **101.2 s / $0.00062** | **2.78** | **0.31** | **splits** — TLC faster, proof cheaper |
 | lcr (N=10) | 2.670 s / $0.00015 | 101.0 s / $0.00042 | **37.8** | 2.87 | TLC, 37.8× |
 
 **Marginal, not from-scratch.** A corollary is the trivial instantiation of the theorem, which cost
@@ -172,7 +172,7 @@ Protocol §3 names three readings and §11 decision 1 makes **reading 2 the head
 | Reading | Statement | Result |
 |---|---|---|
 | **2 (headline)** | Route B proves the tier-2 theorem within budget `B`, where Route A cannot answer at any cost | **Supported, 4 of 4.** Worst case 1009.5 s = 14.0% of the 2 h cap and $0.00081 = 0.0016% of the $50 cap. Route A's coverage of tier 2 is 0 of 4 at any budget. |
-| **1** | Route B settles the tier-1 question within a factor `K` of Route A | **`K` = 0.046 / 0.016 / 2.85 / 37.8.** Two favour the proof, one splits, one favours TLC. |
+| **1** | Route B settles the tier-1 question within a factor `K` of Route A | **`K` = 0.046 / 0.016 / 2.78 / 37.8.** Two favour the proof, one splits, one favours TLC. |
 | **3** | Coverage under a fixed budget | **Counts equal at 4 of 4, claims not equal.** Route B settles four general theorems; Route A settles four bounded instances and 0 of 4 at the general tier. |
 
 ---
