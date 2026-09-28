@@ -36,11 +36,16 @@ Across four concurrent algorithms (token-ring mutual exclusion, Lamport's Bakery
 and EWD998 termination detection) the loop closed every task's general theorem, each with a negative
 control demonstrating that the rig detects a weakened model. \textbf{The headline claim is supported on
 4 of 4 tasks: the loop proves the general theorem inside a 2\,h / \$50 budget, its worst cell median
-using 6.2\% of the clock and 0.0012\% of the money, where TLC cannot answer at any budget.} The same-claim cost comparison is 2--2 and turns on
-where each instance falls relative to its own crossover rather than on the methods: TLC is faster on two
-tasks, the loop on two, and cost totals favour the loop on three of four. Every closure cost under a
-millicent of a dollar, and every proof total --- general theorem plus corollary --- under
-1.5\,millidollars.
+using 6.2\% of the clock and 0.0012\% of the money, where TLC cannot answer at any budget.}
+\textbf{The same-claim cost comparison is withdrawn.} Every tier-2 median, and two of the tier-1 arms,
+rest on rows whose transcripts show prior-proof reuse; re-earning those six cells under per-package
+isolation produced thirty attempts of which \emph{five of six} arms again contained a prior-proof read,
+because the attempt's shell still reaches the repository's templates and results even when its own package
+holds no prior proof. That is a result about running a priced AI proof loop, and it is reported here in
+place of a table built on contaminated samples. On a fresh Paxos cell --- the task whose general theorem
+and bounded instance are the same claim --- the loop settled the general statement in a strict majority of
+five attempts with \emph{no} proof failures, at a median of 1640.7\,s and \$0.00498; that is the theorem
+operand only, with no corollary cell, so no crossing, no parity verdict and no $n_0$.
 
 We report the method, the four tasks, the measured matrix, and at length what the result does
 \emph{not} establish.
@@ -203,7 +208,10 @@ and EWD998 (tier~1: $7/8$, $5/5$, $5/5$, $6/6$). The five non-closures are three
 budget \texttt{timeout}, and one unclosed run whose row records no kind; mutant controls are separate
 runs and never attempts. Ranges are wide --- token-ring's spans 62.9--1021.8\,s --- so no figure is
 quoted without its range. Route~A at $N_0$ is a single deterministic run except EWD998, whose six runs
-give the median shown.}
+give the median shown. \textbf{Withdrawn as cost measurements:} the four tier-2 cells and the Bakery and
+LCR tier-1 cells rest on rows whose transcripts show prior-proof reuse, and the re-earned reruns failed
+their audit gate as well (\S5.5). The counts and medians above are historical observations, not
+independent samples.}
 \end{table}
 
 \noindent
@@ -234,8 +242,11 @@ EWD998 ($N{=}3$)      & 36.4\,s & 162.0\,s & 112.3\,s & \textbf{274.3\,s} & \tex
 LCR ($N{=}10$)        & 2.670\,s & 216.0\,s & 101.0\,s & \textbf{317.0\,s} & \textbf{118.7} & \textbf{TLC, 118.7$\times$} \\
 \bottomrule
 \end{tabular}
-\caption{$K = \text{proof} \div \text{TLC}$ on the same claim. \textbf{The split is 2--2.} On cost the
-totals are kinder to the proof --- cheaper on three of four; only LCR favours TLC on both resources.}
+\caption{$K = \text{proof} \div \text{TLC}$ on the same claim. On cost the
+totals are kinder to the proof --- cheaper on three of four; only LCR favours TLC on both resources.
+\textbf{These totals are withdrawn.} Every tier-2 median, and the Bakery and LCR tier-1 arms, rest on rows
+with prior-proof reuse; the re-earned reruns failed their audit gate (\S5.5), so no recomputed $K$ is
+published and \textbf{no split is a result}.}
 \end{table}
 
 \begin{figure}[htbp]
@@ -261,7 +272,8 @@ EWD998 (7.5$\times$) and LCR (118.7$\times$). Which way a task falls follows its
 methods: every $N_0$ is the instance the rule of \S3.1 selected --- and for LCR the 2\,h cap never bound,
 so the sweep's extent set it --- rather than the instance where the two routes cross. A task calibrated
 so that both routes are under pressure at the same instance is the experiment this plot shows is still
-missing.}
+missing. \textbf{The totals plotted are the withdrawn ones of \S5.2}: what survives is the \emph{shape}
+--- exponential against flat --- not the values.}
 \end{figure}
 
 \subsection{Against published human effort}
@@ -305,7 +317,8 @@ largest tier-2 cost \$0.00062 $=$ \textbf{0.0012\%} of the \$50 cap. TLC's cover
 0 of 4 at any budget. \\
 \addlinespace
 \textbf{Cost parity at the bounded tier ($K$)} &
-\textbf{2--2}: $K = 0.171\,/\,0.107\,/\,7.53\,/\,118.7$. \\
+\textbf{Withdrawn}: the cell medians behind $K$ rest on rows with prior-proof reuse, and the re-earned
+reruns failed their audit gate (\S5.5), so no split is reported. \\
 \addlinespace
 \textbf{Coverage under a fixed budget} &
 Counts equal at 4 of 4, claims not equal: the loop settles four \emph{general} theorems; TLC settles
@@ -315,6 +328,64 @@ four \emph{bounded} instances and zero of the general tier. \\
 \caption{Protocol readings of what ``replacing model checking with proof'' might mean, each reported
 rather than one chosen for the reader.}
 \end{table}
+
+\subsection{Paxos: the general theorem inside the budget, and what isolation does not fix}
+
+\textbf{The theorem and the cell.} Paxos is the task the set was missing: one where the bounded instance
+TLC can check and the general theorem the loop proves are the \emph{same claim} rather than neighbours.
+The loop settled the general statement --- arbitrary acceptor count, arbitrary value type,
+pairwise-intersecting quorums, unbounded ballots, no ballot bound and no fixed value set --- with the
+retained proof of \texttt{Paxos.agreement} depending only on \texttt{propext},
+\texttt{Classical.choice} and \texttt{Quot.sound}, and on no \texttt{sorryAx}. The measured cell ran five
+attempts on one seed digest, each in its own prepared Lean package with its own workspace, results and
+session root, file mode, one repetition per invocation. \textbf{Three of five attempts carry the final
+verdict} --- a strict majority --- and \textbf{zero attempts failed to prove anything}: the two
+non-certified attempts had clean integrity, elaboration, permitted axioms and an intact seed, and were
+withheld for rig reasons only (one put a scratch file outside the allowed prefix; one lost its verdict to
+an instrument fault, below). The all-attempt median is \textbf{1{,}640.690\,s} (range 386.999--1{,}716.946)
+at a cell cost of \textbf{\$0.00498}, with the withheld attempts' actual elapsed times included --- the
+selection operand is never a median over closures only.
+
+\textbf{What it licences, narrowly.} This is the \emph{theorem operand only}. The same-claim proof total
+is the theorem median \emph{plus} the median of Paxos's own tier-1 corollary cell at the selected $N$,
+and no such corollary cell exists, so \textbf{no crossing, no parity verdict and no $n_0$} follow; the
+manifest's \texttt{n\_cap} and \texttt{n\_0} remain null. The cell is an exploratory pilot and is
+\textbf{never pooled} with the earlier five-row Paxos pilot, whose oracle certified a decoy declaration
+and whose repetitions copied each other's proofs: that pilot is retained as diagnostic, and its single
+independent datum was 1{,}934.76\,s. Nothing here is a Route~A/Route~B ratio and nothing here should be
+divided by another task's total.
+
+\textbf{A result about the rig, which stands on its own.} Re-earning the six contaminated published arms
+--- thirty attempts, each in its own prepared package whose receipt shows exactly what it could see ---
+established that \textbf{per-package isolation is necessary and insufficient on a host with no read
+sandbox}. Five of the six arms contained at least one attempt whose transcript shows a prior proof read,
+by two routes: a tier-2 attempt read the \emph{shared template's} \texttt{<Task>Proved.lean} by absolute
+path --- the package had correctly withheld that module, so what leaked was the \emph{reachable corpus},
+not the package, and one attempt reached \emph{another task's} proof --- and a tier-1 attempt read prior
+\emph{evidence}: a published cell's session transcript, a sibling attempt's result row, the prepare
+receipts. Of thirty attempts, nineteen survived the audit and fifteen of those closed. The methodological
+statement is not that the loop fails but that \textbf{a priced AI proof loop needs the attempt's reachable
+corpus removed, not merely its own directory cleaned}: with no kernel boundary available here, a shell
+that can name a path can read it, and the models name the paths unprompted, from their first attempt
+onward. The cross-task cost tables are therefore withdrawn rather than replaced.
+
+\textbf{The instrument the numbers rest on, and why it was replaced twice.} Every file-mode verdict
+depends on a watch that reports writes outside the working copy, and its first form read
+\texttt{inotifywait}'s own reassurance --- \texttt{Watching new directory <path>}, printed when the tool
+\emph{adds} a watch --- as an unreadable stream, so a run that organised scratch into a subdirectory of the
+one path it was allowed to write forfeited its verdict: the rig penalising compliance. Naming that message
+benign then certified a write it never saw, because a path containing a newline splits a record across two
+lines. The third form asks the tool for a machine-readable stream (\texttt{-q -c}), recognises only named
+events, has \emph{no} exemptions, demonstrates its own watch with a nonce sentinel, and treats a reader
+that dies --- an undecodable filename used to kill the reader silently --- as blindness rather than
+silence. That sequence is the honest description of the numbers above.
+
+\textbf{Caveats carried with this result.} The host load at the cell's launch was 2.26/2.15/1.71 on 20
+cores, higher than the Paxos calibration cell's, so any wall-clock comparison across the two carries that
+difference. Two mutation-arm attempts read a proof of the true model: their \emph{outcomes} stand as
+negative controls and their wall-clock and dollar figures are not cost samples. And where this paper's
+cross-task figures are compared against published ones, the comparison is \textbf{indicative}: those rows
+predate the field that records a withheld verdict and were produced under a different verdict rule.
 
 \section{Limitations}
 
@@ -333,8 +404,8 @@ These bound the claims, and we would rather state them than have them found.
 \item \textbf{No pair was measured at a crossover.} Every $N_0$ came from the calibration rule of \S3.1
       --- the largest instance Route~A completes inside the 2\,h cap --- not from where the two routes
       trade places, and for LCR that cap never bound, so the sweep's extent stands in its place. That
-      is \emph{why} \S5.2 splits. The cost shape (TLC exponential, proof flat) is measured; the
-      crossover itself is extrapolated.
+      is \emph{why} \S5.2's pairs fall where they do; the split itself is now withdrawn (\S5.5). The cost
+      shape (TLC exponential, proof flat) is measured; the crossover itself is extrapolated.
 \item \textbf{Small task set.} Four algorithms, eight settled cells. Not a sampled population.
 \item \textbf{Different precision across tasks.} Every cell has $R \ge 5$ closures on a single seed
       digest, but the counts differ --- LCR and EWD998 closed 5 of 5 non-mutant attempts, token-ring
@@ -347,6 +418,14 @@ These bound the claims, and we would rather state them than have them found.
       costed. Both components are reported separately and never merged.
 \item \textbf{Our own tooling is young.} The closure oracle is software: the two attacks that defeated
       its first form (\S3.2) were found by review, not by the loop.
+\item \textbf{The cross-task cost figures are withdrawn.} The published tier-2 medians for all four
+      tasks, and two of the tier-1 arms, rest on rows whose transcripts show prior-proof reuse; the six
+      affected arms were re-earned under per-package isolation and failed their audit gate as well, so no
+      recomputed $K$ exists and \S5.2 reports none. The mutation-arm rows are usable as \emph{outcomes}
+      and never as costs. Comparisons against the superseded published values are \textbf{indicative},
+      because those rows predate the field that records a withheld verdict and were produced under a
+      different verdict rule, and any wall-clock comparison carries the host-load difference recorded in
+      \S5.5.
 \end{enumerate}
 
 \section{Conclusion}
