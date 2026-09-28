@@ -166,6 +166,19 @@ difference splits the cell's five rows across two revisions and must be recorded
 over. That is why no harness edit may land while a cell is in flight, and why this capture exists: the
 row cannot say it, so the provenance file must.
 
+**Re-running the check today will name two files, and that is expected rather than a split revision.**
+The harness's placeholder clause was corrected *after* this cell ended (`harness/lean_lex.py`,
+`harness/lean_repl.py`): `count_unclosed` had counted a named synthetic placeholder as a hole and so
+refused a proof the oracle certifies closed, and the fix splits the scan, leaving `count_holes` — which
+`harness.closure.incomplete_body` still uses for its declaration-level question — untouched. So
+`audit_attempts.py --expect-revision results/paxos-theorem-cell/revision.json` will now report those two
+paths as changed. They changed **after** the last attempt finished, which the committed `audit.txt`
+(`revision ok`, five `clean` sessions, zero offences) is the in-flight evidence for, and the edit cannot
+move these rows: their verdicts come from the closure oracle and the outside watch, and `count_unclosed`
+reaches only `guard_imports`, over the **seed** whose sole hole is the intended `sorry` that the run
+exists to close. A reader who sees two names here should read this paragraph rather than conclude the
+cell spans two revisions.
+
 ## The mid-flight shape note, and whether it held
 
 Written while the attempts were running and kept because it named the hypothesis in advance. It read:
