@@ -195,6 +195,32 @@ cell. Isolation was re-verified after the promotion: preparing a tier-2 package 
 reports `included ["Paxos.lean"]`, `withheld ["PaxosMutant.lean", "PaxosProved.lean"]`, and the package
 holds only the seed, so a theorem-cell attempt still cannot see a prior proof.
 
+**The pre-registered rule yields no bracket on this task, and that is a result rather than a gap.** With
+`P(N) = median(tier-2 theorem) + median(tier-1 corollary-at-N)`, the first term is fixed at **1640.69 s**
+(verified from the theorem cell's rows) and the second is non-negative, so `P(N) ≥ 1640.69 s` for every
+`N`. Every measured `A(N)` is **≤ 1405.943 s** (the official pinned rows, `results/tlc.jsonl:62-66`), and
+the next candidate has no successfully exhausted row at all — the only N=7 attempt is `outcome timeout`
+at 7200.278 s (`:61`), which the rule excludes. So `A(N) < P(N)` at every candidate, the crossing's
+second conjunct fails everywhere, `n0` is not selectable, and **no corollary measurement can change
+this**, because the corollary term can only raise `P(N)`. The consequence for the paper is directional:
+**the absence of a crossing is H1's confirmation** — for every instance TLC completes (N=2…6) the proof
+route costs more wall-clock — while H2's crossover lies beyond the pinned family, which is the
+pre-registered prediction under H1 rather than a failure to measure.
+
+**The temptation this creates, named while it is live.** The theorem cell's *minimum* is 386.999 s, and
+under a minimum-based statistic `A(5)=127.182 < 386.999 ≤ A(6)=1405.943` — a bracket at `L=5`. The
+pre-registered operand is the median of **all precommitted attempts including the withheld ones**, and
+the plan forbids a success-only or otherwise fitted statistic in two places. Substituting the minimum now
+that a crossing is in view is exactly the fitted policy those clauses exist to prevent, so the statistic
+stands and the bracket does not exist.
+
+**The corollary pilot at N=6 is priced for H2, not for the bracket.** H2 claims the proof route is close
+to flat in `N` because the theorem is general and instantiation is free; the corollary-at-N cost is
+precisely that datum. One cell at the fixed instance — `--param-N 6`, module `PaxosN6Pilot.lean`, **not**
+`PaxosN0.lean`, with `n0` left null — gives the instantiation cost against the theorem's 1640.69 s. It
+cannot alter the verdict above, and `PaxosN0.lean` remains authored only after a selection the rule has
+not made.
+
 **Planner-owned prep contract, pre-implementation red (`then`), now implemented:** `tests/paxos-attempt-isolation-contract.md`
 and `tests/test_paxos_attempt_isolation.py` define a
 `python -m harness.attempt_workspace prepare` CLI and temp-only structural
