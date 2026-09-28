@@ -1,0 +1,38 @@
+{
+  "artifact": "results/paxos-calibration/closures/paxos/Paxos-20260928T112011-r2.lean",
+  "artifact_sha256": "e0addc15073a1df120f490e4eaee6ca88e696ae8bafcea93959ebe1fc29eb1d9",
+  "closure": {
+    "axiom_report": "ok",
+    "axioms": [],
+    "closed": true,
+    "elaborates": true,
+    "errors": [],
+    "integrity": true,
+    "lean_path": "/home/gavin/dev/model-or-proof/proofs/lean/paxos/.lake/packages/Cli/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/paxos/.lake/packages/batteries/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/paxos/.lake/packages/Qq/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/paxos/.lake/packages/aesop/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/paxos/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/paxos/.lake/packages/importGraph/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/paxos/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/paxos/.lake/packages/plausible/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/paxos/.lake/packages/mathlib/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/paxos/.lake/build/lib/lean:/home/gavin/.elan/toolchains/leanprover--lean4---v4.35.0-rc3/lib/lean",
+    "module": "Paxos",
+    "no_progress_rounds": 0,
+    "outside_events": [],
+    "outside_writes": [],
+    "pristine_sha256": "0d29361497a893f3ce2ca30d108161486a40cb4aec0ce6efae810986066f184e",
+    "raw_tail": [
+      "",
+      "axioms 0",
+      "resolved Message.agreement"
+    ],
+    "rounds": 1,
+    "seed_intact": true,
+    "theorem": "Message.agreement",
+    "timed_out": false,
+    "verdict": true,
+    "watch_blind": null,
+    "withheld": []
+  },
+  "digests_agree": true,
+  "mode": "file",
+  "omp_sessions": "results/paxos-calibration/omp/Paxos-20260928T112011-r2",
+  "pristine_sha256": "0d29361497a893f3ce2ca30d108161486a40cb4aec0ce6efae810986066f184e",
+  "row": "results/paxos-calibration/proof.jsonl:2",
+  "row_artifact_sha256": "e0addc15073a1df120f490e4eaee6ca88e696ae8bafcea93959ebe1fc29eb1d9",
+  "task": "paxos",
+  "tier": 2
+}
