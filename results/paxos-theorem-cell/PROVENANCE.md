@@ -122,3 +122,23 @@ different code with nothing in them to show it. Recompute this section when the 
 difference splits the cell's five rows across two revisions and must be recorded rather than smoothed
 over. That is why no harness edit may land while a cell is in flight, and why this capture exists: the
 row cannot say it, so the provenance file must.
+
+## Shape so far — an observation, not evidence
+
+Recorded mid-flight while the attempts run, and deliberately **not** a result: no oracle verdict exists
+for any attempt yet, and the per-attempt transcript audit has not run. What was observed is shape.
+Attempt-001's session read for roughly nine minutes before its first write, then edited the working copy
+`13882 → 22574 → 23234` bytes by about 705 s — against the retired pilot's r1, which read before writing
+and reached a comparable size on a comparable clock. r1 is the only attempt in that cell whose transcript
+shows no reuse, and therefore the only honest datum available about what a real attempt costs, so an
+attempt whose shape matches it is the strongest signal obtainable *before* the audit that this cell is
+doing real work. The audit's scan of the same live transcript shows 23 tool calls with **zero** offences
+and only the attempt's own working copy among the files it touched.
+
+Why the status matters, and it is the whole reason this section says "observation" rather than "sign":
+**a cell that reproduces a neighbour's bytes would also be "writing proof text" — copying a proof *is*
+writing it.** What separates the two is whether the transcript shows those bytes arriving from
+somewhere else, which is the audit's question and not one a byte count or a duration can answer. Equally,
+neither number above is a cost: an attempt's wall clock becomes a datum when its row lands with its
+closure verdict, and the cell's median only after all five rows and a complete, committed audit. Nothing
+in this section may be cited as independence, as a pass, or as `P(N)`.
