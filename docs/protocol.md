@@ -152,6 +152,38 @@ Three candidate readings, all reported rather than one being chosen for the read
 7. **Stochastic side gets repetitions.** The AI loop is a sampling process. Every (task, route, tier)
    cell runs `R` repetitions (`R ≥ 5` per cell, fixed budget); results are reported as pass rate
    (`pass@1` and `pass@R`) plus the distribution of wall-clock and cost, never as a single number.
+   **Paxos crossover-selection pilot (preregistered while the tier-2 cell is still running):**
+   for each theorem or own-corollary pilot cell, take the ordinary median of the **actual elapsed
+   wall-clock times of all fixed `R ≥ 5` attempts on one seed digest**, not only closed attempts.
+   A timeout contributes the elapsed time actually recorded at the cap (about 7200 s); an early
+   `no_progress` or provider/harness `error` contributes its own observed elapsed time, **never**
+   an imputed full cap. Preserve every outcome and cost, report pass rate and the full ranges
+   alongside the median, and label any closed-only median as descriptive, **not** the selection
+   operand. This median can be a **cost to settle** only when a strict majority of the
+   attempts have **final `closure.verdict: true`** (structural oracle **and** intact file-mode
+   boundary) and the **elapsed-duration-ranked median** observation has that same final
+   verdict (for even `R`, both central observations must); otherwise report the outcome
+   distribution, **not** a settled-claim crossover or `n0`. The row's top-level
+   `outcome: "closed"` means the proof loop stopped at an oracle-closed file, **not** that
+   the final boundary-inclusive verdict stands. Ordering is by wall-clock **value**, not
+   repetition number or chronological run time.
+   `P(N)` adds the independently measured theorem and corollary *all-attempt* medians under this
+   same rule. Historic tasks' published closed-run medians remain historical and are not
+   silently recomputed under this Paxos-specific selection policy.
+   **Operational independence for new file-mode cells:** a repeated proof attempt starts from
+   the same immutable seed digest in a **fresh Lean package and clean working directory**,
+   with its own OMP session and results root; prior proof copies, helper scratch, closure
+   artifacts and transcripts are **not placed in that package**. The shell on this host is
+   not read-sandboxed (user namespaces/bubblewrap are unavailable); the claim is **no
+   prior-proof reads observed in the complete per-attempt tool transcript**, not that the
+   same-UID model could not open an old artifact by absolute path. Inspect and cite every
+   attempt's transcript; an observed read/copy of a previous same-tier completed proof or
+   human reference proof **invalidates that attempt's independent-cost evidence**, even if
+   Lean elaborates and `closure.verdict` is true. Retain the invalid row as diagnostic,
+   never pool it with a fresh independent R≥5 cell. A tier-1 corollary importing its
+   already-proved tier-2 theorem is an **intended dependency**, not same-tier leakage.
+   The earlier task cells and the first Paxos theorem pilot predate this audit; they are
+   historical observations, not retrospectively certified independent cost samples.
 8. **Human intervention is off for the proof**, except for the model↔spec translation and the lemma
    *statements* (not their proofs). Any human tactic inserted into a proof is logged and marks the run
    `assisted`.
@@ -189,7 +221,8 @@ Each task ships a **mutant**: the same system with the property made false (e.g.
 
 ## 6. Metrics and the result row
 
-Every run appends one JSON object to `results/<route>.jsonl`:
+Every run appends one JSON object to `results/<route>.jsonl`. The following is an **illustrative
+shape**, not an observed row; actual measurements are the append-only `results/` records:
 
 ```json
 {
@@ -206,12 +239,40 @@ Every run appends one JSON object to `results/<route>.jsonl`:
   "peak_rss_mb": 320,
   "cost_usd": 0.000401,
   "cost_basis": "compute@0.20 USD/h",
-  "tlc": {"generated": 1118209, "distinct": 159744, "left": 0, "depth": 27, "workers": 1, "fp": "p9", "seed": "auto"},
+  "tlc": {"generated": 1118209, "distinct": 159744, "left": 0, "depth": 27, "workers": 1},
+  "tlc_profile": {
+    "requested": {"heap_mib": 14336, "fp_index": 28, "seed": 1},
+    "heap_delivery": "-Xmx14336m",
+    "observed": {"heap_mib": 12743, "fp_index": 28, "seed": 1}
+  },
   "proof": null,
   "artifacts": {"spec": "specs/tla/token-ring/TokenRing.tla", "log": "results/logs/…"},
   "negative_control": {"mutant": "TokenRingMutant.tla", "expected": "violation", "observed": "violation"}
 }
 ```
+
+For **new** TLC rows, `tlc_profile.requested` records each independently selected CLI option
+(`heap_mib` is the `-Xmx` **requested ceiling**, `fp_index` the FP64 polynomial index, and `seed` the
+model-checking seed), with explicit `null` for any omitted option. `tlc_profile.heap_delivery` is
+the JVM's actual `-Xmx<n>m` option parsed from `Picked up JAVA_TOOL_OPTIONS: ...`, or `null` when
+that pickup is absent; it is independent of the requested value. `tlc_profile.observed` records
+TLC's banner heap **usable maximum** (`Runtime.maxMemory()/MiB`), polynomial index and seed, each
+`null` if not observed. On the pinned JRE8/ParallelGC a *delivered* `-Xmx14336m` produced a
+**12743MB** banner: numeric equality between requested and banner heap is **not** a valid check.
+For an explicitly pinned heap, the runner removes inherited `_JAVA_OPTIONS` and
+`JDK_JAVA_OPTIONS` **only from the TLC child's environment** before setting its
+`JAVA_TOOL_OPTIONS=-Xmx<n>m`. On the pinned OpenJDK8 JVM an inherited `_JAVA_OPTIONS` is applied
+*after* that delivery witness and can reduce the effective heap without altering the
+`Picked up JAVA_TOOL_OPTIONS:` line; a recorded pickup alone does not exclude this override.
+Runs with no explicit heap request retain their pre-existing inherited-environment behavior.
+
+For an explicit heap request, missing or contradictory JVM pickup fails closed even if the banner
+looks plausible; requested `fp_index` and `seed` must independently match the banner. A completed
+run with a contradictory or missing required attestation yields `outcome: error`, no accepted
+`tlc` summary and a persisted diagnostic log; a genuinely capped run remains `timeout` and
+establishes no property even when the banner is unavailable. The top-level profile survives a
+`tlc: null` timeout; older rows lacking `tlc_profile` mean **not recorded**, not omitted/pinned.
+`peak_rss_mb` is whole-process **used** memory, neither requested -Xmx nor banner usable maximum.
 
 - **Route A cost** is compute only: `wall_clock_s × host_rate`. The host rate is stated once, in the
   README, with the measurement basis; dollars are otherwise zero for this route.
