@@ -46,7 +46,13 @@ failure that matters and an over-reported one costs a human a glance.
 Verdicts and exit status
 ------------------------
 An attempt is **contaminated** when a token classified ``prior-copy``, ``promoted-proof`` or
-``other-transcript`` is read, copied or compared — the rule the contract states. An attempt with no
+``other-transcript`` is read, copied or compared — the rule the contract states, with one exception the
+same contract draws (``tests/audit-boundary-contract.md`` Scenario 5): a ``promoted-proof`` token naming
+the attempt's **own declared dependency** is the intended dependency, not reuse. A tier-1 arm exists to
+instantiate the task's own general theorem, and the preparer copies that module into the package, so
+reading it is the design; reading another task's proved module, or a tier-2 attempt reading any proved
+module, still invalidates. The declaration is read from the attempt's own row and never assumed. An
+attempt with no
 readable transcript is **unaudited**. Everything else is **clean**, and enumeration hits are reported
 without invalidating the attempt: seeing a predecessor's filename in an ``ls`` is not opening it.
 
@@ -158,8 +164,12 @@ def segment_effects(segment: str) -> list[tuple[str, str, int]]:
     return found
 
 
-def scan_transcript(path: Path, stem: str, repetition: int) -> list[dict]:
-    """Every artifact-touching tool call in one transcript, with its class and effect."""
+def scan_transcript(path: Path, stem: str, repetition: int, declared: str | None = None) -> list[dict]:
+    """Every artifact-touching tool call in one transcript, with its class and effect.
+
+    ``declared`` is the module this attempt's row declares as its own dependency, or ``None``; a
+    ``promoted-proof`` hit naming it is marked so the verdict can tell the design from reuse.
+    """
     hits = []
     with path.open() as handle:
         for lineno, line in enumerate(handle, 1):
@@ -188,18 +198,59 @@ def scan_transcript(path: Path, stem: str, repetition: int) -> list[dict]:
                         klass = classify(token, stem, repetition, path)
                         if klass in {"other"} and token.endswith(".jsonl"):
                             klass = "other-transcript"
-                        hits.append(
-                            {
-                                "line": lineno,
-                                "tool": block.get("name"),
-                                "verb": verb,
-                                "effect": effect,
-                                "class": klass,
-                                "token": token,
-                                "cwd": cwd,
-                            }
-                        )
+                        hit = {
+                            "line": lineno,
+                            "tool": block.get("name"),
+                            "verb": verb,
+                            "effect": effect,
+                            "class": klass,
+                            "token": token,
+                            "cwd": cwd,
+                        }
+                        if klass == "promoted-proof" and declared and Path(token).name == declared:
+                            hit["declared"] = True
+                            hit["reason"] = (
+                                "the attempt's own declared dependency (tier 1): its row records the tier "
+                                "and its package holds this module, copied in for the attempt to import"
+                            )
+                        hits.append(hit)
     return hits
+
+
+def declared_dependency(directory: Path) -> str | None:
+    """The proved module this attempt's own row declares, or ``None`` when nothing is declared.
+
+    A tier-1 arm is prepared *with* its task's proved theorem and exists to instantiate it, so reading
+    that module is the design; every other ``*Proved*`` read is reuse. The name is taken from the task's
+    own package registry — ``proofs/lean/<task>/seeds.json`` — and **not** from the attempt's package,
+    whose contents the attempt itself can write: a module copied in during the run must not become
+    declared by arriving, and the copy that put it there is itself a read of the foreign path, which
+    still invalidates.
+
+    Read from the row beside the session — ``<attempt>/omp/<session>`` → ``<attempt>/proof.jsonl`` — and
+    never assumed: no row, an unreadable row, a tier other than 1, or a registry without exactly one
+    ``*Proved*.lean`` all yield ``None``, and then every ``promoted-proof`` hit invalidates as before.
+    An attempt that never wrote a row cannot claim a declaration.
+    """
+    row_path = directory.parent.parent / "proof.jsonl"
+    try:
+        rows = [json.loads(line) for line in row_path.read_text().splitlines() if line.strip()]
+    except (OSError, json.JSONDecodeError):
+        return None
+    for row in rows:
+        if row.get("tier") != 1 or not row.get("task"):
+            continue
+        registry = REPO / "proofs" / "lean" / str(row["task"]) / "seeds.json"
+        try:
+            seeds = json.loads(registry.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(seeds, dict):
+            continue
+        proven = sorted(name for name in seeds if Path(name).match("*Proved*.lean"))
+        if len(proven) == 1:
+            return proven[0]
+    return None
 
 
 def audit_attempt(directory: Path) -> dict:
@@ -228,7 +279,8 @@ def audit_attempt(directory: Path) -> dict:
             "hits": [],
         }
     stem, repetition = match["stem"], int(match["repetition"])
-    hits = [hit for path in transcripts for hit in scan_transcript(path, stem, repetition)]
+    declared = declared_dependency(directory)
+    hits = [hit for path in transcripts for hit in scan_transcript(path, stem, repetition, declared)]
     calls = sum(
         1
         for path in transcripts
@@ -242,7 +294,9 @@ def audit_attempt(directory: Path) -> dict:
     offenders = [
         hit
         for hit in hits
-        if hit.get("class") in INVALIDATING_CLASSES and hit.get("effect") in INVALIDATING_EFFECTS
+        if hit.get("class") in INVALIDATING_CLASSES
+        and hit.get("effect") in INVALIDATING_EFFECTS
+        and not hit.get("declared")
     ]
     if not calls:
         # An empty scan is not evidence of no reuse: a file-mode attempt always issues tool calls, so
