@@ -181,6 +181,20 @@ D15. They differ by design and were measured to: on `theorem t : True := by ?h`,
 and `count_tokens` returns 0. A later tidy-up that folds them back together would re-break the promotion of
 a proven-closed artifact, which uses the ordinary `refine … ?init ?step` idiom.
 
+**Promotion executed, and its invocation shape recorded because getting it wrong looks like a rig fault.**
+The theorem was promoted from attempt-001's artifact — the row whose `artifact_sha256` it matches — into
+`proofs/lean/paxos/PaxosProved.lean` (`1781481374d2…`), with `Paxos.lean` byte-identical, `baseline/`
+pristine, `seeds.json` re-pinned and `lakefile.toml` registering the new target, `lake build` 7.6 s. Two
+things about the call are worth knowing before it is repeated: `--results` takes the **rows file**, not a
+directory (`DEFAULT_RESULTS` is `results/proof.jsonl` and a non-file returns no row), and the artifact to
+pass is the one the **row names** — `artifacts.proof`, the `.runs/<stem>-r<N>.lean` working file — while a
+closure copy is also promotable through the sidecar beside it. Passing a directory produced exactly the
+refusal D19 intends (`no row … records an artifact hash`, exit 13) for a promotion whose evidence was
+present all along, so a reader meeting that message should check the argument rather than distrust the
+cell. Isolation was re-verified after the promotion: preparing a tier-2 package with `--seed Paxos.lean`
+reports `included ["Paxos.lean"]`, `withheld ["PaxosMutant.lean", "PaxosProved.lean"]`, and the package
+holds only the seed, so a theorem-cell attempt still cannot see a prior proof.
+
 **Planner-owned prep contract, pre-implementation red (`then`), now implemented:** `tests/paxos-attempt-isolation-contract.md`
 and `tests/test_paxos_attempt_isolation.py` define a
 `python -m harness.attempt_workspace prepare` CLI and temp-only structural
