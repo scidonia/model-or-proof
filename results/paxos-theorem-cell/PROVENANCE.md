@@ -53,16 +53,53 @@ invocation, budgets unchanged at 7200 s and $50 per attempt. Each attempt's row 
 invocation-local `repetition: 1` values**. Host load at launch was 0.55 / 0.47 / 0.44 on 20 cores, so
 the otherwise-idle-host rule was honoured by measurement. No TLC run is part of this cell.
 
-## Status and what the cell is not yet
+## Result
 
-The rows, closure copies and transcripts are **pending** as this file is written; the attempts run
-serially and each may take up to its budget. Nothing here is a result yet.
+All five attempts completed and the audit is committed beside them (`audit.txt`, `audit.json`).
 
-**The cell's median is not an independent-cost operand, and no `P(N)`, parity, ratio or `n0` arithmetic
-may consume it, until the per-attempt transcript audit is complete and committed.** This host has no
-read sandbox: the earlier proof of the same theorem remains readable at
-`proofs/lean/paxos/.runs/Paxos-r1.lean` and under `results/paxos-calibration/closures/paxos/`, so
-independence rests entirely on that audit. The audit is a runnable step rather than a narrative:
+| attempt | outcome | wall (s) | final verdict | withheld | integrity | elaborates | axioms | closure copy |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 001 | closed | 1640.690 | **true** | — | true | true | permitted 3 | yes |
+| 002 | closed | 1716.946 | **true** | — | true | true | permitted 3 | yes |
+| 003 | closed | 1514.427 | false | `outside_events` | true | true | permitted 3 | no |
+| 004 | closed | 1712.214 | **true** | — | true | true | permitted 3 | yes |
+| 005 | closed | 386.999 | false | `watch_blind` | true | true | permitted 3 | no |
+
+**Pass rate 3 of 5 verdict-true**, a strict majority, so the cell supports a settled claim. All-attempt
+wall times with both withheld attempts' actual elapsed times included: min 386.999, **median 1640.690**,
+max 1716.946 s; cell cost $0.00498. A closed-only median is not reported, because it is not the selection
+operand.
+
+**The audit passes.** `scripts/audit_attempts.py --expect-revision` over
+`results/paxos-theorem-cell/results`, exit **0**: all five attempts `clean`, **zero** offences across
+**359 tool calls**, and `revision ok`. So no attempt read or copied an earlier same-tier proof, and the
+tree still matches the recorded revision — the cell is not split across revisions. The gate's own
+evidence is committed as `audit.txt` (per-attempt lines) and `audit.json` (full report).
+
+**Both withholdings are boundary artifacts, not failures to prove — in two different classes.**
+
+- **attempt-003 — write location.** Two events, `CREATE` and `MODIFY` of its own
+  `workspaces/attempt-003/paxos/check_axioms.lean`: a `cat > check_axioms.lean` whose working directory
+  was the package root while the attempt then looked for the file under `.runs/`, the same accident as
+  the retired pilot's r4. `outside_writes` is empty, so no watched file outside the working copy changed.
+- **attempt-005 — instrument blindness, and it is the harness's own fault.** Its `watch_blind` reads
+  *"the event stream is not readable: 'Watching new directory …/attempt-005/paxos/.runs/probe/'"*. That
+  line is **inotifywait's own announcement that it added a watch** for a newly created subdirectory, and
+  `harness/outside_watch.py:95-113` fails closed on any line it cannot parse. Reproduced directly:
+  `inotifywait -m -r --format "%e %w%f" -e create -e modify -e delete -e attrib <root>`, with a
+  subdirectory created inside the tree, prints `Watching new directory <path>/` on stdout *before* the
+  corresponding `CREATE,ISDIR`. So a model that organises scratch into a subdirectory **inside the allowed
+  prefix** — the most compliant behaviour available to it — blinds the watch and forfeits its verdict.
+  Its transcript shows only two write-ish calls, both `own-copy`, so nothing was written outside its own
+  package; but the transcript sees only the model's own tool calls, not what a command's children wrote,
+  so it cannot certify the boundary alone and the withholding stands.
+
+  The rate is therefore **two boundary artifacts and zero proof failures**: the arithmetic that reads as
+  "3 of 5 with two failures to prove" is the wrong reading, and only the transcripts separate them.
+  This is also the third instance of the guard or the harness withholding a *correct* action — after
+  attempt-003's scratch write and the retired pilot's row 58 repair.
+
+The gate is re-runnable in one command, and its output *is* the committed evidence:
 
 ```
 python -m scripts.audit_attempts --sessions results/paxos-theorem-cell/results        # per-attempt lines
@@ -114,6 +151,12 @@ The attempted seed's digest is the registered `0d29361497a893f3ce2ca30d108161486
 that every prepare receipt recorded, so this map is anchored to the same bytes the cell was launched
 from.
 
+**Recomputed at cell end, as this section required.** Every one of the fifteen inputs still hashes to
+its recorded value and the combined digest still matches, so no `harness/*.py` file changed while the
+cell ran and its five rows were produced by **one** code revision — the check `scripts/audit_attempts.py
+--expect-revision` performs inside the gate, where it reported `revision ok`. The row cannot carry this,
+so the audit does.
+
 **What it licenses, and what it does not.** It pins the twelve `harness/*.py` files, the few-shot
 examples the prompt reads, the attempted seed and the package's `seeds.json`. It is the revision for
 attempt 1, and for every later attempt **only for as long as no `harness/*.py` file changes** — a
@@ -123,41 +166,22 @@ difference splits the cell's five rows across two revisions and must be recorded
 over. That is why no harness edit may land while a cell is in flight, and why this capture exists: the
 row cannot say it, so the provenance file must.
 
-## Shape so far — an observation, not evidence
+## The mid-flight shape note, and whether it held
 
-Recorded mid-flight while the attempts run, and deliberately **not** a result: no oracle verdict exists
-for any attempt yet, and the per-attempt transcript audit has not run. What was observed is shape.
-Attempt-001's session read for roughly nine minutes before its first write, then edited the working copy
-`13882 → 22574 → 23234` bytes by about 705 s — against the retired pilot's r1, which read before writing
-and reached a comparable size on a comparable clock. r1 is the only attempt in that cell whose transcript
-shows no reuse, and therefore the only honest datum available about what a real attempt costs, so an
-attempt whose shape matches it is the strongest signal obtainable *before* the audit that this cell is
-doing real work. The audit's scan of the same live transcript shows 23 tool calls with **zero** offences
-and only the attempt's own working copy among the files it touched.
+Written while the attempts were running and kept because it named the hypothesis in advance. It read:
+attempt-001 spent roughly nine minutes reading before its first write, then reached 22574 → 23234 bytes
+by about 705 s, matching the retired pilot's r1 shape — and the retired cell's wide 193–1,935 s spread
+was, on this reading, plausibly a *symptom of copying*, since each repetition raced to a different prior
+proof and therefore measured different remaining work, whereas honest attempts from one seed should
+cluster.
 
-Why the status matters, and it is the whole reason this section says "observation" rather than "sign":
-**a cell that reproduces a neighbour's bytes would also be "writing proof text" — copying a proof *is*
-writing it.** What separates the two is whether the transcript shows those bytes arriving from
-somewhere else, which is the audit's question and not one a byte count or a duration can answer. Equally,
-neither number above is a cost: an attempt's wall clock becomes a datum when its row lands with its
-closure verdict, and the cell's median only after all five rows and a complete, committed audit. Nothing
-in this section may be cited as independence, as a pass, or as `P(N)`.
+**It held, with one outlier that the audit clears.** The four full-length attempts landed at 1514.427 /
+1640.690 / 1712.214 / 1716.946 s — a **202-second spread**, against the retired pilot's 1,742-second one.
+The fifth, attempt-005, closed in **386.999 s**, roughly four times faster, and it is the attempt whose
+watch was blind; but its transcript audit is **clean** (43 tool calls, zero offences), so the honest
+reading is a fast close rather than a fast copy. What the note forbade still stands: a tight cluster is
+not evidence of independence, and it was the audit — not the distribution — that decided this cell.
 
-**A hypothesis this cell will test, recorded with that status and no more.** The three landed walls are
-1,514 / 1,641 / 1,717 s — a 202-second spread, against the retired pilot's 193–1,935 s. If that holds
-across all five attempts, the pilot's wide distribution was itself plausibly a *symptom of copying*: each
-repetition raced to a different prior proof, so each measured a different amount of remaining work,
-whereas five honest attempts from the same seed do the same work and should cluster. The hypothesis is
-that the honest distribution is **tight** and the contaminated one was wide. It is not a finding and may
-not be used as one: three of five attempts is not a distribution, walls are not costs until their rows
-carry verdicts, and the audit decides whether these five are independent at all. The remaining rows and
-the audit's verdicts are what test it, and the test is a comparison of distributions recorded *after* the
-fact — never a licence to describe this cell as tight before its audit exists.
-
-**Attempt-003's withholding is the benign scratch class, not a candidate breach.** Its two events are
-`CREATE` and `MODIFY` of `check_axioms.lean` at its own package root, produced by a `cat > check_axioms.lean`
-that ran with the package root as its working directory while the attempt then looked for the file under
-`.runs/` — the same working-directory accident as the retired pilot's r4, verified by transcript. Its
-`closure` otherwise reads `integrity: true`, `elaborates: true`, `axioms: ['Classical.choice', 'Quot.sound',
-'propext']`, `seed_intact: true`, so the proof is good and the boundary is the only reason its verdict is
-false. The guard is right to withhold; the cause is an accident.
+A note on what this section is not: the mid-flight paragraphs asserting that nothing here was a result
+have been superseded by the Result section above, and the two preceding paragraphs describing
+attempt-003's withholding have been folded into it rather than left to age in place.
