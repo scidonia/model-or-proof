@@ -4,28 +4,45 @@ Contract: ``tests/paxos-attempt-isolation-contract.md``. The researcher runs thi
 ``harness.route_b --mode file --reps 1``, because ``--reps 1`` alone still leaves the template's
 ``.runs/`` scratch, its promoted ``PaxosProved.lean`` and its closure copies in the working directory
 the next sample starts from (``harness/route_b.py:308-323,378-390``). Preparing an attempt makes a
-*separate* Lean package that holds only the registered seed, its recorded baseline, the package
-configuration, and a link to the pinned dependency cache — so an attempt's own tree contains none of
-the earlier attempts' proofs::
+*separate* Lean package that holds only the attempted seed, that seed's recorded baseline, any declared
+dependencies, the package configuration, and a link to the pinned dependency cache — so an attempt's
+own tree contains none of the earlier attempts' proofs::
 
     python -m harness.attempt_workspace prepare \\
       --template proofs/lean/paxos --seed Paxos.lean \\
       --attempt 1 --workspace-root <workspace root> --results-root <results root>
 
-It prints one JSON receipt with ``attempt``, the absolute ``package``, ``seed`` and ``results`` paths
-and the copied seed's ``seed_sha256``, and exits 0. A destination that already exists — the same
-attempt prepared twice — is refused (exit 2) rather than overwritten, so an existing attempt's
-evidence is never silently replaced.
+``seeds.json`` is the *resolution* record — it names every module a run may need to resolve, including
+the ``<Stem>Proved`` module promotion writes — while ``baseline/<file>`` is the *attempted* text, which
+promotion deliberately never re-pins (``scripts/promote.py:190-221``). A registered seed with no
+baseline is therefore a dependency or artifact, never an attempt; it is copied only when declared. A
+tier-1 arm on a package whose promotion already registered ``<Stem>Proved.lean`` declares it, because
+every registered seed that is neither the attempted one nor declared is withheld::
+
+    python -m harness.attempt_workspace prepare \\
+      --template proofs/lean/bakery --seed BakeryN0.lean --dependency BakeryProved.lean \\
+      --attempt 1 --workspace-root <workspace root> --results-root <results root>
+
+It prints one JSON receipt with ``attempt``, the absolute ``package``, ``seed`` and ``results`` paths,
+the copied seed's ``seed_sha256`` and the ``modules`` object below, and exits 0. A destination that
+already exists — the same attempt prepared twice — is refused (exit 2) rather than overwritten, so an
+existing attempt's evidence is never silently replaced.
 
 What the *preparation* asserts, and what the *receipt* carries. The preparation enforces a
 *filesystem* statement about the fresh tree, refusing rather than proceeding when it cannot: the named
-seed and ``baseline/<seed>`` are byte-identical to the registered digest in ``seeds.json``, ``seed``
-is inside ``package``, ``results`` is outside it (and its own per-attempt directory), the pinned cache
-is a symlink reused rather than a ≈7 GB copy, and the package's top level holds none of the
-template's ``.runs/``, promoted target, closure copies, other modules or results. The receipt printed
-to stdout carries five fields — ``attempt``, ``package``, ``results``, ``seed`` and ``seed_sha256`` —
-and the seed digest is the one asserted property it also names; a reader who wants the rest of the
-statement above inspects the prepared tree, which is what the contract's scenarios do.
+seed and ``baseline/<seed>`` are byte-identical to the registered digest in ``seeds.json``, each
+declared dependency is byte-identical to *its* recorded digest, ``seed`` is inside ``package``,
+``results`` is outside it (and its own per-attempt directory), the pinned cache is a symlink reused
+rather than a ≈7 GB copy, and the package's top level holds none of the template's ``.runs/``,
+promoted target, closure copies, withheld modules or results. The copied ``lakefile.toml`` is rewritten
+to name exactly the modules copied: a promoted module is both an ``[[lean_lib]]`` target and a
+``defaultTargets`` entry, so withholding its bytes while keeping the target would leave a package whose
+``lake build`` fails on a missing module. The receipt printed to stdout carries ``attempt``,
+``package``, ``results``, ``seed``, ``seed_sha256`` and ``modules`` — ``modules.included`` and
+``modules.withheld`` being the module file names copied and left behind, so what a package may see is
+auditable rather than inferred from a directory listing. The seed digest is the one asserted property
+the receipt also names; a reader who wants the rest of the statement above inspects the prepared tree,
+which is what the contract's scenarios do.
 It does **not** assert that earlier proofs are unreadable. This host has no enforced read sandbox
 (``harness/outside_watch.py:1-11``: ``unshare``/bubblewrap are denied, file-mode bash runs as the same
 UID, and ``outside_watch`` tracks writes only), so a same-UID session can still read any path it names.
@@ -38,8 +55,10 @@ Four more things this boundary leaves alone, named so a reader need not infer th
 ``lake update`` through it is visible to the template and to every other attempt. Nothing stops a
 session from reading a *sibling* attempt's results directory. Reads are unconstrained and no receipt
 records what was read, which is why the offered guarantee is operational nonreuse plus a post-hoc
-transcript audit rather than an enforced sandbox. And ``PaxosMutant.lean`` is copied beside
-``Paxos.lean``, so "the seed" here means the registered seed *set*, not a single file.
+transcript audit rather than an enforced sandbox. And a registered module that is neither the attempted
+seed nor a declared dependency is withheld, so "the seed" here means exactly the ``--seed`` module plus
+its ``--dependency`` declarations, never the registered seed *set*: the mutant is withheld unless
+declared, and so is ``<Stem>Proved.lean``.
 
 The dependency cache is linked, not copied. ``.lake/packages`` in the template is the pinned Mathlib
 (and its own dependency) checkout — ≈7 GB, and a per-attempt copy would cost that per attempt. The new
@@ -54,9 +73,11 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import sys
 import tomllib
+from collections.abc import Sequence
 from pathlib import Path
 
 # The template's registered-seed record and pristine seed texts (harness/route_b.py:70-78).
@@ -156,10 +177,11 @@ def _link_cache(template: Path, package: Path) -> None:
 
 
 def _check_package_contents(package: Path, expected: set[str]) -> None:
-    """The package holds *only* the allowlisted entries: the copied modules, their baselines, the
-    package configuration, ``seeds.json`` and ``.lake``. Checked rather than assumed, because a
-    wholesale copy is exactly how a template's ``.runs/``, promoted target or closure copy would
-    reappear in a "clean" attempt.
+    """The package holds *only* the allowlisted entries: the copied modules, the attempted seed's
+    baseline, the package configuration, ``seeds.json`` and ``.lake``. Checked rather than assumed,
+    because a wholesale copy is exactly how a template's ``.runs/``, promoted target or closure copy
+    would reappear in a "clean" attempt, and a withheld registered seed would reappear beside the
+    committed one.
     """
     found = {entry.name for entry in package.iterdir()}
     extra = sorted(found - expected)
@@ -172,15 +194,81 @@ def _check_package_contents(package: Path, expected: set[str]) -> None:
         )
 
 
+_TABLE_HEADER = re.compile(r'^\s*\[\[?\s*[A-Za-z0-9_.\-]+\s*\]\]?\s*(?:#.*)?$')
+
+
+def _rewrite_lakefile(text: str, included_stems: set[str]) -> str:
+    """Rewrite a copied lakefile so it names exactly the modules the package holds.
+
+    Promotion registers a proved module in ``defaultTargets`` **and** as a ``[[lean_lib]]`` target
+    (``scripts/promote.py:117-137``), so withholding that module's bytes while copying the lakefile
+    unchanged would leave a package whose ``lake build`` fails on a missing module — a copy step that
+    looks like success and a dead cell at the run. The rewrite is textual and table-aware, so the
+    package name, comments and dependency tables survive: ``defaultTargets`` is set to the included
+    modules' library names, a ``[[lean_lib]]`` table naming an absent module is dropped, and one is
+    appended for an included module the lakefile does not name.
+    """
+    blocks: list[tuple[str | None, str]] = []
+    header: str | None = None
+    body: list[str] = []
+    for line in text.splitlines(keepends=True):
+        if _TABLE_HEADER.match(line):
+            blocks.append((header, "".join(body)))
+            header, body = line.strip(), [line]
+        else:
+            body.append(line)
+    blocks.append((header, "".join(body)))
+
+    targets = "[" + ", ".join(f'"{stem}"' for stem in sorted(included_stems)) + "]"
+    named: set[str] = set()
+    out: list[str] = []
+    has_defaults = False
+    for header, block in blocks:
+        if header is None:
+            if re.search(r"(?m)^\s*defaultTargets\s*=", block):
+                block = re.sub(
+                    r"(?ms)^(\s*defaultTargets\s*=\s*)\[.*?\]", rf"\g<1>{targets}", block, count=1
+                )
+                has_defaults = True
+            out.append(block)
+            continue
+        if header.startswith("[[lean_lib]]"):
+            match = re.search(r'(?m)^\s*name\s*=\s*"([^"]+)"', block)
+            found = match.group(1) if match else None
+            if found not in included_stems:
+                continue
+            named.add(found)
+        out.append(block)
+
+    if not has_defaults:
+        # A lakefile that named no targets: the bare key has to precede any table, so it goes first.
+        out.insert(0, f"defaultTargets = {targets}\n")
+    rewritten = "".join(out)
+    missing = sorted(included_stems - named)
+    if missing:
+        if not rewritten.endswith("\n"):
+            rewritten += "\n"
+        rewritten += "".join(f'\n[[lean_lib]]\nname = "{stem}"\n' for stem in missing)
+    return rewritten
+
+
 def prepare(
     *,
     template: Path,
     seed: str,
+    dependencies: Sequence[str] = (),
     attempt: int,
     workspace_root: Path,
     results_root: Path,
 ) -> dict:
     """Prepare the attempt and return its receipt. See the module docstring for what it asserts.
+
+    ``seed`` is the single attempted module: it is copied with its ``baseline/<seed>``, and both must
+    hash to its recorded digest. Each ``dependencies`` module is copied *without* any baseline — it is
+    imported, never attempted — and must hash to its own recorded digest. Every other registered seed
+    is withheld, ``<Stem>Proved.lean`` included: for a tier-2 attempt a completed proof of the
+    attempted statement must not be in the attempt's own tree, and the same module for a tier-1 arm is
+    declared here as the dependency it is.
 
     The workspace and results destinations are created exclusively: an existing one is a refusal, so
     re-running the same attempt cannot overwrite the attempt it prepared. Anything this function
@@ -209,14 +297,28 @@ def prepare(
             f"{template / SEEDS_RECORD} does not record {seed}: recorded seeds are {sorted(seeds)}"
         )
     seed_digest = seeds[seed]
-    # Every registered seed and its baseline must still be the recorded pristine text: the attempt's
-    # package carries exactly that set, so a stale one would be copied in the same step.
-    sources = {}
-    for registered, digest in sorted(seeds.items()):
-        sources[Path(registered)] = _checked_source(template, Path(registered), digest)
-        sources[Path(BASELINE_DIR) / registered] = _checked_source(
-            template, Path(BASELINE_DIR) / registered, digest
-        )
+    declared = list(dict.fromkeys(dependencies))
+    for module in declared:
+        if module == seed:
+            raise PrepareError(f"{module} is the attempted seed, not a dependency to declare")
+        if module not in seeds:
+            raise PrepareError(
+                f"{template / SEEDS_RECORD} does not record the declared dependency {module}: "
+                f"recorded seeds are {sorted(seeds)}"
+            )
+    included = [seed, *declared]
+    included_stems = {Path(module).stem for module in included}
+    withheld = sorted(set(seeds) - set(included))
+
+    # The attempted seed and its baseline, and each declared dependency, must be the recorded pristine
+    # text: the package carries those bytes, so a stale one would be copied in the same step. A
+    # withheld seed is never copied and needs no baseline — promotion does not re-pin one.
+    sources: dict[Path, Path] = {}
+    for module in included:
+        sources[Path(module)] = _checked_source(template, Path(module), seeds[module])
+    sources[Path(BASELINE_DIR) / seed] = _checked_source(
+        template, Path(BASELINE_DIR) / seed, seed_digest
+    )
 
     attempt_dir = Path(ATTEMPT_DIR.format(attempt=attempt))
     workspace = (workspace_root / attempt_dir).resolve()
@@ -250,19 +352,33 @@ def prepare(
         for config in PACKAGE_CONFIG:
             shutil.copyfile(template / config, package / config)
         shutil.copyfile(template / SEEDS_RECORD, package / SEEDS_RECORD)
+        # The lakefile names targets that may not all be present once the withheld seeds are left
+        # behind; rewritten so the package names exactly what it holds.
+        lakefile = package / "lakefile.toml"
+        lakefile.write_text(_rewrite_lakefile(lakefile.read_text(), included_stems))
         _link_cache(template, package)
 
         _check_package_contents(
             package,
-            {relative.parts[0] for relative in sources} | set(PACKAGE_CONFIG) | {SEEDS_RECORD, ".lake"},
+            {str(Path(module).parts[0]) for module in included}
+            | {BASELINE_DIR}
+            | set(PACKAGE_CONFIG)
+            | {SEEDS_RECORD, ".lake"},
         )
         # Hash the bytes the attempt will actually work from, and require them to be the registered
-        # seed: the receipt's digest is a statement about the copied file, not about the template.
+        # digest: the receipt's digest is a statement about the copied file, not about the template.
         copied = sha256_file(package / seed)
         if copied != seed_digest:
             raise PrepareError(
                 f"the copied seed {package / seed} hashes to {copied}, not the registered {seed_digest}"
             )
+        for module in declared:
+            dependency = sha256_file(package / module)
+            if dependency != seeds[module]:
+                raise PrepareError(
+                    f"the copied dependency {package / module} hashes to {dependency}, not the "
+                    f"registered {seeds[module]}"
+                )
     except BaseException:
         # Only the destinations this call created are removed; a pre-existing attempt is untouched.
         for destination in reversed(created):
@@ -275,6 +391,7 @@ def prepare(
         "seed": str(package / seed),
         "results": str(results),
         "seed_sha256": copied,
+        "modules": {"included": sorted(included), "withheld": withheld},
     }
 
 
@@ -286,15 +403,27 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
     prepare_parser = commands.add_parser(
         "prepare",
-        help="copy the registered seeds and package config into a fresh per-attempt package",
+        help="copy the attempted seed and declared dependencies into a fresh per-attempt package",
         description=(
-            "Create <workspace-root>/attempt-NNN/<package> holding only the registered modules, their "
-            "baselines, seeds.json, the lake package config and a symlink to the pinned dependency "
-            "cache, with a separate empty <results-root>/attempt-NNN, and print the JSON receipt."
+            "Create <workspace-root>/attempt-NNN/<package> holding only the attempted seed, its "
+            "baseline, the declared dependency modules, seeds.json, the lake package config and a "
+            "symlink to the pinned dependency cache, with a separate empty <results-root>/attempt-NNN, "
+            "and print the JSON receipt. Every other registered seed, <Stem>Proved.lean included, is "
+            "withheld, and the copied lakefile names exactly the modules present."
         ),
     )
     prepare_parser.add_argument("--template", required=True, help="the source Lean package to prepare from")
     prepare_parser.add_argument("--seed", required=True, help="the registered seed module to attempt")
+    prepare_parser.add_argument(
+        "--dependency",
+        action="append",
+        default=[],
+        metavar="MODULE",
+        help=(
+            "a registered module the attempt imports; copied without a baseline, repeatable. Every "
+            "registered seed not named here or by --seed is withheld, <Stem>Proved.lean included"
+        ),
+    )
     prepare_parser.add_argument("--attempt", required=True, type=int, help="the attempt number (1, 2, …)")
     prepare_parser.add_argument(
         "--workspace-root", required=True, help="the root holding each attempt's clean package"
@@ -311,6 +440,7 @@ def main(argv: list[str] | None = None) -> int:
         receipt = prepare(
             template=Path(args.template),
             seed=args.seed,
+            dependencies=args.dependency,
             attempt=args.attempt,
             workspace_root=Path(args.workspace_root),
             results_root=Path(args.results_root),
