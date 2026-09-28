@@ -266,6 +266,54 @@ Two defects, both the failure-attribution family:
 
 The manifests carry `n0` for the four published tasks (token-ring 23, bakery 9, lcr 10, ewd998 3) and `repetitions: 5`, so a tier-1 arm is stated at its `n0` and `--param-N` is passed explicitly to be self-documenting rather than relying on the manifest default. The tier-2 arms take the general-theorem seed; the tier-1 arms take the corollary seed and import the proved theorem as the intended dependency. Because the row cannot record the per-package isolation (the finding above), each re-earned cell carries its provenance beside its rows — the prepare receipts, the exact commands and the arm's audit extract — which is what makes re-earned and superseded rows distinguishable at all. **None of this could run until the preparer blocker above was fixed and red-observed; that is now done and the reruns are open.** The preparer's seed-role rule landed (`241051b`) and was checked node by node against Scenario 4 — a tier-2 package holds no `<Task>Proved.lean`, a tier-1 package declares it as the sanctioned dependency, and the copied lakefile names exactly the modules present so the build resolves rather than refusing — so the recipe below is no longer precommitted-only. The remediation is **open** at `results/remediation/`, with its provenance, thirty prepare receipts, a run script generated from those receipts so every `--proof` path is a package the preparer actually built, and a revision record over the thirteen common inputs. Thirty attempts, six arms, each in its own package with its own workspace, results and session root, at the headline configuration the replaced rows used; host load at launch 2.26 / 2.15 / 1.71 on 20 cores, recorded as measured rather than claimed idle. No row enters `K` until each arm's per-attempt audit is committed, withholdings are reported in three classes, a reused attempt is invalidated rather than repeated, and the comparison against the published figures is presented as **indicative** — those rows predate the `withheld` field, so they were produced under a different verdict rule and only the reruns are measurable like-for-like.
 
+**The corollary cell: which `N`, why only one candidate, and what happens if no bracket exists.** `P(N)`
+is `median(R≥5 tier-2 theorem) + median(R≥5 tier-1 corollary at N)`, measured in **separate** cells on one
+seed digest each. The theorem half now exists: **1,640.690 s**, three of five verdict-true, audited. So
+`P(N) ≥ 1,640.690 s` for every `N`, before any corollary cost is added. Against the pinned official
+`A(N)` — 0.717 / 1.107 / 2.670 / 127.182 / **1,405.943** s for `N = 2…6` — the bracket test
+`A(L) < P(L)` already holds at every measured `N`, and the upper half `A(L+1) ≥ P(L+1)` cannot hold at
+`L+1 = 6` because **1,405.943 < 1,640.690**. So **the pair `(5, 6)` is excluded by arithmetic before any
+run**, and the **only** candidate bracket is `(6, 7)` — which additionally requires a **successful,
+witnessed, under-cap pinned `A(7)`**, and no such row exists: the pinned family stopped at a successful
+`N = 6`, the exploratory `N = 7` timed out at 7,200 s (10,850,698 distinct states), and the plan forbids
+extrapolation. Therefore:
+
+1. **One corollary cell, at `N = 6`** — the largest `N` with a measured `A(N)`, and the only `L` whose
+   `L+1` could bracket. A corollary at any `N < 6` would buy a cell whose pair is already excluded by the
+   arithmetic above, which is why there is no sweep here: the bracket is constrained by the *measured* `A`
+   family, not searched for.
+2. **Then a pinned `N = 7` attempt under the same 7200-s cap and profile** (`--heap-mib 14336 --fp-index 28
+   --seed 1 --workers 1`), which the plan already contemplates rather than extrapolating. If it **times
+   out or dies on memory**, `A(7)` does not exist as a successful row, the pair `(6,7)` cannot form, and
+   the outcome is **nonviability of the crossing** — reported with the measured operand and **no ratio**,
+   never a budget-edge substitute. If it **succeeds**, a second corollary cell at `N = 7` completes the
+   bracket test.
+3. **The selection, pre-registered and not fitted:** if the pair forms, `n₀ = argmin_{n ∈ {6,7}}
+   |log(A(n)/P(n))|` with ties taking `L`, and the selected ratio must lie in `[1/2, 2]` or the result is
+   reported as a bracket only, never as a pair at the crossing.
+
+**The corollary needs a seed that does not exist yet, and that absence is by design.** The plan holds the
+tier-1 `PaxosN0.lean` corollary back until the theorem cost exists — which is now — and the corollary's
+dependency, the promoted `PaxosProved.lean`, also does not exist in the template because the theorem was
+proved by the loop in a scratch copy rather than promoted. So the cell is built in three steps that the
+protocol already sanctions: **promote** a retained closure of the theorem into
+`proofs/lean/paxos/PaxosProved.lean` (`scripts/promote.py`: a closed artifact, a row recording its hash, a
+faithful closure of the recorded baseline), **author the corollary as a statement only** — the general
+theorem instantiated at `N = 6`, with no tactic body, since "human authors model/theorem and helper
+statements only" — and register its baseline, then **prepare five tier-1 packages that declare
+`PaxosProved.lean` as `--dependency`**, whose receipts must show that declaration *included* rather than
+withheld. The tier-2 template's door for the corpus leak does not exist here (`seeds.json` registers no
+`Proved` seed today, and the one this adds is the corollary's *declared* dependency), which is why the
+isolation finding does not attach to this cell.
+
+**The gate is the same one, unchanged:** per-attempt transcript audit committed **before** the rows are
+read, withholdings reported in three classes, the revision recorded and recomputed at the end, the
+all-attempt median including withheld attempts' actual times, and one seed digest per cell. **Expected
+cost, stated before it is spent:** five attempts at the tier-1 class (63–77 s each in the remediation) plus
+five package builds ≈ **under ten minutes** for the `N = 6` cell; the pinned `A(7)` attempt is the open
+one, **up to 7,200 s** and more likely to time out or exhaust the heap than to succeed, which is itself the
+result that decides whether a crossing exists at all.
+
 **The queue closed, in the order it was fixed.** The preparer seed-role rule (`241051b`, verified node by node); the boundary watch's read layer (`d7ae7ee`, independently reviewed sound, with the exemption that certified an unobserved write deleted rather than kept, and two wording corrections at `35a9a59` retiring the contract's own `[INFERENCE]` and a comment that claimed a termination proof it did not have); the launch-failure path (`7598cc8`, verified end to end, with the diagnostic's wording contracted as a form rather than a byte string); the row-58 loaded-seed pair and the file-mode row marking (`721e522`, `32 passed`); and two policy rules in `AGENTS.md` — a command whose exit status carries meaning is read unmodified, and a scenario's expected-failure field is itself a claim that gets measured. One record defect remains and is deliberately not repaired: `e26e163`'s subject overstates the retired theorem cell, and because that commit is published on `origin/main` under forty-six later commits, correcting the subject would mean rewriting published history. `2a9bb8a` states the correction as an empty commit instead, so a reader meets it one commit after the overstatement, and the paper states it once, correctly.
 
 ```bash
