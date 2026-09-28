@@ -82,12 +82,27 @@ per-attempt classification is what that status means:
 | `bak1` | 3/5 | 3/3 | 63.7, 72.8, 76.6 | 72.8 | a1, a3 **prior transcript read** |
 | `lcr1` | 4/5 | 3/4 | 66.4, 70.7, 73.3, 207.8 | 72.0 | a2 **prior transcript read** |
 
-**Withholdings, in their three classes, named:** five attempts were withheld on a **boundary artifact**
+**Withholdings, in their three classes, named:** **four** attempts were withheld on a **boundary artifact**
 (`tok2` a1, `lcr2` a1, `ewd2` a5, `lcr1` a1 — each `outside_events`, a scratch file landing outside the
-allowed prefix) and **none on instrument blindness** and **none as a proof failure**: every withheld
-attempt's `integrity`, `elaborates`, axiom set and `seed_intact` were clean. `bak2` and `ewd2` have only
-**two clean attempts of five**, which is **not a strict majority**, so by the preregistered rule their
-cells cannot support a settled claim at all.
+allowed prefix), **none on instrument blindness** and **none as a proof failure**: every withheld attempt's
+`integrity`, `elaborates`, axiom set and `seed_intact` were clean. The row verdicts agree: 4/5, 5/5, 4/5,
+4/5, 5/5, 4/5 is twenty-six verdict-true of thirty, which is exactly thirty minus those four. `bak2` and
+`ewd2` have only **two clean attempts of five**, which is **not a strict majority**, so by the
+preregistered rule their cells cannot support a settled claim at all.
+
+**Two counts a reader must not confuse, recorded here rather than left to be reconstructed.**
+**Only `tok2` is a whole clean arm** — 5/5 uncontaminated, 4/5 verdict-true, median 310.9 s. Every other
+arm is a clean *subset*, and the clean subsets across all six arms come to **nineteen clean attempts, of
+which fifteen closed**. The raw figure is twenty-six verdict-true of thirty, and the two must never be
+quoted as though they were comparable: the honest basis is fifteen closed attempts out of nineteen that
+survived the transcript audit, not twenty-six out of thirty attempts run.
+
+**And the contamination's direction is stated beside the table, because it decides how to read any
+comparison.** Contamination *flatters* closure: a contaminated attempt closer to the answer had prior
+proofs available, so a contaminated attempt that closed tells a reader nothing about the route, and an arm
+whose clean subset closes less often than its contaminated superset is **not** evidence of a weaker route.
+That is the opposite of what the same arithmetic would mean for an arm whose rows were not contaminated at
+all, and it is why the clean subsets are the only honest basis here.
 
 **Two mechanisms caused the contamination, and both are new doors into the room the isolation was meant to
 close.**

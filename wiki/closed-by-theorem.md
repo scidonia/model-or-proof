@@ -273,6 +273,58 @@ What this does *not* include is a task calibrated so both routes are under press
 crossover gap §6 names. Eight settled cells is also a small denominator for a coverage claim, and the
 set is four tasks rather than a sampled population.
 
+## 9. Paxos — the theorem operand, measured, and the licence it carries
+
+**The tier-2 theorem cell ran, and it is the first Paхos number this project has that survives its own
+audit.** Five attempts of the unbounded general `agreement` theorem — arbitrary acceptor count, arbitrary
+value type, pairwise-intersecting quorums, unbounded ballots — one prepared Lean package each, one
+attempted seed digest (`0d293614…`), separate workspace, results and session roots, file mode, both arms,
+one repetition per invocation. Rows, closures and the audit are in `results/paxos-theorem-cell/`.
+
+**Three of five attempts carry the final verdict** — a strict majority, which is what the gate requires —
+and **every attempt that was allowed to count had produced a proof**: `integrity`, `elaborates`, the
+permitted axiom set and `seed_intact` are clean on all five, so the two non-certified attempts are rig
+artifacts rather than failures to prove. The all-attempt median is **1,640.690 s** (min 386.999, max
+1,716.946), with both withheld attempts' elapsed times included: the selection operand is never a
+closed-only median.
+
+**The distribution moved, and the movement is the interesting part.** The four full-length attempts landed
+at 1,514–1,717 s — a **202-second spread**, against the retired pilot's **1,742-second** one. The retired
+cell's spread is plausibly a *symptom of its contamination*: each repetition raced to a different prior
+proof and so measured a different amount of remaining work, whereas honest attempts from one seed do the
+same work and cluster. The fifth attempt closed in 387 s and its transcript audit is **clean** (43 tool
+calls, zero offences), so it reads as a fast close rather than a fast copy. The cluster is not evidence of
+independence — the audit is — but it is consistent with it, and the order matters: the audit decides and
+the distribution agrees.
+
+**Two withholdings, in different classes, and neither is a proof failure.** One attempt wrote its own
+`check_axioms.lean` beside the seed while looking for it under `.runs/` — a working-directory accident,
+the same shape as the retired pilot's. The other was **blindness of the instrument, not of the attempt**:
+`inotifywait` prints `Watching new directory <path>` when it *adds* a watch for a new subdirectory, and the
+watch read that reassurance as an unreadable stream — so a run that organised its scratch into a
+subdirectory of the one path it was allowed to write forfeited its verdict. That is the rig penalising
+compliance, and it is fixed: the watch now consumes a machine-readable stream, recognises only named
+events, and has no exemptions at all.
+
+**What the number licences, narrowly.** It is the **theorem operand only**. `P(N)` is the theorem median
+*plus* the median of the task's own tier-1 corollary cell at `N`, and no corollary cell exists, so there is
+**no crossing, no parity verdict and no `n₀`**; `n_calibration` and `n₀` stay null. The cell is the
+exploratory pilot and is **never pooled** with the retired five-row pilot, whose single honest datum was
+1,934.76 s at rep 1. Nothing here is a Route A/Route B ratio, and nothing here should be multiplied,
+divided or compared against another task's total.
+
+**And one result about the rig, which stands on its own.** Auditing thirty re-earned attempts across the
+six contaminated published arms found that per-package isolation — a fresh Lean package per attempt, with
+no prior proof in its own tree, which the receipts confirm — is **necessary and insufficient on a host with
+no read sandbox**. Five of the six arms contained at least one attempt whose transcript shows a prior proof
+read, by two routes: a **tier-2** attempt read the *shared template's* `<Task>Proved.lean` by absolute path
+(the package had correctly withheld it, so the read reaches the repository instead), and a **tier-1**
+attempt read prior *evidence* — a published cell's OMP transcript, a sibling attempt's row, the prepare
+receipts. Of nineteen attempts that survived the audit, fifteen closed. The methodological statement is
+therefore not that the loop fails but that **a priced AI proof loop needs the attempt's *reachable corpus*
+removed, not merely its own directory cleaned**: with no kernel boundary available here, a shell that can
+name a path can read it, and the models name the paths unprompted.
+
 ## Provenance
 
 | Number | Where it comes from |
