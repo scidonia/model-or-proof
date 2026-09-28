@@ -219,3 +219,14 @@ def test_unlaunchable_tlc_binary_yields_error_row_and_no_metadir(tmp_path):
     assert row["outcome"] == "error"
     assert row["tlc"] is None
     assert "no-such-tlc" in json.dumps(row["error"]), row["error"]
+
+
+def test_launched_but_silent_failure_names_its_exit_status(tmp_path):
+    """Scenario 11: an error row must name why, even when the binary prints nothing."""
+    proc = run_runner(tmp_path, "--instance", "3", "--reps", "1", "--tlc-bin", "/bin/false")
+    assert proc.returncode == 0, proc.stderr
+
+    row = rows(tmp_path)[0]
+    assert row["outcome"] == "error"
+    assert row["tlc"] is None
+    assert any("exit" in entry.lower() and "1" in entry for entry in row["error"]), row["error"]

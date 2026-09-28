@@ -176,6 +176,37 @@ completed proof of the property, and a run that was killed must not be reported 
   traceback, writes no row at all, and leaves the `run-*` directory in place. Both the row assertion
   and the metadir-set assertion fail, and neither failure is a missing fixture or a bad argument.
 
+**Outcome, and the wording ruling.** The fix landed (`7598cc8`, `harness/tlc_run.py` only) and was
+verified independently: `tests/test_tlc_run.py` is `10 passed`, and a direct `--tlc-bin /tmp/no-such-tlc`
+run exits **0**, writes one row with `outcome: error`, `tlc: null` and an `error` list led by
+`could not launch the TLC binary '/tmp/no-such-tlc': [Errno 2] No such file or directory: …`, writes its
+log artifact, and leaves `.tlc-states/` with **0** `run-*` entries before and after. The diagnostic lives
+in the **existing** `error` list — the row's 21 keys are identical to the pre-fix row's, so no consumer of
+the row schema is affected — and it appears only on the launch-failure path, which is what keeps it from
+being a field that is always present. **What is contracted is the form, not the bytes:** the sentence must
+lead with a fixed, greppable phrase naming the binary and must carry the operating system's reason after
+it. The exact rendering of that reason is left to the platform's exception, because pinning it would make
+a libc's wording a contract term and turn a cosmetic change into a re-registration.
+
+## Scenario 11 — a launched run that fails silently names its exit status
+
+- **Actor**: the researcher whose `--tlc-bin` launches but exits non-zero without printing a summary.
+- **Boundary**: the runner CLI and the row it persists.
+- **Given**: `--tlc-bin /bin/false` with the success node's task and instance — a real launch, exit 1, no
+  output.
+- **When**: the row is written.
+- **Then**: `outcome: error`, `tlc: null`, and the row's `error` **names the exit status**: the diagnostic
+  contains the word `exit` and the status, so a reader can tell a silent non-zero exit from a run that
+  printed nothing because a budget bound or the harness died.
+- **Why**: this is deliberately *not* part of Scenario 10. That path is *no process at all* and now carries
+  a sentence; this one is *a process that ran and said nothing*, where `failure_tail` of an empty log is an
+  empty list — so the row reports a failure and names nothing. Same shape as every reporting defect this
+  round has found: a row that looks handled because its outcome label is right and its reason is absent.
+  Observed before the fix was written: `outcome: error`, `error: []`, `tlc: null`, with a log artifact and
+  no pool leak, so the metadir half of the launch fix already covers this path.
+- **Expected first failure before correction**: the row's `error` is `[]`, so the assertion that it names
+  the exit status fails.
+
 This fake is a local parser/provenance substitute; it makes **no** model, network, clock or external
 filesystem call. The coder additionally smokes the *actual* measured-fast token-ring N3 with the
 explicit chosen profile after implementation to verify the real wrapper's `JAVA_TOOL_OPTIONS` and TLC
