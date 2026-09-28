@@ -36,6 +36,13 @@ VIOLATION_RE = re.compile(r"Error: (?:Invariant|Temporal property) (\S+) is viol
 CFG_CONSTANT_RE = re.compile(r"(?m)^\s*CONSTANTS?\s+N\s*=\s*(\d+)")
 CFG_INVARIANT_RE = re.compile(r"(?m)^\s*INVARIANTS?\s+(\S+)")
 TLC_VERSION_RE = re.compile(r"Version ([\d.]+) of")
+# TLC's banner states the effective profile of the run it is about to start, e.g.
+# "Running breadth-first search Model-Checking with fp 28 and seed 1 with 1 worker on 20 cores with
+# 14336MB heap and 64MB offheap memory (…)". These three fields are what a pinned Route A cell claims
+# the run used, so they are read back from the run's own output rather than from the request.
+BANNER_HEAP_RE = re.compile(r"\bwith (\d+)MB heap\b")
+BANNER_FP_RE = re.compile(r"\bwith fp (\d+)\b")
+BANNER_SEED_RE = re.compile(r"\band seed (-?\d+)\b")
 
 
 def _num(text: str) -> int:
@@ -81,6 +88,51 @@ def parse_tlc_log(text: str) -> dict:
         parsed["violation"] = violation.group(1)
 
     return parsed
+
+
+def parse_tlc_banner(text: str) -> dict | None:
+    """The effective profile TLC's banner reports, or None when the log carries no banner.
+
+    The banner is the *observed* side of the profile contract: it is what the launched JVM and TLC
+    actually used, as opposed to what the caller asked for. Fields the banner does not state are null,
+    so a partial banner can only ever fail to confirm a request, never silently satisfy one.
+    """
+    heap = BANNER_HEAP_RE.search(text)
+    fp = BANNER_FP_RE.search(text)
+    seed = BANNER_SEED_RE.search(text)
+    if heap is None and fp is None and seed is None:
+        return None
+    return {
+        "heap_mib": int(heap.group(1)) if heap else None,
+        "fp_index": int(fp.group(1)) if fp else None,
+        "seed": int(seed.group(1)) if seed else None,
+    }
+
+
+# The row-facing names of the profile controls, used in the mismatch diagnostic so the sentence names
+# the quantity rather than the dict key (scenario 7 requires the fingerprint mismatch to be named).
+PROFILE_LABELS = {"heap_mib": "heap (MiB)", "fp_index": "fingerprint fp", "seed": "seed"}
+
+
+def profile_mismatch(requested: dict, observed: dict | None) -> str | None:
+    """The first *requested* control the run's banner contradicts, or None when the banner confirms
+    every one of them.
+
+    Only non-null requests are compared: a null request is "not asked for", not "asked for null", so an
+    unpinned run cannot mismatch an ambient setting it never claimed (scenario 6). A request whose
+    banner value is missing is a mismatch too — an unconfirmed pin is not a confirmed one.
+    """
+    for field, label in PROFILE_LABELS.items():
+        want = requested[field]
+        if want is None:
+            continue
+        got = observed.get(field) if observed else None
+        if got != want:
+            return (
+                f"requested {label} {want}, but TLC reported "
+                f"{got if got is not None else 'no banner value'}"
+            )
+    return None
 
 
 def read_cfg(config: Path) -> dict:
@@ -148,8 +200,17 @@ def run_tlc(
     tlc_bin: str = "tlc",
     cap_s: float = 7200.0,
     workers: int = 1,
+    heap_mib: int | None = None,
+    fp_index: int | None = None,
+    seed: int | None = None,
 ) -> dict:
-    """Run TLC over one instance, capped at ``cap_s`` seconds, and return the raw observation."""
+    """Run TLC over one instance, capped at ``cap_s`` seconds, and return the raw observation.
+
+    ``heap_mib``/``fp_index``/``seed`` are the *requested* fixed profile (`None` = not requested). The
+    heap is delivered to the JVM only, via the child's ``JAVA_TOOL_OPTIONS``; ``tlc -Xmx`` is rejected by
+    the pinned wrapper, which execs Java with the remaining arguments after the main class. ``-fp`` and
+    ``-seed`` are TLC options and go in the option region of the command line, before the spec.
+    """
     spec = Path(spec).resolve()
     config = Path(config).resolve()
     # The runner sets the child's cwd to the spec's directory, so a relative binary path would no
@@ -177,14 +238,26 @@ def run_tlc(
     # lifetime is ours now, on every exit path.
     cmd = [
         tlc_bin, "-workers", str(workers),
+        *(["-fp", str(fp_index)] if fp_index is not None else []),
+        *(["-seed", str(seed)] if seed is not None else []),
         "-metadir", metadir,
         "-config", str(config), str(spec),
     ]
+    # The requested heap is a JVM property, not a TLC option: the pinned wrapper runs
+    # `java … tlc2.TLC <args>`, so a `-Xmx` in TLC's argv is not seen by the JVM and TLC rejects it.
+    # `JAVA_TOOL_OPTIONS` is read by the JVM at startup, so it reaches the TLC child (and only the
+    # child: the runner's own interpreter is not a JVM) and the banner then reports the effective heap.
+    # An explicit request replaces any inherited value: the row claims *this* heap, and silently
+    # keeping a second `-Xmx` from the caller's environment would make the row's claim unattributable.
+    env = os.environ.copy()
+    if heap_mib is not None:
+        env["JAVA_TOOL_OPTIONS"] = f"-Xmx{heap_mib}m"
 
     started = time.monotonic()
     proc = subprocess.Popen(
         cmd,
         cwd=str(spec.parent),
+        env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -229,9 +302,18 @@ def run_tlc(
     wall_clock_s = round(time.monotonic() - started, 3)
     log = "".join(lines)
     parsed = parse_tlc_log(log)
+    requested = {"heap_mib": heap_mib, "fp_index": fp_index, "seed": seed}
+    observed = parse_tlc_banner(log)
+    # A contradictory banner outranks the run's own verdict other than a timeout: a completed summary
+    # whose profile does not match the request is not evidence about the *requested* configuration, and
+    # neither is a violation found under an unconfirmed fingerprint/seed. It never outranks a timeout,
+    # which says nothing about what was checked and is already not a verdict.
+    mismatch = profile_mismatch(requested, observed)
 
     if state["timed_out"]:
         outcome = "timeout"
+    elif mismatch is not None:
+        outcome = "error"
     elif parsed["violation"] is not None:
         outcome = "violation"
     elif parsed["generated"] is not None and proc.returncode == 0:
@@ -246,6 +328,10 @@ def run_tlc(
         "peak_rss_mb": round(state["peak_rss_mb"], 1) if state["peak_rss_mb"] else None,
         "states_reached": parsed["states_reached"],
         "parsed": parsed,
+        # What was asked for versus what the run reported using: the row's provenance, not the run's
+        # verdict. `observed` is null when the log carried no banner at all.
+        "tlc_profile": {"requested": requested, "observed": observed},
+        "profile_error": mismatch,
         "log": log,
         "cmd": cmd,
     }
@@ -285,7 +371,13 @@ def build_row(
     negative_control: dict | None = None,
 ) -> dict:
     parsed = observation["parsed"]
-    completed = parsed["generated"] is not None
+    completed = parsed["generated"] is not None and observation.get("profile_error") is None
+    # A profile mismatch is a failure TLC itself never printed, so the row's failure tail starts with the
+    # harness's own sentence and is followed by whatever TLC did say. Without it the diagnostic would be
+    # no more specific than the banner in `artifacts.log`.
+    error = failure_tail(observation["log"])
+    if observation.get("profile_error"):
+        error = [observation["profile_error"], *error]
     return {
         "task": task,
         "route": "tlc",
@@ -300,7 +392,12 @@ def build_row(
         # message. `outcome` stays the machine-readable summary — `success`/`violation`/`timeout`/`error` —
         # and this is the "why" beside it, so a failing calibration can be diagnosed from its own record
         # rather than only from `artifacts.log`. `None` on a run that did not fail.
-        "error": failure_tail(observation["log"]) if observation["outcome"] == "error" else None,
+        "error": error if observation["outcome"] == "error" else None,
+        # The run's provenance: the requested fixed profile (explicit nulls for flags the caller omitted,
+        # so an unpinned run is never labelled as a pinned one) against the profile the run's banner
+        # reported. A mismatch makes the row an `error` with no `tlc` summary above (`completed`), so a
+        # contradictory banner can never settle a pinned cell.
+        "tlc_profile": observation["tlc_profile"],
         "wall_clock_s": observation["wall_clock_s"],
         "startup_s": observation["startup_s"],
         "peak_rss_mb": observation["peak_rss_mb"],
@@ -331,6 +428,38 @@ def build_row(
 REPO = Path(__file__).resolve().parents[1]
 
 
+def _positive_int(text: str) -> int:
+    try:
+        value = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"expected an integer, got {text!r}") from None
+    if value <= 0:
+        raise argparse.ArgumentTypeError(f"expected a positive integer, got {text!r}")
+    return value
+
+
+def _fp_index(text: str) -> int:
+    """TLC's fingerprint polynomial index: `-fp` accepts 0..130."""
+    try:
+        value = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"expected an integer, got {text!r}") from None
+    if not 0 <= value <= 130:
+        raise argparse.ArgumentTypeError(f"expected a fingerprint index in 0..130, got {text!r}")
+    return value
+
+
+def _signed_long(text: str) -> int:
+    """TLC's `-seed` is a Java `long`, so the accepted range is the signed 64-bit one."""
+    try:
+        value = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"expected an integer, got {text!r}") from None
+    if not -(2**63) <= value < 2**63:
+        raise argparse.ArgumentTypeError(f"expected a signed 64-bit long, got {text!r}")
+    return value
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="harness.tlc_run")
     parser.add_argument("--task", required=True, help="task manifest under tasks/")
@@ -341,6 +470,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--cap-s", type=float, default=None)
     parser.add_argument("--tlc-bin", default="tlc")
     parser.add_argument("--workers", type=int, default=1)
+    # The optional fixed-profile flags (scenarios 5–7). Each is None when omitted and is then recorded as
+    # an explicit null in `tlc_profile.requested` — "not requested" is not "requested to be the default".
+    parser.add_argument(
+        "--heap-mib", type=_positive_int, default=None,
+        help="TLC child JVM max heap in MiB, delivered as JAVA_TOOL_OPTIONS=-Xmx<n>m",
+    )
+    parser.add_argument(
+        "--fp-index", type=_fp_index, default=None,
+        help="TLC fingerprint polynomial index (TLC -fp), 0..130",
+    )
+    parser.add_argument(
+        "--seed", type=_signed_long, default=None,
+        help="TLC enumeration seed (TLC -seed), a signed 64-bit long",
+    )
     args = parser.parse_args(argv)
 
     manifest = json.loads(Path(args.task).read_text())
@@ -374,7 +517,11 @@ def main(argv: list[str] | None = None) -> int:
         # The host load at the run's start (planner's ruling): a concurrent TLC inflates a Route A row the
         # same way it inflates a Route B one, and a reader cannot tell from the row alone. Paired at append.
         load_before = [round(value, 2) for value in os.getloadavg()]
-        observation = run_tlc(spec, config, tlc_bin=args.tlc_bin, cap_s=cap_s, workers=args.workers)
+        observation = run_tlc(
+            spec, config,
+            tlc_bin=args.tlc_bin, cap_s=cap_s, workers=args.workers,
+            heap_mib=args.heap_mib, fp_index=args.fp_index, seed=args.seed,
+        )
         observation["workers"] = args.workers
         stamp = time.strftime("%Y%m%dT%H%M%S")
         log_path = logs_dir / f"{task}{'-mutant' if args.mutant else ''}-{stamp}-r{repetition}.log"

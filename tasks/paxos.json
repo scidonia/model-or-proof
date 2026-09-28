@@ -67,7 +67,7 @@
     "delivery": "must reach the TLC child as JAVA_TOOL_OPTIONS=-Xmx14336m; tlc -Xmx was observed rejected; the wrapper execs Java with TLC args after the main class",
     "row_requirement": "rows record tlc_profile.requested {heap_mib, fp_index, seed} with explicit null for each omitted flag, and tlc_profile.observed with the parsed banner values",
     "measured_demand": "observed exploratory N=7 RSS peak 5535.5 MB (whole-process used memory); fixed-profile memory demand is NOT yet measured. Comparing RSS with the 14 GiB java-heap maximum is an illustrative ratio, not evidence of headroom, and it does not establish that no other limit (offheap, disk, host) binds.",
-    "implemented": false,
+    "implemented": true,
     "established": "N=7 reached 10,850,698 distinct states and timed out at the 7200 s cap rather than dying on a resource error; that is the only resource claim stage 1 supports"
   }
 }
