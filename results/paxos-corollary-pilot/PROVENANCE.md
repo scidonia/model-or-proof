@@ -110,6 +110,17 @@ matters: a **foreign** task's proved module still contaminates, a **tier-2** att
 module still contaminates, an attempt with **no row** declares nothing, and another attempt's
 **transcript** still invalidates.
 
+**And that claim is checked a second way, because the classifier cannot see one case at all.** `own-copy`
+is decided by *name* — an attempt's working file is `<stem>-r<k>.lean` — so a read of **another attempt's**
+identically named working file would classify as the reader's own and pass silently; each attempt has a
+separate package, but the name is the same. So the five transcripts were scanned directly for another
+attempt's `.lean` path appearing in a read, copy or compare segment: **zero in all five**. What crosses
+attempts is metadata only — 003 and 004 read earlier *rows*, and 005 ran `find` over attempt-004's package,
+which the contract treats as enumeration rather than opening ("seeing a predecessor's filename in an `ls`
+is not opening it"). The gap itself is real and is recorded in `plans/2026-09-27-paxos-agreement.md`: a
+cross-cell `r1` collision is invisible to the current classifier, which is what makes the path-and-verb
+scan — not the audit alone — the thing that licenses the sentence above.
+
 ## The code revision this cell ran under
 
 A file-mode row records **no** `harness_revision`, so this cell's rows cannot state which code produced

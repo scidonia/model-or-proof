@@ -253,6 +253,21 @@ withholding changes is only the naive pass rate: reported without reading it, th
 the honest sentence is **two attempts, two complete proofs, two withholdings for compiling**, with the event
 list beside it rather than behind it.
 
+**One more gate gap, found while verifying this cell's own claim, and it is the sharpest one yet.**
+`own-copy` is decided by **name** — `<stem>-r<k>.lean` at the attempt's own repetition — so a read of
+**another attempt's** identically named working file classifies as the reader's own and passes silently.
+Each attempt gets its own package, but every cell starts at `r1`, so the name collides across attempts
+*and* across cells. The contract's name rule is there for a good reason (an attempt reading its own working
+file is ordinary, and "seeing a predecessor's filename in an `ls` is not opening it"), but a name cannot
+tell the two apart. Measured for this cell by a method the audit does not have — scanning all five
+transcripts for another attempt's `.lean` path inside a read/copy/compare segment — the answer is **zero**,
+so this cell's rows stand and its provenance says on what evidence; the gap is recorded because the *next*
+cell's independence claim would otherwise rest on an assumption rather than a measurement.
+**The fix, when the classifier is next opened:** an identically named working file **outside the attempt's
+own package** is suspect, not own. The stated reason for name-based classification — that a `cp` into one's
+own directory would defeat a path rule — does not apply here, because the copy's own *source* read is
+already an invalidating hit, so a path-aware `own-copy` closes the collision without opening that door.
+
 **Planner-owned prep contract, pre-implementation red (`then`), now implemented:** `tests/paxos-attempt-isolation-contract.md`
 and `tests/test_paxos_attempt_isolation.py` define a
 `python -m harness.attempt_workspace prepare` CLI and temp-only structural
