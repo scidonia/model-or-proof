@@ -111,6 +111,12 @@ RUNS = {"python", "python3", "lean", "lake", "elan", "bash", "sh", "nix", "timeo
 INVALIDATING_CLASSES = {"prior-copy", "promoted-proof", "other-transcript"}
 INVALIDATING_EFFECTS = {"read", "compare", "copy"}
 
+# A session transcript, as the store names it: `<stamp>_<uuid>.jsonl`. The class means *transcript* — an
+# attempt's reasoning and its tool calls — and a row (`proof.jsonl`) is the run's record instead: verdict,
+# axioms, paths, no reasoning and no proof text. A bare suffix test promoted rows into the reuse channels
+# (contract Scenario 6), so the kind is decided by this shape rather than by `.jsonl` alone.
+TRANSCRIPT_NAME = re.compile(r"^\d{4}-\d{2}-\d{2}T[\d\-]+Z_[0-9a-fA-F\-]{8,}\.jsonl$")
+
 
 def classify(token: str, stem: str, repetition: int, own_transcript: Path) -> str:
     """The token's class, by name and location. Lexical on purpose: a name-shaped rule cannot be
@@ -119,7 +125,9 @@ def classify(token: str, stem: str, repetition: int, own_transcript: Path) -> st
     if "baseline/" in token or name in (f"{stem}.lean", f"{stem}Mutant.lean"):
         return "seed"
     if name.endswith(".jsonl"):
-        return "own-transcript" if Path(token).name == own_transcript.name else "other-transcript"
+        if Path(token).name == own_transcript.name:
+            return "own-transcript"
+        return "other-transcript" if TRANSCRIPT_NAME.match(name) else "other"
     if "Proved" in name or "closures/" in token:
         return "promoted-proof"
     work = WORK_COPY.match(name)
@@ -196,8 +204,6 @@ def scan_transcript(path: Path, stem: str, repetition: int, declared: str | None
                         if token.startswith("/dev/null") or token in {".", ".."}:
                             continue
                         klass = classify(token, stem, repetition, path)
-                        if klass in {"other"} and token.endswith(".jsonl"):
-                            klass = "other-transcript"
                         hit = {
                             "line": lineno,
                             "tool": block.get("name"),

@@ -48,3 +48,26 @@ never wrote a row cannot claim a declaration, and a missing declaration is never
 - **Why**: the plan sanctions the tier-1 dependency and excludes only undeclared reuse; an audit that
   cannot tell them apart converts the design into an offence, which is the same defect class as a
   synthetic placeholder read as a hole and an absent signal read as a satisfied one.
+
+## Scenario 6 — a prior attempt's row is metadata, and only a transcript is a transcript
+
+- **Actor**: the audit, over one attempt directory.
+- **Boundary**: `scripts.audit_attempts.audit_attempt(directory) -> verdict`.
+- **Given**: two synthetic attempts, each whose only artifact-touching call reads a `.jsonl` belonging to
+  another attempt — (a) that attempt's **row** (`proof.jsonl`), as a path or through a `*.jsonl` glob;
+  (b) that attempt's **session transcript** (`<stamp>_<uuid>.jsonl` under its `file/` directory).
+- **When**: each is audited.
+- **Then**: (a) is **clean**, with the read still listed in the report so a reader can see it — a row is
+  the run's *record* (verdict, axioms, paths), not its reasoning and not its proof text, so it is not one
+  of the three reuse channels; and (b) is **contaminated**, because another attempt's transcript carries
+  that attempt's reasoning, its tool calls and the proof text it worked on.
+- **Expected pre-correction failure**: (a) reports `contaminated` today. The classifier returns
+  `other-transcript` for **every** `.jsonl` that is not this attempt's own, so the suffix rather than the
+  file's kind decides the class, and a model that reads its siblings' rows to understand why they were
+  withheld is found to have reused a proof it never read.
+- **Why**: the contract's own words are "a `.jsonl` that is not this attempt's own transcript" — the class
+  is about transcripts. A rule that classes every `.jsonl` alike is the same over-reach as counting
+  `?ident` as a hole and reading an absent signal as a satisfied one: a lexical test standing in for a
+  distinction the caller is expected to make. The guard-rail is what keeps the exception honest — a read
+  of another attempt's *transcript* must still invalidate, so the fix narrows the class to the file kind
+  and does not simply drop it.

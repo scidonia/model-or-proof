@@ -80,3 +80,62 @@ def test_attempt_without_a_row_declares_nothing(tmp_path):
     """No row, no declaration: the exception is never assumed."""
     session = build_attempt(tmp_path, tier=1, proved_module="PaxosProved.lean", with_row=False)
     assert audit_attempt(session)["verdict"] == "contaminated"
+
+
+def build_sibling_jsonl_read(tmp_path, *, transcript):
+    """An attempt whose only artifact-touching call reads a .jsonl belonging to another attempt."""
+    stem = "PaxosN6Pilot"
+    attempt = tmp_path / "results" / "attempt-001"
+    package = tmp_path / "workspaces" / "attempt-001" / "paxos"
+    package.mkdir(parents=True)
+    (package / f"{stem}.lean").write_text("theorem t : True := by\n  sorry\n")
+    (package / "PaxosProved.lean").write_text("theorem proven : True := by trivial\n")
+    sibling = tmp_path / "results" / "attempt-000"
+    if transcript:
+        sibling = sibling / "omp" / f"{stem}-20260928T000000-r1" / "file"
+        sibling.mkdir(parents=True)
+        target = sibling / "2026-09-28T20-34-41-298Z_01a0e9ba-1412-76ee-8702-95016d4cbed4.jsonl"
+    else:
+        sibling.mkdir(parents=True)
+        target = sibling / "proof.jsonl"
+    target.write_text('{"tier": 1}\n')
+    session = attempt / "omp" / f"{stem}-20260928T000001-r1"
+    (session / "file").mkdir(parents=True)
+    record = {
+        "type": "message",
+        "message": {
+            "content": [
+                {
+                    "type": "toolCall",
+                    "name": "Bash",
+                    "arguments": {"command": f"cat {target}", "cwd": None},
+                }
+            ]
+        },
+    }
+    (session / "file" / "20260928T000001_cccc.jsonl").write_text(json.dumps(record) + "\n")
+    (attempt / "proof.jsonl").write_text(
+        json.dumps(
+            {
+                "tier": 1,
+                "task": "paxos",
+                "artifacts": {"baseline": {"seed": str(package / f"{stem}.lean")}},
+            }
+        )
+        + "\n"
+    )
+    return session
+
+
+def test_a_prior_attempts_row_is_metadata_not_a_transcript(tmp_path):
+    """A row is the run's record, not its reasoning: reading it is not proof reuse."""
+    session = build_sibling_jsonl_read(tmp_path, transcript=False)
+    report = audit_attempt(session)
+    assert report["verdict"] == "clean", report
+    assert [hit for hit in report["hits"] if hit["class"] == "other-transcript"] == []
+
+
+def test_a_prior_attempts_transcript_still_contaminates(tmp_path):
+    """The guard-rail: the exception is about the file kind, not about dropping the class."""
+    session = build_sibling_jsonl_read(tmp_path, transcript=True)
+    assert audit_attempt(session)["verdict"] == "contaminated"
