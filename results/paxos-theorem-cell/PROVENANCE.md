@@ -142,3 +142,22 @@ somewhere else, which is the audit's question and not one a byte count or a dura
 neither number above is a cost: an attempt's wall clock becomes a datum when its row lands with its
 closure verdict, and the cell's median only after all five rows and a complete, committed audit. Nothing
 in this section may be cited as independence, as a pass, or as `P(N)`.
+
+**A hypothesis this cell will test, recorded with that status and no more.** The three landed walls are
+1,514 / 1,641 / 1,717 s — a 202-second spread, against the retired pilot's 193–1,935 s. If that holds
+across all five attempts, the pilot's wide distribution was itself plausibly a *symptom of copying*: each
+repetition raced to a different prior proof, so each measured a different amount of remaining work,
+whereas five honest attempts from the same seed do the same work and should cluster. The hypothesis is
+that the honest distribution is **tight** and the contaminated one was wide. It is not a finding and may
+not be used as one: three of five attempts is not a distribution, walls are not costs until their rows
+carry verdicts, and the audit decides whether these five are independent at all. The remaining rows and
+the audit's verdicts are what test it, and the test is a comparison of distributions recorded *after* the
+fact — never a licence to describe this cell as tight before its audit exists.
+
+**Attempt-003's withholding is the benign scratch class, not a candidate breach.** Its two events are
+`CREATE` and `MODIFY` of `check_axioms.lean` at its own package root, produced by a `cat > check_axioms.lean`
+that ran with the package root as its working directory while the attempt then looked for the file under
+`.runs/` — the same working-directory accident as the retired pilot's r4, verified by transcript. Its
+`closure` otherwise reads `integrity: true`, `elaborates: true`, `axioms: ['Classical.choice', 'Quot.sound',
+'propext']`, `seed_intact: true`, so the proof is good and the boundary is the only reason its verdict is
+false. The guard is right to withhold; the cause is an accident.

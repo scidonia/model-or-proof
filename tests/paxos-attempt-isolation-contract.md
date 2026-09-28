@@ -113,6 +113,19 @@ status rather than the message.
   *is* supplied prepares successfully and puts the proved module into the package. Each assertion above
   therefore fails for its own reason, and none of them is a missing fixture.
 
+### The boundary rule, recorded here because no other contract owns it
+
+A write outside the attempt's allowed prefix — `.runs/` beside the working copy — is a **real** event and
+withholds the verdict: no closure copy is promoted and `closure.verdict` is false even when the file
+elaborates within the permitted axiom set. The common **benign** cause, observed by transcript in three
+cells, is a model writing its verification scratch under a *relative* name while its working directory is
+the package root rather than `.runs/`, then deleting the `.runs/` path instead and leaving the root-level
+file behind — a working-directory accident, not a search for a prior proof. The rule is nonetheless
+correct as it stands: the prefix is what makes an isolation claim mean anything, and buying back a benign
+withholding by widening the prefix would trade the experiment's substance for its arithmetic. The remedy
+belongs in the prompt — say where an attempt's scratch lives — and because that is a setup change it must
+be **preregistered and stated as a configuration difference** rather than applied silently mid-remediation.
+
 ## Real-cell audit and acceptance, not a pytest mock
 
 After the preparer passes all three scenarios, prepare **five separate packages** from the *same registered seed*, each in a different workspace with a different result/session root; run one detached `harness.route_b --mode file --tier 2 --arms proof+refutation --reps 1 --exploratory` per package under the unchanged 7200s/$50 per-run budgets. The conductor archives the five rows and source/package/seed digests as one named pilot cell without silently merging invocation-local `repetition: 1` values. No earlier result root or closure copy is placed in the new package. Before interpreting its median, an independent reader inspects **every** attempt's complete OMP tool-call transcript, naming the row, session path and every read/copy of an older same-tier working proof, closure copy, reference proof, result or transcript. An observed prior-proof read invalidates that attempt's independent-cost evidence even if `closure.verdict: true`; preserve the row and label it contaminated, **never** pool it or replace it with a cheapest clean closure. A tier-1 corollary intentionally importing the established general theorem is a different, allowed dependency. This gives an **operationally independent, transcript-audited** result, *not* a guarantee that an unsandboxed same-UID shell could not read arbitrary absolute paths (`harness/outside_watch.py:1-11`). Do not launch this cell until corrected-FQN verification and the offline real-package smoke are accepted — the smoke's commands and outputs, including the dead-port proxy run and the zero-`connect` syscall evidence on a prepared package, are recorded in `plans/2026-09-27-paxos-agreement.md`. Old pilot rows remain diagnostic.
