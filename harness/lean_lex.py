@@ -126,26 +126,21 @@ def skip_quoted_identifier(text: str, start: int) -> int:
 def synthetic_hole_end(text: str, start: int) -> int | None:
     """One past a synthetic hole opening at ``start`` (``?h``, ``?«x»``), or ``None``.
 
-    Lean's ``?name`` is a synthetic sorry: the goal is left to a metavariable, which the repl reports
-    as ``contains metavariable(s)`` rather than as ``contains sorry``. It is a hole all the same, and
-    the import-clean guard reads a module's source with no repl verdict to fall back on (plan D13), so
-    it is counted here. The syntax is ``?`` followed by an identifier, so the name is read to its own
-    end (``?m.123`` is the hole ``?m`` and a projection) and may be a ``« … »`` quoted identifier,
-    which is one token like any other. ``?`` must be followed by a *letter* to be a hole: a bare ``?``,
-    a digit-named ``?1`` and the anonymous ``?_`` are other spellings and stay with the repl's verdict
-    — ``?_`` is the ordinary anonymous-constructor idiom (``refine ⟨?_, ?_⟩``), each hole becoming a
-    goal the following focusing discharges, and a surviving one shows up as ``sorryAx`` in the axiom
-    set, which is the authority this scan is a pre-filter for (plan D6, revised).
+    Lean's ``?name`` is a synthetic sorry: the goal is left to a metavariable. Whether it *survives*
+    is not a lexical fact — ``refine … ?init ?step`` followed by the bullets that discharge both is a
+    complete proof, while the same text without them is not — so this scan serves the policy that asks
+    only whether a body rests on a metavariable at all, never the artifact-level closure count, which
+    leaves a placeholder to elaboration and the axiom report (plan D6, revised). Its remaining caller
+    is ``harness.closure.incomplete_body`` (plan D15); ``harness.lean_repl.count_unclosed`` reads an
+    artifact with ``count_tokens`` and does not reach this. The syntax is ``?`` followed by an
+    identifier, so the name is read to its own end (``?m.123`` is the hole ``?m`` and a projection) and
+    may be a ``« … »`` quoted identifier, which is one token like any other. ``?`` must be followed by
+    a *letter* to be a hole: a bare ``?``, a digit-named ``?1`` and the anonymous ``?_`` are other
+    spellings, and ``?_`` is the ordinary anonymous-constructor idiom (``refine ⟨?_, ?_⟩``), each hole
+    becoming a goal the following focusing discharges.
 
     ``admit?``, ``simp?`` and ``exact?`` end in ``?`` and are ordinary identifiers, which the scan
     consumes before reaching this.
-
-    **This scan is a pre-filter and a diagnostic; the axiom check is the authority for closure.** A
-    hole that survives elaboration is `sorry`-backed, so it shows up as ``sorryAx`` in the axiom set
-    regardless of how the term was written — which is why the proxy can afford to leave ``?_`` to the
-    repl's verdict rather than guess at Lean's syntax. Read the two as layers, not as competing rules:
-    this one is cheap, needs no toolchain, and runs on a module source; the axiom set is what says the
-    proof is real.
     """
     if text[start] != "?" or start + 1 >= len(text):
         return None
@@ -179,19 +174,12 @@ def skip_noncode(text: str, index: int) -> int | None:
     return None
 
 
-def count_holes(text: str, tokens: Iterable[str]) -> int:
-    """How many holes a Lean text carries, counting ``tokens`` and every synthetic ``?name``.
+def _scan(text: str, tokens: Iterable[str], *, placeholders: bool) -> int:
+    """One code-only pass counting whole-identifier occurrences of ``tokens``.
 
-    Only code counts: a single pass skips Lean's comments (``--`` to end of line, ``/- … -/`` with
-    nesting), string literals, character literals and ``« … »`` quoted identifiers, so a ``sorry`` in
-    the seed's own prose or in a prover error message does not refuse a genuinely closed proof and
-    lose its row. ``tokens`` is the caller's policy — the artifact spelling set is
-    ``harness.lean_repl.UNCLOSED_TOKENS`` — while ``?name`` is always a hole, whatever the caller
-    counts (plan D13).
-
-    A ``sorry`` inside a string *interpolation* (``s!"{sorry}"``) reads as string text and is missed
-    here; the driver's close-guard covers that spelling, because the repl reports a proof containing
-    ``sorry`` as ``Incomplete`` however the term is written (D6).
+    ``placeholders`` adds every synthetic ``?name`` (``synthetic_hole_end``). Only a caller whose
+    policy is about a declaration's own body asks for them: a placeholder's survival is elaboration's
+    answer, so an artifact-level caller must not have this pass guess at it.
     """
     counted = frozenset(tokens)
     count = 0
@@ -201,7 +189,7 @@ def count_holes(text: str, tokens: Iterable[str]) -> int:
         if skipped is not None:
             index = skipped
             continue
-        if text[index] == "?":
+        if placeholders and text[index] == "?":
             hole_end = synthetic_hole_end(text, index)
             if hole_end is None:
                 index += 1
@@ -217,3 +205,35 @@ def count_holes(text: str, tokens: Iterable[str]) -> int:
                 count += 1
             index += len(token)
     return count
+
+
+def count_tokens(text: str, tokens: Iterable[str]) -> int:
+    """How many of ``tokens`` a Lean text carries as whole identifiers in code, and nothing else.
+
+    The pass ``count_holes`` makes without its synthetic-``?name`` clause, for a caller that has an
+    authority for whether a placeholder survived and must not have one guessed at lexically
+    (``harness.lean_repl.count_unclosed``, protocol §8). Only code counts: Lean's comments (``--`` to
+    end of line, ``/- … -/`` with nesting), string literals, character literals and ``« … »`` quoted
+    identifiers are skipped, so a spelling mentioned in prose is prose, and one inside a longer
+    identifier (``sorryful``) is one name, not a spelling of its own.
+    """
+    return _scan(text, tokens, placeholders=False)
+
+
+def count_holes(text: str, tokens: Iterable[str]) -> int:
+    """How many holes a Lean text carries: ``tokens`` plus every synthetic ``?name``.
+
+    Only code counts: a single pass skips Lean's comments (``--`` to end of line, ``/- … -/`` with
+    nesting), string literals, character literals and ``« … »`` quoted identifiers, so a ``sorry`` in
+    the seed's own prose or in a prover error message does not refuse a genuinely closed proof and
+    lose its row. ``tokens`` is the caller's policy — the declaration spelling set is
+    ``harness.closure._HOLE_TOKENS`` — while ``?name`` is counted for every caller, because a
+    declaration whose body rests on a metavariable is not a body that establishes anything (plan D15).
+    That is a declaration-level question; an artifact-level caller has elaboration in its place
+    (``count_tokens``, plan D6, revised).
+
+    A ``sorry`` inside a string *interpolation* (``s!"{sorry}"``) reads as string text and is missed
+    here; the driver's close-guard covers that spelling, because the repl reports a proof containing
+    ``sorry`` as ``Incomplete`` however the term is written (D6).
+    """
+    return _scan(text, tokens, placeholders=True)

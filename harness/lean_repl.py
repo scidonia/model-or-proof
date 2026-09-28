@@ -62,7 +62,7 @@ from harness.closure import (  # noqa: E402
     SeedAlreadyClosedError,
     declaration_matches,
 )
-from harness.lean_lex import count_holes, is_identifier_char, skip_noncode  # noqa: E402
+from harness.lean_lex import count_tokens, is_identifier_char, skip_noncode  # noqa: E402
 
 # `repl` holds the goal state in memory and the loop drives it turn by turn, so a step that hangs
 # would hang the run rather than bind a budget; these bounds turn that into a named failure. Loading
@@ -81,8 +81,11 @@ LAKE_ENV = ("lake", "env")
 # hole as `sorry` under another name; `sorryAx` is what a `sorry` term elaborates to. They are matched
 # as whole identifiers by `count_unclosed` rather than by a regex over the raw text: a regex cannot
 # tell whether it is reading code, and the seed's own prose explains the placeholder it sits next to.
-# Lean's synthetic `?name` is a sixth spelling, matched by `harness.lean_lex`'s synthetic-hole scan; it
-# is not in this set, because it is a `?` followed by a name rather than one identifier.
+# Lean's synthetic `?name` is deliberately not one of them, and is not scanned for here: it is a hole
+# only if it survives, and survival is decided by elaboration, not lexically — measured, `exact ?nope`
+# fails with `unsolved goals`, while the `refine … ?init ?step` idiom discharges its placeholders with
+# the bullets that follow. Counting the name refused a proof the closure oracle certifies closed (plan
+# D6, revised).
 UNCLOSED_TOKENS = frozenset({"sorry", "sorryAx", "admit", "Admitted", "axiom"})
 
 # What runs ahead of every command on the refutation channel (plan D16). Lean's autoImplicit binds a
@@ -162,13 +165,21 @@ def count_unclosed(artifact_text: str) -> int:
     with nesting), string literals, character literals and ``« … »`` quoted identifiers, so a ``sorry``
     in the seed's own prose or in a prover error message does not refuse a genuinely closed proof and
     lose its row — while every spelling that really is a hole (``sorry``, ``sorryAx``, ``admit``,
-    ``Admitted``, ``axiom``, and Lean's synthetic ``?name``) still counts.
+    ``Admitted``, ``axiom``) still counts.
+
+    A synthetic placeholder (``?h``, ``?init``, ``?_``) is deliberately not counted, and neither is its
+    name: a placeholder is a hole only if it survives, which no lexical scan can know, and the
+    authority is present at both call sites — elaboration for an artifact (measured: ``exact ?nope``
+    fails with ``unsolved goals``), ``lake build`` for an import. Counting a name refused a proof the
+    closure oracle certifies closed, because ``refine … ?init ?step`` is discharged by the bullets that
+    follow it (contract Scenario 1, revised), so this counts from ``count_tokens``, the pass without
+    the synthetic-hole clause.
 
     A ``sorry`` inside a string *interpolation* (``s!"{sorry}"``) reads as string text and is missed
     here; the driver's close-guard covers that spelling, because the repl reports a proof containing
     ``sorry`` as ``Incomplete`` however the term is written (D6).
     """
-    return count_holes(artifact_text, UNCLOSED_TOKENS)
+    return count_tokens(artifact_text, UNCLOSED_TOKENS)
 
 
 def _goal_payload_start(seed_text: str, goal_start: int) -> int:
