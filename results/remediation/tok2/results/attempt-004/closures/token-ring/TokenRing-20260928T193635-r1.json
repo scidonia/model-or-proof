@@ -1,0 +1,42 @@
+{
+  "artifact": "results/remediation/tok2/results/attempt-004/closures/token-ring/TokenRing-20260928T193635-r1.lean",
+  "artifact_sha256": "48f7371260c818f789a9489426ef4f61a02b3e9cde0e68df6684ad9fa765343d",
+  "closure": {
+    "axiom_report": "ok",
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "closed": true,
+    "elaborates": true,
+    "errors": [],
+    "integrity": true,
+    "lean_path": "/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/Cli/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/batteries/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/Qq/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/aesop/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/importGraph/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/plausible/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/token-ring/.lake/packages/mathlib/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/results/remediation/tok2/workspaces/attempt-004/token-ring/.lake/build/lib/lean:/home/gavin/.elan/toolchains/leanprover--lean4---v4.35.0-rc3/lib/lean",
+    "module": "TokenRing",
+    "no_progress_rounds": 0,
+    "outside_events": [],
+    "outside_writes": [],
+    "pristine_sha256": "e1d65f1a467ec21a04712c2d4b6cf19912cc92251ad682e1b04260f951b5cf4d",
+    "raw_tail": [
+      "Quot.sound",
+      "propext",
+      "resolved TokenRing.mutex"
+    ],
+    "rounds": 1,
+    "seed_intact": true,
+    "theorem": "TokenRing.mutex",
+    "timed_out": false,
+    "verdict": true,
+    "watch_blind": null,
+    "withheld": []
+  },
+  "digests_agree": true,
+  "mode": "file",
+  "omp_sessions": "/home/gavin/dev/model-or-proof/results/remediation/tok2/results/attempt-004/omp/TokenRing-20260928T193635-r1",
+  "pristine_sha256": "e1d65f1a467ec21a04712c2d4b6cf19912cc92251ad682e1b04260f951b5cf4d",
+  "row": "results/remediation/tok2/results/attempt-004/proof.jsonl:1",
+  "row_artifact_sha256": "48f7371260c818f789a9489426ef4f61a02b3e9cde0e68df6684ad9fa765343d",
+  "task": "token-ring",
+  "tier": 2
+}
