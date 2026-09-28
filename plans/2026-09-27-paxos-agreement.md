@@ -221,6 +221,38 @@ precisely that datum. One cell at the fixed instance — `--param-N 6`, module `
 cannot alter the verdict above, and `PaxosN0.lean` remains authored only after a selection the rule has
 not made.
 
+**The tier-1 pilot's rows are withheld for the toolchain's own build output, and that is a rig defect with a
+per-cell cost — recorded now, fixed after the freeze.** Both prepared attempts report `closed`, `elaborates`
+and `integrity` true, `axioms = {propext, Classical.choice, Quot.sound}`, `seed_intact` true and
+`outside_writes` empty, yet `verdict: false` with `withheld: ["outside_events"]` — and every event is under
+the attempt's **own** package: `CREATE,ISDIR .lake/build`, `ir/PaxosProved.setup.json`,
+`lib/lean/PaxosProved.olean.tmp.<pid>`, `MOVED_FROM`. That is `lake build` compiling the declared
+dependency inside its own tree, reported as a violation. It is the guard withholding a correct action — the
+class this plan already counts — in a new sub-class: the documented instances are model-authored
+verification scratch at the package root, and this one is the build system itself.
+
+**The carve-out, and why it is at the child and not the parent.** `.lake` is one path with two meanings:
+`.lake/packages` is the absolute symlink to the shared 7.2 GB cache and a dependency rebuild there is
+visible to every other attempt, so it **must** stay watched; `.lake/build` is the attempt's own local
+output and cannot reach the repo or a sibling. So the watch's `allowed` set grows by `.lake/build`
+specifically — never by `.lake`, which would silently exempt the shared cache. Widening it to the
+attempt's own package is otherwise right, and it does not leave the pristine `baseline/` unguarded: the
+seed's integrity rides on the row's own `pristine_sha256` and `baseline.matches`, so that property is
+guarded by a recorded field rather than by an event, which is the stronger of the two. The fix belongs in
+`harness/outside_watch.py` and **must wait for the cell to finish**: that file is inside the cell's
+revision record, so editing it now converts two withheld rows into two unauditable ones, and the defect is
+deterministic and reproduces identically in the next cell, so it loses nothing by waiting — but it must not
+wait past the freeze, because **every tier-1 cell whose attempt builds carries this withholding**.
+
+**What it does not change is the H2 datum, and the provenance must say so explicitly.** The selection rule
+takes the median of **all** precommitted attempts' recorded walls, whether or not their verdicts are true —
+the theorem cell set that precedent, and it is why its withheld attempts' actual times are in its median.
+So the pilot's 115.701 s and 75.344 s are in its instantiation cost, and a reader who assumes withheld
+attempts are excluded from the timing will compute a different median from the same rows. What the
+withholding changes is only the naive pass rate: reported without reading it, this cell reads 0 of 5, and
+the honest sentence is **two attempts, two complete proofs, two withholdings for compiling**, with the event
+list beside it rather than behind it.
+
 **Planner-owned prep contract, pre-implementation red (`then`), now implemented:** `tests/paxos-attempt-isolation-contract.md`
 and `tests/test_paxos_attempt_isolation.py` define a
 `python -m harness.attempt_workspace prepare` CLI and temp-only structural
