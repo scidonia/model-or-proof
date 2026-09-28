@@ -51,9 +51,18 @@ readable transcript is **unaudited**. Everything else is **clean**, and enumerat
 without invalidating the attempt: seeing a predecessor's filename in an ``ls`` is not opening it.
 
 Exit status **0** means every attempt is clean, **1** means at least one is contaminated, and **2**
-means at least one is unaudited or the invocation itself is unusable — 2 taking precedence, so that a
-missing audit can never be read as a clean cell. That distinction is the same one the preparer's
-refusal path enforces: "could not establish" and "established clean" are different answers.
+means at least one is unaudited or the recorded code revision no longer matches — 2 taking precedence,
+so that a missing audit or a cell that may span two revisions can never be read as a clean cell. That
+distinction is the same one the preparer's refusal path enforces: "could not establish" and
+"established clean" are different answers.
+
+With ``--expect-revision`` the same pass also checks the code the cell ran under. A file-mode row
+records no `harness_revision`, so a mid-cell edit to any `harness/*.py` file would leave later attempts
+produced by different code with nothing in their rows to show it. The recorded revision is a JSON map of
+input path to sha256; each input is re-hashed and any difference or absence is named, and the cell is
+reported **split** rather than certified. The map is data, deliberately: the audit does not import the
+runner to recompute a combined digest, so a change to `harness_revision`'s own algorithm cannot make
+this check silently agree — and naming the changed file is what a combined digest alone cannot do.
 
 This script reads transcripts and writes nothing; it never runs a model, TLC or Lean.
 """
@@ -61,10 +70,13 @@ This script reads transcripts and writes nothing; it never runs a model, TLC or 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
 from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[1]
 
 # Every attempt directory is named by `harness.route_b.run_session_dir`: `<stem>-<stamp>-r<k>`.
 ATTEMPT_DIR = re.compile(r"^(?P<stem>.+?)-(?P<stamp>\d{8}T\d{6})-r(?P<repetition>\d+)$")
@@ -260,6 +272,39 @@ def audit_attempt(directory: Path) -> dict:
     }
 
 
+def sha256_file(path: Path) -> str:
+    """The SHA-256 of a file's exact bytes, streamed so a large input costs no extra memory."""
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def revision_report(recorded: dict, repo: Path) -> dict:
+    """Compare a recorded code revision's inputs against the tree as it stands, file by file.
+
+    The record is data — a map of repo-relative path to sha256 — so this needs no import of the runner
+    and cannot silently agree with a change to the runner's own digest algorithm. Comparing per input
+    also names *which* file moved, which a single combined digest cannot: the reader learns that the
+    cell may span two revisions and which source changed under it.
+    """
+    differing, missing = [], []
+    for name, digest in sorted((recorded.get("files") or {}).items()):
+        path = repo / name
+        if not path.is_file():
+            missing.append(name)
+        elif sha256_file(path) != digest:
+            differing.append(name)
+    return {
+        "recorded_digest": recorded.get("digest"),
+        "recorded_at": recorded.get("head"),
+        "differing": differing,
+        "missing": missing,
+        "verdict": "split" if (differing or missing) else "ok",
+    }
+
+
 def attempt_directories(root: Path) -> list[Path]:
     """The attempt session directories under `root`.
 
@@ -288,7 +333,20 @@ def main(argv: list[str] | None = None) -> int:
         help="cell session root, or a cell/results root holding the attempts below it",
     )
     parser.add_argument("--json", action="store_true", help="emit the full machine-readable report")
+    parser.add_argument(
+        "--expect-revision",
+        help="JSON recording the cell's code revision (input path -> sha256) to verify in the same pass",
+    )
     args = parser.parse_args(argv)
+
+    revision = None
+    if args.expect_revision:
+        record = Path(args.expect_revision)
+        try:
+            revision = revision_report(json.loads(record.read_text()), REPO)
+        except (OSError, json.JSONDecodeError) as error:
+            print(f"error: cannot read the recorded revision {record}: {error}", file=sys.stderr)
+            return 2
 
     root = Path(args.sessions)
     directories = attempt_directories(root)
@@ -298,8 +356,18 @@ def main(argv: list[str] | None = None) -> int:
 
     reports = [audit_attempt(directory) for directory in directories]
     if args.json:
-        print(json.dumps(reports, indent=2))
+        print(json.dumps({"revision": revision, "attempts": reports}, indent=2))
     else:
+        if revision is not None:
+            print(
+                f"revision     {revision['verdict']:<12} recorded {str(revision['recorded_digest'])[:16]}… "
+                f"at {revision['recorded_at']}"
+                + (
+                    f"  differing={revision['differing']} missing={revision['missing']}"
+                    if revision["verdict"] == "split"
+                    else ""
+                )
+            )
         for report in reports:
             print(
                 f"{report['verdict']:<12} {report['attempt']:<32} calls={report['calls']:<4} "
@@ -313,6 +381,8 @@ def main(argv: list[str] | None = None) -> int:
                     f"(line {hit['line']}, cwd {hit.get('cwd')})"
                 )
 
+    if revision is not None and revision["verdict"] == "split":
+        return 2
     if any(report["verdict"] == "unaudited" for report in reports):
         return 2
     if any(report["verdict"] == "contaminated" for report in reports):

@@ -155,6 +155,24 @@ identify the attempt, or a transcript that records **no tool calls at all**, sin
 evidence of no reuse — with 2 taking precedence so that a missing audit can never be read as a clean
 cell.
 
+**The recorded code revision is checked in the same pass.** `--expect-revision <record.json>` compares a
+recorded revision map — `{"digest", "head", "files": {<repo-relative path>: sha256}}`, the form
+`results/paxos-theorem-cell/revision.json` records for that cell — against the tree as it stands, and
+prints `revision ok`, or `revision split` naming every input that differs or is missing. A `split`
+forces exit **2**: a file-mode row records no `harness_revision`, so if a `harness/*.py` file changed
+while the cell ran, later attempts were produced by different code and nothing in their rows would show
+it. The map is data on purpose, so the check does not import the runner and cannot silently agree with a
+change to `harness_revision`'s own algorithm; and comparing input by input names the file that moved,
+which a combined digest alone cannot. **What it is not:** it compares the *tree* to the record once per
+invocation, so `revision ok` says the tree still matches the recorded revision and nothing about
+attempts produced earlier under other code — a statement about this invocation's inputs, not a
+per-attempt property.
+
+**Reading the exit status.** Truncating the output (`| head`, `| grep`) closes the pipe and can turn the
+writer's zero status into a nonzero one, so a caller reading the status captures the output first or
+reads it unmodified — the audit's status is a gate, and `0`, `1` and `2` mean different things. `--json`
+emits `{"revision": …, "attempts": […]}`, with `revision` null when no record was supplied.
+
 What is scanned: **every** `toolCall` block in every `*.jsonl` under each attempt directory, not a
 search for path-shaped strings. Bare relative filenames, tokens inside dynamically generated shell
 loops and tokens inside heredoc bodies all count. Failed calls are scanned too: an attempted read is
