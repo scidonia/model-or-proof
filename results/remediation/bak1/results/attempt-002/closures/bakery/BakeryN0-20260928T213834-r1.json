@@ -1,0 +1,42 @@
+{
+  "artifact": "results/remediation/bak1/results/attempt-002/closures/bakery/BakeryN0-20260928T213834-r1.lean",
+  "artifact_sha256": "add05c6570b6a96da31706cc1943063e5dfe8a7a228cfbfa28db74298fd703d1",
+  "closure": {
+    "axiom_report": "ok",
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "closed": true,
+    "elaborates": true,
+    "errors": [],
+    "integrity": true,
+    "lean_path": "/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/Cli/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/batteries/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/Qq/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/aesop/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/importGraph/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/plausible/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/bakery/.lake/packages/mathlib/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/results/remediation/bak1/workspaces/attempt-002/bakery/.lake/build/lib/lean:/home/gavin/.elan/toolchains/leanprover--lean4---v4.35.0-rc3/lib/lean",
+    "module": "BakeryN0",
+    "no_progress_rounds": 0,
+    "outside_events": [],
+    "outside_writes": [],
+    "pristine_sha256": "e9516ec95fa1a80023bfad21d647cd809947f30dd5ed16992868c758e0c1f2b3",
+    "raw_tail": [
+      "Quot.sound",
+      "propext",
+      "resolved Bakery.mutual_exclusion_n0"
+    ],
+    "rounds": 1,
+    "seed_intact": true,
+    "theorem": "Bakery.mutual_exclusion_n0",
+    "timed_out": false,
+    "verdict": true,
+    "watch_blind": null,
+    "withheld": []
+  },
+  "digests_agree": true,
+  "mode": "file",
+  "omp_sessions": "/home/gavin/dev/model-or-proof/results/remediation/bak1/results/attempt-002/omp/BakeryN0-20260928T213834-r1",
+  "pristine_sha256": "e9516ec95fa1a80023bfad21d647cd809947f30dd5ed16992868c758e0c1f2b3",
+  "row": "results/remediation/bak1/results/attempt-002/proof.jsonl:1",
+  "row_artifact_sha256": "add05c6570b6a96da31706cc1943063e5dfe8a7a228cfbfa28db74298fd703d1",
+  "task": "bakery",
+  "tier": 1
+}
