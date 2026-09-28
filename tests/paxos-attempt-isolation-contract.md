@@ -7,11 +7,22 @@ Owner: planner. Subject: the researcher-facing `python -m harness.attempt_worksp
 ```
 python -m harness.attempt_workspace prepare \
   --template proofs/lean/paxos --seed Paxos.lean \
+  [--dependency <module>]… \
   --attempt 1 --workspace-root <private clean workspace root> \
   --results-root <separate results root>
 ```
 
 It emits one JSON record with `attempt`, absolute `package`, `seed`, `results`, and the copied seed's `seed_sha256`. Attempts are uniquely named (`attempt-001`, `attempt-002`, …); an existing destination is refused, not overwritten. The package copies the exact allowlisted module seed, its `baseline/<seed>` and `seeds.json`, `lakefile.toml`, `lean-toolchain`, and `lake-manifest.json`, and links to the pinned dependency cache (`.lake/packages`) instead of copying ≈7 GB of Mathlib. It does **not** copy the template's `.runs/`, promoted/proved versions of the target, closure copies, results or OMP sessions. The per-attempt `results` directory is outside the prepared package and distinct for every attempt; `harness.route_b` still records one normal row and one OMP session *there*. The seed digest must match the committed source record for every attempt. A missing/dirty seed record fails before the live model starts, never silently re-pins it.
+
+**Which seeds are copied, and why a baseline may legitimately be absent.** `seeds.json` is the *resolution* record: it names every module a run may need to resolve — the attempted seed, its mutant, a tier-1 corollary, and the `<Stem>Proved` module that promotion writes (`scripts/promote.py:190-214`: the proof goes to a new module, `seeds.json` gains that module's digest, and the module is registered as a library target in `lakefile.toml`). `baseline/<file>` is the *attempted* text: it keeps the pristine `sorry` version forever, and promotion deliberately does **not** re-pin it, because re-pinning it "would make the next tier-2 run copy a closed file and 'close' in zero turns — a rig artefact wearing the shape of a result" (`scripts/promote.py:217-221`). **A registered seed with no baseline is therefore a signal, not an oversight**: it is a dependency or an artifact, never something attempted from pristine text. `prepare` must distinguish the two roles:
+
+- the **attempted** seed (`--seed`) is copied together with its `baseline/<seed>`, and both must hash to the recorded digest;
+- every **declared dependency** (`--dependency <module>`, repeatable) is copied **without** any baseline requirement — the module's own bytes must hash to its recorded digest, and it is imported, never attempted;
+- every other registered seed is **withheld**, `<Stem>Proved` included. For a tier-2 attempt a completed proof of the attempted theorem must not be in the attempt's own tree at all; for a tier-1 arm the same module is the **intended dependency** the protocol sanctions, and is declared.
+
+The receipt records the **included** and **withheld** sets in a `modules` object — `modules.included` and `modules.withheld` — so what a package may see is auditable after the fact rather than inferred from a directory listing; the receipt therefore carries six fields rather than five, and the module docstring's field list follows.
+
+**The copied `lakefile.toml` names exactly the modules present.** A promoted module is registered as a `[[lean_lib]]` target and added to `defaultTargets` (`scripts/promote.py:117-137`), so withholding the file while keeping the target list would leave a package whose `lake build` fails on a missing module, refusing the run before it measures anything. `prepare` therefore rewrites the copied `defaultTargets` and library targets to the modules it actually copied, and the receipt's included set is what that list must agree with.
 
 The **per-attempt destinations**, not necessarily the parent directory names supplied as roots,
 must be disjoint: `--workspace-root /tmp/x/nest --results-root /tmp/x/nest/inner` is allowed
@@ -69,6 +80,38 @@ status rather than the message.
   assertion fails on that one node while the other five pass. (The earlier red this scenario carried —
   a *removed* member exiting 1 because it was copied inside the cleanup `try` — is fixed and recorded
   in the plan; a removed `lakefile.toml` already exits 2 through the package-name lookup.)
+
+## Scenario 4 — a declared dependency is copied and an undeclared registered seed is withheld
+
+- **Actor**: the researcher preparing a tier-2 attempt on a package whose promotion has already
+  registered a completed proof of the same theorem — and preparing the tier-1 corollary that imports it.
+- **Boundary**: the same preparation CLI, its receipt, and the contents of the copied package.
+- **Given**: a template shaped exactly as promotion leaves one — `seeds.json` registers the attempted
+  seed **and** a `<Stem>Proved` module carrying a completed proof of the attempted statement, while
+  `baseline/` holds only the attempted seed's pristine text, because promotion never re-pins a baseline
+  for the proved module. The lakefile names both modules in `defaultTargets` and as `[[lean_lib]]`
+  targets.
+- **When**: the researcher prepares attempt 1 with nothing declared, and attempt 2 declaring
+  `--dependency <Stem>Proved.lean`.
+- **Then**: both succeed with exit **0** and a receipt naming the included and withheld sets in
+  `modules.included` / `modules.withheld`. Attempt 1's package holds the attempted seed and its
+  baseline, does **not** hold the proved module, and its copied `lakefile.toml` names only the modules
+  present — so excluding the prior proof cannot leave a package that fails to build. Attempt 2's
+  package holds the proved module's text, hashed to its recorded digest, as a declared dependency, holds
+  **no** `baseline/<Stem>Proved.lean`, and its lakefile names that module. Neither package's receipt
+  claims a baseline that does not exist.
+- **Why**: promotion's design makes a registered seed without a baseline normal rather than anomalous,
+  and the roles it distinguishes are opposite for the two tiers. For a tier-2 attempt, a completed proof
+  of the attempted statement inside the attempt's own tree is exactly the contamination this contract
+  exists to prevent. For a tier-1 arm the same module is the **intended dependency** the protocol
+  sanctions. A rule that copies every registered seed expresses neither, and a rule that withholds the
+  file while keeping the lakefile target breaks the build rather than the contamination.
+- **Expected pre-correction failure**: the CLI has no `--dependency` at all, so argparse refuses the
+  declared invocation, and the undeclared invocation is refused with a diagnosed error because
+  `baseline/<Stem>Proved.lean` does not exist (observed on a real template: exit **2**,
+  `error: template is missing baseline/BakeryProved.lean`) — while a template in which that baseline
+  *is* supplied prepares successfully and puts the proved module into the package. Each assertion above
+  therefore fails for its own reason, and none of them is a missing fixture.
 
 ## Real-cell audit and acceptance, not a pytest mock
 

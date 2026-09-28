@@ -34,12 +34,13 @@ def template_package(tmp_path):
     return package
 
 
-def prepare(tmp_path, template, attempt):
+def prepare(tmp_path, template, attempt, *extra):
     env = dict(os.environ, PYTHONPATH=str(REPO))
     return subprocess.run(
         [
             sys.executable, "-m", "harness.attempt_workspace", "prepare",
             "--template", str(template), "--seed", "Paxos.lean", "--attempt", str(attempt),
+            *extra,
             "--workspace-root", str(tmp_path / "workspaces"),
             "--results-root", str(tmp_path / "results"),
         ],
@@ -136,3 +137,60 @@ def test_incomplete_pinned_package_metadata_refuses_cleanly(tmp_path, pinned, mo
     assert pinned in proc.stderr
     assert not (tmp_path / "workspaces" / "attempt-001").exists()
     assert not (tmp_path / "results" / "attempt-001").exists()
+
+
+PROVED = "namespace Paxos\ntheorem agreement : True := by\n  trivial\nend Paxos\n"
+
+
+def promoted_template_package(tmp_path):
+    """A template as promotion leaves one: seeds.json registers a Proved module carrying a completed
+    proof of the attempted statement, while baseline/ holds only the attempted seed's pristine text —
+    promotion never re-pins a baseline for the proved module.
+    """
+    package = template_package(tmp_path)
+    (package / "PaxosProved.lean").write_text(PROVED)
+    record = json.loads((package / "seeds.json").read_text())
+    record["PaxosProved.lean"] = hashlib.sha256(PROVED.encode()).hexdigest()
+    (package / "seeds.json").write_text(json.dumps(record))
+    (package / "lakefile.toml").write_text(
+        'name = "paxos"\n'
+        'defaultTargets = ["Paxos", "PaxosProved"]\n\n'
+        '[[lean_lib]]\nname = "Paxos"\n\n'
+        '[[lean_lib]]\nname = "PaxosProved"\n\n'
+        '[[require]]\nname = "mathlib"\ngit = "https://example.invalid/mathlib4"\nrev = "v4.35.0-rc3"\n'
+    )
+    return package
+
+
+def test_tier2_package_withholds_an_undeclared_registered_proof_seed(tmp_path):
+    """Scenario 4: a tier-2 attempt's tree must not offer a completed proof of its own theorem."""
+    template = promoted_template_package(tmp_path)
+
+    proc = prepare(tmp_path, template, 1)
+
+    assert proc.returncode == 0, proc.stderr
+    receipt = json.loads(proc.stdout)
+    package = Path(receipt["package"])
+    assert (package / "Paxos.lean").is_file()
+    assert (package / "baseline" / "Paxos.lean").is_file()
+    assert not (package / "PaxosProved.lean").exists()
+    assert not (package / "baseline" / "PaxosProved.lean").exists()
+    assert "PaxosProved" not in (package / "lakefile.toml").read_text()
+    assert set(receipt["modules"]["included"]) == {"Paxos.lean"}
+    assert set(receipt["modules"]["withheld"]) == {"PaxosProved.lean"}
+
+
+def test_tier1_package_copies_the_declared_dependency_without_a_baseline(tmp_path):
+    """Scenario 4: the same module is the tier-1 arm's intended dependency, declared rather than absent."""
+    template = promoted_template_package(tmp_path)
+
+    proc = prepare(tmp_path, template, 1, "--dependency", "PaxosProved.lean")
+
+    assert proc.returncode == 0, proc.stderr
+    receipt = json.loads(proc.stdout)
+    package = Path(receipt["package"])
+    assert (package / "PaxosProved.lean").read_text() == PROVED
+    assert not (package / "baseline" / "PaxosProved.lean").exists()
+    assert 'name = "PaxosProved"' in (package / "lakefile.toml").read_text()
+    assert set(receipt["modules"]["included"]) == {"Paxos.lean", "PaxosProved.lean"}
+    assert set(receipt["modules"]["withheld"]) == set()
