@@ -1,0 +1,22 @@
+{
+  "captured": "2026-09-28T17:19:48Z",
+  "cell": "results/remediation",
+  "digest": "cd7343e89d8f2c1ac9ceef9956acbec63d81c2c308af827058204b383d19aa31",
+  "files": {
+    "harness/__init__.py": "7ff4ca89bba7f2acdadd9c77cf3ab184c68b7617f3cb06eb7bf6f985a223c198",
+    "harness/attempt_workspace.py": "2fd8f3c8c79c6a162087139a4948f9a972bae0c33767af3e456a31d7ed668e4a",
+    "harness/closure.py": "e7e14d5754ee109f7c1e51cbd880d9042e3eea542e7032ea9941c3894d54862c",
+    "harness/closure_oracle.py": "539b3b94d85a0ba5d359fe0a5d3cf18beb04b5cd4be993aa7adaf78fe3d3b551",
+    "harness/file_mode.py": "718e7e21c59c7c91b2fd5a3cd2fb0bc9e5a3dcb3666a4521375e06c1b3094da0",
+    "harness/lean_lex.py": "2b00edfe9fe04b3f01f000e1015a02c22713af968964bd37b5bec80a0f696c5d",
+    "harness/lean_repl.py": "f8e2811b9bde970ac49099c54864f10d00024ea0348b2bc9c3132ee22ed8c4ef",
+    "harness/model.py": "78bc99d611fccddd0fa5a0ddfbc643f21ca75e9fad8385228395779533ca85a0",
+    "harness/outside_watch.py": "2de0372c47bb4ff9f9a22de16f608874608c6927ee9db5fae8c804753774440d",
+    "harness/result.py": "ab9ccd96f993e2d7b6652e0b712a974415bfe24ae85d0d09b1e0fb8a54534b32",
+    "harness/route_b.py": "f875e2333367b8554ac357b9847bc95de8ce1d1ba09af8f0de78af84676804b6",
+    "harness/tlc_run.py": "26d5b68057d257b15f3ce5ddab180eda955caab05898cfe820af4466e772be12",
+    "proofs/lean/token-ring/prompt_examples.lean": "86e0d649ec8931602f249eb185793feeba47067cf976a501bbcb399ad795db63"
+  },
+  "head": "2a9bb8a22828259e3d462ec83ebe5c01ffb97e69",
+  "method": "harness/route_b.harness_revision's inputs, less the per-arm seed (pinned by each prepare receipt)"
+}
