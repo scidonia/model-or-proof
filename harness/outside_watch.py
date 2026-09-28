@@ -106,6 +106,14 @@ class OutsideWatch:
                 continue
             if self._ready.is_set() is False and ("Watches" in line or "Setting up" in line):
                 continue
+            if line.startswith("Watching new directory "):
+                # An announcement, not an event. `-r` reports each watch it *adds*, so creating a
+                # subdirectory of the tree prints `Watching new directory <path>` immediately before the
+                # matching `CREATE,ISDIR <path>`: the tree is more observed than a moment before, not
+                # less. A writer that organises its scratch into a subdirectory of the one path it may
+                # write is the one most likely to print it, so reading it as a fault withholds the
+                # verdict of the most compliant run.
+                continue
             match = _EVENT_LINE.match(line)
             if match is None or "OVERFLOW" in line.upper():
                 # A queue overflow or anything unparseable: the stream has a gap, so the observation is
