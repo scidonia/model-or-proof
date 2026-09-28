@@ -188,8 +188,9 @@ def read_cfg(config: Path) -> dict:
 def _kill_tree(proc: subprocess.Popen) -> None:
     """Kill a process and everything it spawned.
 
-    TLC's launcher shell leaves the JVM in a child process; killing only the shell leaves the pipe
-    open, so the reader waits for a process nobody is waiting for and the run's wall-clock is wrong.
+    The pinned wrapper execs the JVM, so the process started here *is* the JVM. Killing its process
+    group (runs are launched with ``start_new_session``) takes the JVM and any children it started, and
+    closes the pipe the reader thread is waiting on.
     """
     if proc.poll() is not None:
         return
@@ -290,6 +291,14 @@ def run_tlc(
     # keeping a second `-Xmx` from the caller's environment would make the row's claim unattributable.
     env = os.environ.copy()
     if heap_mib is not None:
+        # `_JAVA_OPTIONS` (and, on newer JDKs, `JDK_JAVA_OPTIONS`) is read by the JVM *after*
+        # JAVA_TOOL_OPTIONS and overrides it (measured on the pinned JRE: an ambient
+        # `_JAVA_OPTIONS=-Xmx1000m` left the JAVA_TOOL_OPTIONS pickup printing -Xmx14336m while the usable
+        # heap fell to 958MB). Left in place it would make an explicit request a lie the row cannot show.
+        # Only an explicit request scrubs them — an unpinned run keeps the caller's environment — and they
+        # are removed from the child's copy, never from the caller's process.
+        env.pop("_JAVA_OPTIONS", None)
+        env.pop("JDK_JAVA_OPTIONS", None)
         env["JAVA_TOOL_OPTIONS"] = f"-Xmx{heap_mib}m"
 
     started = time.monotonic()
