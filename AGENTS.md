@@ -29,6 +29,14 @@ it is the contract of the experiment.
   measured acceptance runs, not full-suite fixtures. Keep pytest fast and deterministic with
   structural contract checks; preserve the real result rows, trace logs, and provenance separately.
 
+## Commits
+
+- A commit message **body** goes through `git commit -F <file>`, never `git commit -m`, whenever it
+  contains backticks, `$`, or anything else the shell expands. With `-m` the shell substitutes first, so
+  the recorded message silently loses the segment and `git log` reads plausibly while the reasoning is
+  gone — a message that was never written cannot be recovered from a message that looks fine. `-F` also
+  keeps a long body legible, which the entries here are.
+
 ## Layout
 
 | Path | Purpose |
