@@ -1,5 +1,6 @@
 """Behavior scenarios for the file-mode closure oracle (tests/closure-oracle-contract.md)."""
 
+import subprocess
 import sys
 from pathlib import Path
 
@@ -165,3 +166,32 @@ def test_file_mode_feedback_carries_the_first_lean_error(monkeypatch, tmp_path):
     assert retries, prompts
     assert "bogus_tactic_name" in retries[0], retries[0]
     assert "depends on axioms" not in retries[0], retries[0]
+
+
+def test_nested_namespace_decoy_cannot_certify_unproved_paxos(tmp_path):
+    """Scenario 7: the checker must ask about Paxos.agreement, not Message.agreement."""
+    seed = REPO / "proofs" / "lean" / "paxos" / "baseline" / "Paxos.lean"
+    package = REPO / "proofs" / "lean" / "paxos"
+    pristine = seed.read_text()
+    assert "theorem agreement " in pristine
+
+    candidate = tmp_path / "PaxosDecoy.lean"
+    candidate.write_text(
+        pristine
+        + "\nnamespace Message\n"
+        + "theorem agreement : True := by trivial\n"
+        + "end Message\n"
+    )
+    proc = subprocess.run(
+        [
+            sys.executable, "-m", "harness.closure_oracle", str(candidate),
+            "--seed", str(seed), "--package", str(package),
+        ],
+        cwd=REPO,
+        capture_output=True,
+        text=True,
+        timeout=180,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "NOT-CLOSED" in proc.stdout, proc.stdout
+    assert "sorryAx" in proc.stdout, proc.stdout

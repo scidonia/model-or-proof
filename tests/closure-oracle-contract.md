@@ -93,6 +93,34 @@ The untouched seed's `errors` is **empty** (its `sorry` warning is dropped) whil
 - **Expected red (before the fix)**: the feedback was the raw tail, so the next prompt does not contain
   the identifier — recovered by temporarily restoring the pre-fix feedback path.
 
+## Scenario 7 — a decoy named like a nested namespace cannot stand in for the seeded theorem
+
+- **Actor**: the Route B file-mode caller asking the closure-oracle CLI to certify a proof.
+- **Boundary**: `python -m harness.closure_oracle <candidate> --seed <recorded seed> --package <Lean package>`
+  **without** manually supplying `--theorem` — exactly how the caller derives the seeded declaration.
+- **Given**: the immutable `proofs/lean/paxos/baseline/Paxos.lean` declares the actual statement
+  `Paxos.agreement` in `namespace Paxos`, after a nested `namespace Message … end Message`, with
+  `by sorry`. In a temporary directory a candidate keeps every baseline byte and *appends* an
+  unrelated, trivially proved `Message.agreement : True`. It therefore elaborates and preserves
+  the prefix while the **actual** seeded `Paxos.agreement` still depends on `sorryAx`.
+- **When**: the caller asks the CLI to check that candidate against the recorded seed.
+- **Then**: the checker reports **NOT-CLOSED** for the actual `Paxos.agreement` and an axiom set
+  containing `sorryAx`; it cannot report CLOSED because the appended `Message.agreement` has no axioms.
+  Conversely, a genuinely proved `Paxos.agreement` may depend on Lean's permitted
+  `{propext, Classical.choice, Quot.sound}` — closure checks membership in that whitelist, **not**
+  equality with the decoy's empty axiom set. The corrected checker must name the declaration it
+  resolved in its report so wrong-name regressions are detectable.
+- **Why**: otherwise a tool-using candidate can append a true same-named neighbour and have the
+  oracle certify that neighbour while the system's safety theorem remains unproved.
+- **Expected pre-implementation failure**: the old seed-namespace scanner ignores `end Message`,
+  wrongly selects `Message.agreement`, and the CLI prints **CLOSED** with `axioms=set()`; the
+  scenario's NOT-CLOSED assertion fails on the false verdict, not on an import or fixture.
+
+This is a local Lean/toolchain scenario: it reaches no model or network, writes its decoy only in
+pytest's temporary directory, and invokes the same prebuilt checker as the existing positive/negative
+oracle fixtures. The existing positive fixture and an after-fix smoke of the retained Paxos proof
+must still accept Lean's three standard axioms; merely requiring `axioms=[]` is not a repair.
+
 ## Expected failure before implementation
 
 A fixture that *edits* a seed must **refuse if its marker is absent** — a candidate built by
@@ -100,7 +128,9 @@ A fixture that *edits* a seed must **refuse if its marker is absent** — a cand
 vacuous and the test can report success while checking nothing. The guard is one line
 (`assert "sorry" in seed_text`), and it turns a silent no-edit into a red at the point of cause.
 
-`closure_oracle` does not exist yet → `ModuleNotFoundError` / `ImportError` (the "does not exist yet"
-row). Observed red run: recorded by the coder once observed.
-
-Run with: `nix develop -c pytest tests/test_closure_oracle.py`
+Scenarios 1–6 were first added before the oracle existed and carry their historical
+`ModuleNotFoundError` / `ImportError` or recovered negative-control reds in this file.
+Scenario 7 is a **new behavior-exists-but-wrong** contract: its own expected CLOSED-vs-NOT-CLOSED
+assertion failure is stated above and must be observed **before** fixing namespace resolution.
+Run it alone with `nix develop -c pytest tests/test_closure_oracle.py::test_nested_namespace_decoy_cannot_certify_unproved_paxos`;
+the complete oracle suite follows once the code fix lands.
