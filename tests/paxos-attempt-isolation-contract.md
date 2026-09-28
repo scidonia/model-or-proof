@@ -99,13 +99,17 @@ from it.
 narrative:
 
 ```
-python -m scripts.audit_attempts --sessions <cell session root>          # one line per attempt
-python -m scripts.audit_attempts --sessions <cell session root> --json    # the committed report
+python -m scripts.audit_attempts --sessions <root>          # one line per attempt
+python -m scripts.audit_attempts --sessions <root> --json    # the committed report
 ```
 
+`<root>` is either the session root whose direct children are the attempts, or the cell or results
+root *above* them — the attempts are found by their `<stem>-<stamp>-r<k>` names, not by a fixed depth.
+
 Exit status **0** means every attempt is clean, **1** means at least one is contaminated, and **2**
-means at least one is unaudited — no readable transcript, or a session directory whose name does not
-identify the attempt — with 2 taking precedence so that a missing audit can never be read as a clean
+means at least one is unaudited — no readable transcript, a session directory whose name does not
+identify the attempt, or a transcript that records **no tool calls at all**, since an empty scan is not
+evidence of no reuse — with 2 taking precedence so that a missing audit can never be read as a clean
 cell.
 
 What is scanned: **every** `toolCall` block in every `*.jsonl` under each attempt directory, not a

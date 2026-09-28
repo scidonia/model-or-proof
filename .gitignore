@@ -12,6 +12,10 @@ results/omp/
 # the transcripts are evidence, but they are large and per-run, so the audit's bounded extract is what
 # gets committed beside the rows (results/route-b-cell-reuse.md precedent).
 results/**/omp/
+# Prepared per-attempt Lean packages: inputs, not evidence. Each is reproducible from the template plus
+# the recorded prepare command and seed digest, and each holds a build directory and a link to the
+# pinned cache. The rows, closures and the audit extract stay tracked.
+results/**/workspaces/
 
 # TLC state pools: one private directory per run (the planner's ruling), so a `-cleanup` cannot delete a
 # sibling run's pool mid-enumeration. The shared `states/` above is TLC's default; this is ours.

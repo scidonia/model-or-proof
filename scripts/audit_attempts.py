@@ -232,6 +232,21 @@ def audit_attempt(directory: Path) -> dict:
         for hit in hits
         if hit.get("class") in INVALIDATING_CLASSES and hit.get("effect") in INVALIDATING_EFFECTS
     ]
+    if not calls:
+        # An empty scan is not evidence of no reuse: a file-mode attempt always issues tool calls, so
+        # a session with none is a different kind of session (or a transcript that did not record them)
+        # and cannot be certified either way.
+        return {
+            "attempt": directory.name,
+            "session": str(directory),
+            "stem": stem,
+            "repetition": repetition,
+            "transcripts": [str(path) for path in transcripts],
+            "calls": 0,
+            "verdict": "unaudited",
+            "reason": "transcript holds no tool calls, so there is nothing to certify",
+            "hits": hits,
+        }
     return {
         "attempt": directory.name,
         "session": str(directory),
@@ -245,19 +260,40 @@ def audit_attempt(directory: Path) -> dict:
     }
 
 
+def attempt_directories(root: Path) -> list[Path]:
+    """The attempt session directories under `root`.
+
+    Both layouts the repository uses are accepted by matching on the **name** rather than on a depth:
+    a session root whose direct children are the attempts (``<cell>/omp/<stem>-<stamp>-r<k>``), or a
+    cell/results root holding them one or two levels down
+    (``<cell>/results/attempt-NNN/omp/<stem>-<stamp>-r<k>``). When nothing matches, the direct children
+    are returned so each is reported *unaudited* rather than silently absent.
+    """
+    if ATTEMPT_DIR.match(root.name):
+        return [root]
+    found = sorted(path for path in root.rglob("*") if path.is_dir() and ATTEMPT_DIR.match(path.name))
+    if found:
+        return found
+    return sorted(path for path in root.iterdir() if path.is_dir()) if root.is_dir() else []
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="scripts.audit_attempts",
         description="Scan every per-attempt tool call for prior-proof reads or copies.",
     )
-    parser.add_argument("--sessions", required=True, help="cell session root: one directory per attempt")
+    parser.add_argument(
+        "--sessions",
+        required=True,
+        help="cell session root, or a cell/results root holding the attempts below it",
+    )
     parser.add_argument("--json", action="store_true", help="emit the full machine-readable report")
     args = parser.parse_args(argv)
 
     root = Path(args.sessions)
-    directories = sorted(path for path in root.iterdir() if path.is_dir()) if root.is_dir() else []
+    directories = attempt_directories(root)
     if not directories:
-        print(f"error: no attempt directories under {root}", file=sys.stderr)
+        print(f"error: no attempt session directories under {root}", file=sys.stderr)
         return 2
 
     reports = [audit_attempt(directory) for directory in directories]
