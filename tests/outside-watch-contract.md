@@ -64,6 +64,17 @@ record that cannot be parsed, a stream that ends mid-record, a line the instrume
 are **no exemptions**: no message is benign, so there is no list to keep correct and no future message
 can be silently treated as serving.
 
+**The recognised set is measured, not guessed, because a name missing from it is a false withholding.**
+Provoking every subscribed operation against the real instrument on a temporary tree — directory create,
+file create, modify, attrib, rename within the tree, delete file, delete directory, move out of the tree
+and back in — emits exactly `CREATE`, `CREATE,ISDIR`, `MODIFY`, `ATTRIB`, `MOVED_FROM`, `MOVED_TO`,
+`DELETE` and `DELETE,ISDIR`, and **every one is in the set**. `DELETE_SELF`, `MOVE_SELF` and `IGNORED`
+arise only when the watched root itself is removed or the watch is dropped, and are in the set too. The
+set also names events unreachable under this `-e` subscription (`ACCESS`, `OPEN`, `CLOSE*`, `UNMOUNT`),
+which is inert in this direction: an unrecognised **token** blinds, conservatively, whereas a blessed
+**message** goes silent — and a superset of event names is exactly the inverse of the exemption that had
+to be retired, where naming one message benign is what turned a refusal into a pass.
+
 ## The handshake is a sentinel, and it is weaker than what it replaces — deliberately
 
 `-q` costs the `Watches established.` line, and waiting for a *message* only proves the tool can print.
@@ -72,6 +83,11 @@ it, because waiting for your own event proves the watch works.
 
 - The sentinel is created `O_CREAT|O_EXCL` with a **random nonce** in its name, and matched on the
   **exact assembled path**; a name collision is `blind`, never a crash.
+- **One sentinel is not enough, and that is measured rather than cautious.** A sentinel written while the
+  recursive setup is still walking the tree is **silently missed** — observed against the real instrument,
+  where a single sentinel blinded a healthy watch. The handshake therefore retries with a **fresh nonce**
+  within the ready budget and reports blindness only when no sentinel's event arrives at all. A handshake
+  is a new way to trip, and this is its own false-withholding mode.
 - `allowed` is `.runs`, which is the run's own output directory, so the sentinel belongs in a dedicated
   hidden subdirectory of it (for example `.runs/.watch-probe/`) and is deleted immediately — a DELETE
   inside `allowed` is benign by definition.
