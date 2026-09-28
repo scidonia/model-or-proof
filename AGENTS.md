@@ -19,6 +19,12 @@ it is the contract of the experiment.
   nothing about Paxos's runtime.
 - Every new or changed scenario is observed failing before the code that satisfies it; the failure is
   reported, not asserted from memory.
+- A command whose **exit status carries meaning** is read with its output captured or left unmodified.
+  A pipeline's status belongs to its last stage, and `| head`/`| tail` can also turn the writer's own
+  zero into a nonzero through a broken pipe — so `… | tail -3` shows what ran, never whether it passed.
+  This applies wherever a status is evidence: a test run, a gate such as `scripts/audit_attempts.py`
+  whose `0`/`1`/`2` mean different things, or a measurement whose outcome is decided by the runner's
+  own code.
 - Resource-heavy TLC calibration, diagnostic reachability witnesses, and live AI cells are explicit
   measured acceptance runs, not full-suite fixtures. Keep pytest fast and deterministic with
   structural contract checks; preserve the real result rows, trace logs, and provenance separately.

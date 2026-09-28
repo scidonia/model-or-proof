@@ -170,8 +170,9 @@ per-attempt property.
 
 **Reading the exit status.** Truncating the output (`| head`, `| grep`) closes the pipe and can turn the
 writer's zero status into a nonzero one, so a caller reading the status captures the output first or
-reads it unmodified — the audit's status is a gate, and `0`, `1` and `2` mean different things. `--json`
-emits `{"revision": …, "attempts": […]}`, with `revision` null when no record was supplied.
+reads it unmodified — the audit's status is a gate, and `0`, `1` and `2` mean different things. That is
+the repository-wide rule stated in `AGENTS.md` (Test policy), not a local convention of this tool.
+`--json` emits `{"revision": …, "attempts": […]}`, with `revision` null when no record was supplied.
 
 What is scanned: **every** `toolCall` block in every `*.jsonl` under each attempt directory, not a
 search for path-shaped strings. Bare relative filenames, tokens inside dynamically generated shell
