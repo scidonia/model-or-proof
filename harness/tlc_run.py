@@ -302,51 +302,65 @@ def run_tlc(
         env["JAVA_TOOL_OPTIONS"] = f"-Xmx{heap_mib}m"
 
     started = time.monotonic()
-    proc = subprocess.Popen(
-        cmd,
-        cwd=str(spec.parent),
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        bufsize=1,
-        start_new_session=True,
-    )
-
     state: dict = {"startup_s": None, "peak_rss_mb": 0.0, "timed_out": False}
     lines: list[str] = []
+    # A `--tlc-bin` that cannot be launched is a diagnosis about the caller's input, not a crash of the
+    # harness: the path is recorded on the row so a reader can see which binary was tried.
+    launch_error: str | None = None
+    proc: subprocess.Popen | None = None
 
-    def watch_memory() -> None:
-        while proc.poll() is None:
-            rss = _peak_rss_mb(proc.pid)
+    def watch_memory(child: subprocess.Popen) -> None:
+        while child.poll() is None:
+            rss = _peak_rss_mb(child.pid)
             if rss is not None:
                 state["peak_rss_mb"] = max(state["peak_rss_mb"], rss)
             time.sleep(0.05)
 
-    def read_output() -> None:
-        for line in proc.stdout:  # type: ignore[union-attr]
+    def read_output(child: subprocess.Popen) -> None:
+        for line in child.stdout:  # type: ignore[union-attr]
             if state["startup_s"] is None and "Starting..." in line:
                 state["startup_s"] = round(time.monotonic() - started, 3)
             lines.append(line)
 
-    reader = threading.Thread(target=read_output, daemon=True)
-    memory = threading.Thread(target=watch_memory, daemon=True)
-    reader.start()
-    memory.start()
-
+    # The pool's removal belongs here rather than to a TLC flag, and its `finally` is established *before*
+    # the launch rather than after it: `finally` runs on the normal path, the capped path (`TimeoutExpired`
+    # below) and an exception, and starting it before `subprocess.Popen` is what also covers the failure
+    # where no process ever exists — a mistyped binary raises `OSError` out of the launch, and a `finally`
+    # that began only once a process existed would leave the empty metadir behind for exactly the failure
+    # the caller most needs explained.
     try:
-        proc.wait(timeout=cap_s)
-    except subprocess.TimeoutExpired:
-        state["timed_out"] = True
-        _kill_tree(proc)
+        proc = subprocess.Popen(
+            cmd,
+            cwd=str(spec.parent),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+            start_new_session=True,
+        )
+    except OSError as exc:
+        # Caught where it happens, so the row's existing error path carries the attempted path and the
+        # operating system's own reason instead of a traceback escaping the function. No process exists,
+        # so there is nothing to read, join or kill.
+        launch_error = f"could not launch the TLC binary {tlc_bin!r}: {exc}"
+    else:
+        reader = threading.Thread(target=read_output, args=(proc,), daemon=True)
+        memory = threading.Thread(target=watch_memory, args=(proc,), daemon=True)
+        reader.start()
+        memory.start()
+        try:
+            proc.wait(timeout=cap_s)
+        except subprocess.TimeoutExpired:
+            state["timed_out"] = True
+            _kill_tree(proc)
+        finally:
+            reader.join(timeout=10)
+            memory.join(timeout=10)
     finally:
-        reader.join(timeout=10)
-        memory.join(timeout=10)
-        # The pool's removal belongs here rather than to a TLC flag: `finally` runs on the normal path, the
-        # capped path (`TimeoutExpired` above) and an exception, so no sweep leaves a metadir behind and no
-        # removal happens while the run that owns it is still using it.
         shutil.rmtree(metadir, ignore_errors=True)
 
+    returncode = proc.returncode if proc is not None else None
     wall_clock_s = round(time.monotonic() - started, 3)
     log = "".join(lines)
     parsed = parse_tlc_log(log)
@@ -359,13 +373,16 @@ def run_tlc(
     # which says nothing about what was checked and is already not a verdict.
     mismatch = profile_mismatch(requested, observed, delivered)
 
-    if state["timed_out"]:
+    if launch_error is not None:
+        # First, because a launch that never happened has no TLC output and cannot be any other verdict.
+        outcome = "error"
+    elif state["timed_out"]:
         outcome = "timeout"
     elif mismatch is not None:
         outcome = "error"
     elif parsed["violation"] is not None:
         outcome = "violation"
-    elif parsed["generated"] is not None and proc.returncode == 0:
+    elif parsed["generated"] is not None and returncode == 0:
         outcome = "success"
     else:
         outcome = "error"
@@ -386,6 +403,9 @@ def run_tlc(
             "observed": observed,
         },
         "profile_error": mismatch,
+        # The harness's own explanation for a run that never launched (the OS's reason and the path the
+        # caller named), which `build_row` places in the row's `error` tail ahead of TLC's own output.
+        "launch_error": launch_error,
         "log": log,
         "cmd": cmd,
     }
@@ -426,12 +446,14 @@ def build_row(
 ) -> dict:
     parsed = observation["parsed"]
     completed = parsed["generated"] is not None and observation.get("profile_error") is None
-    # A profile mismatch is a failure TLC itself never printed, so the row's failure tail starts with the
-    # harness's own sentence and is followed by whatever TLC did say. Without it the diagnostic would be
-    # no more specific than the banner in `artifacts.log`.
+    # A profile mismatch and a launch that never happened are failures TLC itself never printed, so the
+    # row's failure tail starts with the harness's own sentence and is followed by whatever TLC did say.
+    # Without the first the diagnostic would be no more specific than the banner in `artifacts.log`;
+    # without the second a mistyped `--tlc-bin` would leave an `error` row naming nothing.
     error = failure_tail(observation["log"])
-    if observation.get("profile_error"):
-        error = [observation["profile_error"], *error]
+    for diagnostic in (observation.get("profile_error"), observation.get("launch_error")):
+        if diagnostic:
+            error = [diagnostic, *error]
     return {
         "task": task,
         "route": "tlc",
