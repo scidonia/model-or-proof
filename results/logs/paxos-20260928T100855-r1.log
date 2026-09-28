@@ -1,0 +1,32 @@
+tlc-workers1-fp28-seed1-metadir/home/gavin/dev/model-or-proof/specs/tla/paxos/.tlc-states/run-5r3bcs6h-config/home/gavin/dev/model-or-proof/specs/tla/paxos/PaxosN5.cfg/home/gavin/dev/model-or-proof/specs/tla/paxos/PaxosFinite.tla
+
+Picked up JAVA_TOOL_OPTIONS: -Xmx14336m
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 28 and seed 1 with 1 worker on 20 cores with 12743MB heap and 64MB offheap memory (Linux 6.8.0-85-generic amd64, Oracle Corporation 1.8.0_504 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/paxos/PaxosFinite.tla
+Parsing file /tmp/Integers.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module PaxosFinite
+Starting... (2026-09-28 10:06:48)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-28 10:06:48.
+Progress(11) at 2026-09-28 10:06:51: 76,707 states generated (76,707 s/min), 19,829 distinct states found (19,829 ds/min), 10,771 states left on queue.
+Progress(17) at 2026-09-28 10:07:51: 2,054,523 states generated (1,977,816 s/min), 370,641 distinct states found (350,812 ds/min), 130,801 states left on queue.
+Progress(20) at 2026-09-28 10:08:51: 4,796,443 states generated (2,741,920 s/min), 687,665 distinct states found (317,024 ds/min), 30,840 states left on queue.
+Model checking completed. No error has been found.
+  Estimates of the probability that TLC did not check all reachable states
+  because two distinct states had the same fingerprint:
+  calculated (optimistic):  val = 1.7E-7
+  based on the actual fingerprints:  val = 9.0E-9
+5041259 states generated, 701505 distinct states found, 0 states left on queue.
+The depth of the complete state graph search is 25.
+The average outdegree of the complete state graph is 1 (minimum is 0, the maximum 11 and the 95th percentile is 4).
+Finished in 02min 06s at (2026-09-28 10:08:55)

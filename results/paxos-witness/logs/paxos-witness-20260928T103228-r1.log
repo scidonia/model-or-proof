@@ -1,0 +1,83 @@
+tlc-workers1-fp28-seed1-metadir/home/gavin/dev/model-or-proof/specs/tla/paxos/.tlc-states/run-6ek25_f0-config/home/gavin/dev/model-or-proof/specs/tla/paxos/PaxosN3Witness.cfg/home/gavin/dev/model-or-proof/specs/tla/paxos/PaxosFinite.tla
+
+Picked up JAVA_TOOL_OPTIONS: -Xmx14336m
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Running breadth-first search Model-Checking with fp 28 and seed 1 with 1 worker on 20 cores with 12743MB heap and 64MB offheap memory (Linux 6.8.0-85-generic amd64, Oracle Corporation 1.8.0_504 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /home/gavin/dev/model-or-proof/specs/tla/paxos/PaxosFinite.tla
+Parsing file /tmp/Integers.tla
+Parsing file /tmp/FiniteSets.tla
+Parsing file /tmp/TLC.tla
+Parsing file /tmp/Naturals.tla
+Parsing file /tmp/Sequences.tla
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module Sequences
+Semantic processing of module FiniteSets
+Semantic processing of module TLC
+Semantic processing of module PaxosFinite
+Starting... (2026-09-28 10:32:28)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-09-28 10:32:28.
+Error: Invariant NoChoice is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ msgs = {}
+/\ maxVBal = <<-1, -1, -1>>
+/\ maxVal = <<"NoValue", "NoValue", "NoValue">>
+/\ maxBal = <<-1, -1, -1>>
+
+State 2: <Phase1a line 69, col 15 to line 71, col 54 of module PaxosFinite>
+/\ msgs = {[type |-> "1a", bal |-> 0]}
+/\ maxVBal = <<-1, -1, -1>>
+/\ maxVal = <<"NoValue", "NoValue", "NoValue">>
+/\ maxBal = <<-1, -1, -1>>
+
+State 3: <Phase1b line 82, col 3 to line 88, col 37 of module PaxosFinite>
+/\ msgs = { [type |-> "1a", bal |-> 0],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 1] }
+/\ maxVBal = <<-1, -1, -1>>
+/\ maxVal = <<"NoValue", "NoValue", "NoValue">>
+/\ maxBal = <<0, -1, -1>>
+
+State 4: <Phase1b line 82, col 3 to line 88, col 37 of module PaxosFinite>
+/\ msgs = { [type |-> "1a", bal |-> 0],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 1],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 2] }
+/\ maxVBal = <<-1, -1, -1>>
+/\ maxVal = <<"NoValue", "NoValue", "NoValue">>
+/\ maxBal = <<0, 0, -1>>
+
+State 5: <Phase2a line 99, col 3 to line 110, col 42 of module PaxosFinite>
+/\ msgs = { [type |-> "1a", bal |-> 0],
+  [type |-> "2a", bal |-> 0, val |-> "v1"],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 1],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 2] }
+/\ maxVBal = <<-1, -1, -1>>
+/\ maxVal = <<"NoValue", "NoValue", "NoValue">>
+/\ maxBal = <<0, 0, -1>>
+
+State 6: <Phase2b line 119, col 3 to line 125, col 45 of module PaxosFinite>
+/\ msgs = { [type |-> "1a", bal |-> 0],
+  [type |-> "2a", bal |-> 0, val |-> "v1"],
+  [type |-> "2b", bal |-> 0, acc |-> 1, val |-> "v1"],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 1],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 2] }
+/\ maxVBal = <<0, -1, -1>>
+/\ maxVal = <<"v1", "NoValue", "NoValue">>
+/\ maxBal = <<0, 0, -1>>
+
+State 7: <Phase2b line 119, col 3 to line 125, col 45 of module PaxosFinite>
+/\ msgs = { [type |-> "1a", bal |-> 0],
+  [type |-> "2a", bal |-> 0, val |-> "v1"],
+  [type |-> "2b", bal |-> 0, acc |-> 1, val |-> "v1"],
+  [type |-> "2b", bal |-> 0, acc |-> 2, val |-> "v1"],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 1],
+  [maxVBal |-> -1, maxVal |-> "NoValue", type |-> "1b", bal |-> 0, acc |-> 2] }
+/\ maxVBal = <<0, 0, -1>>
+/\ maxVal = <<"v1", "v1", "NoValue">>
+/\ maxBal = <<0, 0, -1>>
+
+417 states generated, 215 distinct states found, 130 states left on queue.
+The depth of the complete state graph search is 7.
+The average outdegree of the complete state graph is 3 (minimum is 0, the maximum 6 and the 95th percentile is 5).
+Finished in 00s at (2026-09-28 10:32:28)
