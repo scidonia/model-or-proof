@@ -43,6 +43,12 @@ TLC_VERSION_RE = re.compile(r"Version ([\d.]+) of")
 BANNER_HEAP_RE = re.compile(r"\bwith (\d+)MB heap\b")
 BANNER_FP_RE = re.compile(r"\bwith fp (\d+)\b")
 BANNER_SEED_RE = re.compile(r"\band seed (-?\d+)\b")
+# The JVM prints the options it was handed, e.g. "Picked up JAVA_TOOL_OPTIONS: -Xmx14336m". That line
+# is the *delivery witness* for a requested heap: the JVM's own statement of the -Xmx it received. It
+# is deliberately not the banner, whose heap is the usable maximum on a different basis (8/9 of -Xmx
+# under ParallelGC) and which therefore never confirms the delivered option.
+PICKUP_RE = re.compile(r"Picked up JAVA_TOOL_OPTIONS: (.+)")
+XMX_RE = re.compile(r"-Xmx(\d+)m\b")
 
 
 def _num(text: str) -> int:
@@ -109,19 +115,51 @@ def parse_tlc_banner(text: str) -> dict | None:
     }
 
 
+def parse_heap_delivery(text: str) -> str | None:
+    """The ``-Xmx<n>m`` the JVM says it was handed, or None when no pickup line states one.
+
+    This is the *delivery* side of a requested heap, and it is a different quantity from the banner's
+    usable heap: the JVM echoes the option it received, while the banner reports the maximum the run
+    could actually use. When several pickup lines exist the last one wins, matching the JVM's own
+    last-option-wins handling of its command line.
+    """
+    delivered = None
+    for match in PICKUP_RE.finditer(text):
+        options = XMX_RE.findall(match.group(1))
+        if options:
+            delivered = options[-1]
+    return f"-Xmx{delivered}m" if delivered is not None else None
+
+
 # The row-facing names of the profile controls, used in the mismatch diagnostic so the sentence names
 # the quantity rather than the dict key (scenario 7 requires the fingerprint mismatch to be named).
-PROFILE_LABELS = {"heap_mib": "heap (MiB)", "fp_index": "fingerprint fp", "seed": "seed"}
+PROFILE_LABELS = {"fp_index": "fingerprint fp", "seed": "seed"}
 
 
-def profile_mismatch(requested: dict, observed: dict | None) -> str | None:
-    """The first *requested* control the run's banner contradicts, or None when the banner confirms
-    every one of them.
+def profile_mismatch(
+    requested: dict, observed: dict | None, heap_delivery: str | None
+) -> str | None:
+    """The first *requested* control the run contradicts, or None when the run confirms every one.
 
     Only non-null requests are compared: a null request is "not asked for", not "asked for null", so an
-    unpinned run cannot mismatch an ambient setting it never claimed (scenario 6). A request whose
-    banner value is missing is a mismatch too — an unconfirmed pin is not a confirmed one.
+    unpinned run cannot mismatch an ambient setting it never claimed (scenario 6). The heap is checked
+    against the JVM's own delivery witness rather than the banner — a banner echoing the request is not
+    evidence that the JVM received it — while the fingerprint index and seed are checked against the
+    banner, where TLC states them. A request the run cannot confirm is a mismatch: an unconfirmed pin
+    is not a confirmed one, and a request with no banner at all is unconfirmed by definition.
     """
+    if observed is None and any(value is not None for value in requested.values()):
+        return "a fixed profile was requested, but the run printed no TLC profile banner"
+
+    heap = requested["heap_mib"]
+    if heap is not None:
+        wanted = f"-Xmx{heap}m"
+        if heap_delivery != wanted:
+            return (
+                f"requested heap {wanted}, but the JVM reported "
+                f"{heap_delivery if heap_delivery is not None else 'no JAVA_TOOL_OPTIONS pickup'}"
+            )
+
     for field, label in PROFILE_LABELS.items():
         want = requested[field]
         if want is None:
@@ -304,11 +342,12 @@ def run_tlc(
     parsed = parse_tlc_log(log)
     requested = {"heap_mib": heap_mib, "fp_index": fp_index, "seed": seed}
     observed = parse_tlc_banner(log)
+    delivered = parse_heap_delivery(log)
     # A contradictory banner outranks the run's own verdict other than a timeout: a completed summary
     # whose profile does not match the request is not evidence about the *requested* configuration, and
     # neither is a violation found under an unconfirmed fingerprint/seed. It never outranks a timeout,
     # which says nothing about what was checked and is already not a verdict.
-    mismatch = profile_mismatch(requested, observed)
+    mismatch = profile_mismatch(requested, observed, delivered)
 
     if state["timed_out"]:
         outcome = "timeout"
@@ -329,8 +368,13 @@ def run_tlc(
         "states_reached": parsed["states_reached"],
         "parsed": parsed,
         # What was asked for versus what the run reported using: the row's provenance, not the run's
-        # verdict. `observed` is null when the log carried no banner at all.
-        "tlc_profile": {"requested": requested, "observed": observed},
+        # verdict. `heap_delivery` is the JVM's own `-Xmx` witness (null when it printed none) and
+        # `observed` is the banner's profile (null when the log carried no banner at all).
+        "tlc_profile": {
+            "requested": requested,
+            "heap_delivery": delivered,
+            "observed": observed,
+        },
         "profile_error": mismatch,
         "log": log,
         "cmd": cmd,
