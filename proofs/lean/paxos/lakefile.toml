@@ -10,13 +10,16 @@ name = "paxos"
 # as it is written. Until then the targets below name only the two seeds that exist.
 # `defaultTargets` has to precede the `[[…]]` tables below: once a dependency table starts, a bare key
 # belongs to that dependency table rather than to the package.
-defaultTargets = ["Paxos", "PaxosMutant"]
+defaultTargets = ["PaxosProved", "Paxos", "PaxosMutant"]
 
 [[lean_lib]]
 name = "Paxos"
 
 [[lean_lib]]
 name = "PaxosMutant"
+
+[[lean_lib]]
+name = "PaxosProved"
 
 [[require]]
 name = "mathlib"
