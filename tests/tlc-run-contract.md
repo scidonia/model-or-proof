@@ -61,8 +61,111 @@ completed proof of the property, and a run that was killed must not be reported 
 - **Why**: the protocol's timeout policy — a killed run must not be reported as the property
   established or refuted.
 
+## Scenario 5 — a requested TLC profile is checked against what TLC reports
+
+- **Actor**: the researcher measuring a pinned Route A instance.
+- **Boundary**: the `harness.tlc_run` command line and its persisted result row/log.
+- **Given**: the already-measured fast token-ring `N=3` task, an empty temporary result directory,
+  and a local stand-in TLC executable that prints the JVM's delivery line
+  `Picked up JAVA_TOOL_OPTIONS: -Xmx14336m`, then the **observed** OpenJDK8 ParallelGC usable-heap
+  banner value **12743MB** for a requested `-Xmx14336m`, a completed summary, fp 28 and seed 1.
+  The stand-in shape is fixed by the real-token-ring smoke, not invented from the earlier contract
+  (`tests/fixtures/fake_tlc_profile.py`).
+- **When**: the researcher selects `--instance 3 --heap-mib 14336 --fp-index 28 --seed 1` with that
+  executable, under the existing one-worker setting.
+- **Then**: one successful row reports 36 distinct states,
+  `tlc_profile.requested == {heap_mib: 14336, fp_index: 28, seed: 1}`,
+  `tlc_profile.heap_delivery == "-Xmx14336m"` parsed from the JVM's own pickup line, and
+  `tlc_profile.observed == {heap_mib: 12743, fp_index: 28, seed: 1}` parsed from TLC's banner.
+  **The -Xmx ceiling and the banner's usable maximum are not numerically equal.** `-fp 28 -seed 1`
+  reach TLC; the row's existing `peak_rss_mb` remains whole-process *used* memory, not either maximum.
+- **Why**: matching the requested maximum to its delivery witness and separately recording the
+  usable maximum makes a fixed profile honest on the installed JRE.
+- **Expected first failure after this planner-owned revision, before correction**: the current
+  runner falsely reports `outcome: error` because it compares the requested 14336 against TLC's
+  real/banner 12743 (an assertion on `outcome: success`), not because the CLI or fake is missing.
+
+## Scenario 6 — omitted profile flags remain visibly unset
+
+- **Actor**: the researcher inspecting a legacy-style, unpinned TLC invocation.
+- **Boundary**: the same command line/result row.
+- **Given**: the same local executable emits a successful banner with effective heap 14247 MiB,
+  polynomial index 7, and seed 17 when no flags are requested.
+- **When**: the researcher invokes the fast task without any profile flags.
+- **Then**: the row succeeds and distinguishes `tlc_profile.requested == {heap_mib: null,
+  fp_index: null, seed: null}` from `tlc_profile.observed == {heap_mib: 14247, fp_index: 7,
+  seed: 17}`, with `tlc_profile.heap_delivery: null` because no heap was requested. Older rows
+  lacking `tlc_profile` mean **not recorded**, not a retrospectively inferred set of null requests.
+- **Why**: omitted settings can happen to equal explicitly requested settings without making the
+  two measurements the same configuration.
+- **Expected first failure after this planner-owned revision, before correction**: the current
+  runner's persisted row lacks `tlc_profile.heap_delivery` (`KeyError`); its pre-revision
+  red was the entirely missing `tlc_profile` object.
+
+## Scenario 7 — a contradictory banner cannot produce a pinned success
+
+- **Actor**: the researcher attempting a fixed-profile Route A cell.
+- **Boundary**: the same command line/result row/log.
+- **Given**: the stand-in prints a **correct** JVM `-Xmx14336m` pickup and the corresponding
+  12743MB banner, plus a plausible completed 36-state summary, but reports fingerprint index
+  **29**, not requested **28**.
+- **When**: the researcher invokes `--heap-mib 14336 --fp-index 28 --seed 1`.
+- **Then**: the row is `outcome: error`, has no accepted `tlc` summary, preserves
+  `tlc_profile.heap_delivery == "-Xmx14336m"`, carries requested fp 28 and observed fp 29,
+  gives a diagnostic naming **fp** (not an irrelevant numeric heap mismatch), and retains the log.
+- **Why**: an incorrect fingerprint polynomial must not silently settle a different configuration.
+- **Expected first failure after planner revision**: missing `heap_delivery` on the row or an error
+  naming heap before fp because the old runner compares unlike heap quantities.
+
+## Scenario 8 — a banner alone cannot attest delivery of an explicit heap request
+
+- **Actor**: the researcher attempting a fixed-profile Route A cell.
+- **Boundary**: the runner CLI and persisted row/log.
+- **Given**: the local fake still reports a 12743MB banner, fp 28 and seed 1 with a complete
+  36-state summary, but deliberately **omits** the JVM `Picked up JAVA_TOOL_OPTIONS:` line.
+- **When**: the researcher requests `--heap-mib 14336 --fp-index 28 --seed 1`.
+- **Then**: `outcome: error`, `tlc: null`, `tlc_profile.requested.heap_mib: 14336`,
+  `tlc_profile.observed.heap_mib: 12743`, `tlc_profile.heap_delivery: null`, a heap-delivery
+  diagnostic and the raw log. There is **no banner fallback** for a claimed explicit heap.
+- **Why**: a banner value can coincidentally resemble a requested maximum without proving that
+  this invocation delivered the requested JVM option.
+- **Expected first failure before correction**: the current row lacks `heap_delivery` (`KeyError`)
+  or, if it gets the field but still trusts a banner echo, incorrectly reports success.
+
+## Scenario 9 — a caller's JVM override cannot defeat the explicitly pinned heap
+
+- **Actor**: the researcher running a pinned Route A cell from a shell with inherited JVM options.
+- **Boundary**: `python -m harness.tlc_run` and its persisted row and TLC log.
+- **Given**: the caller environment contains `_JAVA_OPTIONS=-Xmx1000m` and
+  `JDK_JAVA_OPTIONS=-Xmx1000m`. The stand-in TLC child reads its actual inherited environment:
+  if `_JAVA_OPTIONS` reaches it, the fake prints the JVM's second `Picked up _JAVA_OPTIONS:` line
+  and the reviewer-measured **958MB** usable heap for this later override; with only the runner's
+  `JAVA_TOOL_OPTIONS=-Xmx14336m`, it reports **12743MB**.
+- **When**: the researcher selects token-ring N3 with explicit
+  `--heap-mib 14336 --fp-index 28 --seed 1`.
+- **Then**: the successful row reports 36 distinct states, requested heap 14336, independently
+  confirmed `heap_delivery: "-Xmx14336m"`, banner usable heap **12743**, and its raw log has
+  **no** `Picked up _JAVA_OPTIONS:` line. Only the TLC child's environment is scrubbed: the
+  runner does not change the caller's shell. Without an explicit heap request, the runner retains
+  its pre-existing environment behavior.
+- **Why**: this OpenJDK8 JVM applies `_JAVA_OPTIONS` *after* `JAVA_TOOL_OPTIONS`; witnessing
+  delivery alone cannot establish the heap actually selected if an inherited override survives.
+- **Expected first failure before implementation**: the current runner copies all of `os.environ`
+  into the TLC child; it appends `outcome: success` with **958MB observed**, so the assertion that
+  `tlc_profile.observed.heap_mib == 12743` fails (not a missing fixture or argument).
+
+This fake is a local parser/provenance substitute; it makes **no** model, network, clock or external
+filesystem call. The coder additionally smokes the *actual* measured-fast token-ring N3 with the
+explicit chosen profile after implementation to verify the real wrapper's `JAVA_TOOL_OPTIONS` and TLC
+banner (outside these deterministic scenarios). Full Paxos N5/N6 remeasurements are acceptance rows,
+not pytest fixtures. Do not modify the mutable `tests/` files as a coder.
+
 ## Expected failure before implementation
 
-Every scenario fails with an unresolved import (`harness.tlc_run` does not exist), which is the
-`does not exist yet` row of the authoring guide. After the first implementation, scenarios 1–4 must
-pass, and the observed failure output from the red run is reported with the implementation report.
+Historical scenarios 1–4 were observed red on unresolved `harness.tlc_run` imports before the runner
+existed. Scenarios 5–7 were first red before their CLI implementation and again before the
+heap-delivery correction. Scenario 8 is non-vacuous under a faithful reviewer scratch mutation but
+**was not observed red before the satisfying code landed**; that failure-first violation remains
+reported in the plan/review record rather than silently reclassified as a red. Scenario 9 above
+must be observed failing for its specific **ambient override** assertion before its production fix.
+No scenario explores an unmeasured Paxos instance in pytest.

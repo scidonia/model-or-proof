@@ -102,3 +102,100 @@ def test_killed_run_is_a_timeout_not_a_verdict(tmp_path):
     assert row["states_reached"] == 337897
     assert row["tlc"] is None
     assert Path(row["artifacts"]["log"]).exists()
+
+
+def test_requested_tlc_profile_is_confirmed_by_observed_banner(tmp_path):
+    """Scenario 5: a completed check records the profile TLC actually reports."""
+    proc = run_runner(
+        tmp_path, "--instance", "3", "--tlc-bin", str(FIXTURES / "fake_tlc_profile.py"),
+        "--heap-mib", "14336", "--fp-index", "28", "--seed", "1",
+    )
+    assert proc.returncode == 0, proc.stderr
+
+    row = rows(tmp_path)[0]
+    assert row["outcome"] == "success"
+    assert row["tlc"]["distinct"] == 36
+    assert row["tlc_profile"]["requested"] == {
+        "heap_mib": 14336, "fp_index": 28, "seed": 1,
+    }
+    assert row["tlc_profile"]["observed"] == {
+        "heap_mib": 12743, "fp_index": 28, "seed": 1,
+    }
+    assert row["tlc_profile"]["heap_delivery"] == "-Xmx14336m"
+
+
+def test_omitted_tlc_flags_are_explicitly_unrequested(tmp_path, monkeypatch):
+    """Scenario 6: an implicit profile is not labelled as a pinned request."""
+    monkeypatch.delenv("JAVA_TOOL_OPTIONS", raising=False)
+    monkeypatch.delenv("_JAVA_OPTIONS", raising=False)
+    proc = run_runner(
+        tmp_path, "--instance", "3", "--tlc-bin", str(FIXTURES / "fake_tlc_profile.py"),
+    )
+    assert proc.returncode == 0, proc.stderr
+
+    row = rows(tmp_path)[0]
+    assert row["outcome"] == "success"
+    assert row["tlc_profile"]["requested"] == {
+        "heap_mib": None, "fp_index": None, "seed": None,
+    }
+    assert row["tlc_profile"]["observed"] == {
+        "heap_mib": 14247, "fp_index": 7, "seed": 17,
+    }
+    assert row["tlc_profile"]["heap_delivery"] is None
+
+
+def test_mismatched_tlc_banner_refuses_pinned_success(tmp_path, monkeypatch):
+    """Scenario 7: a contradictory banner cannot settle an official cell."""
+    monkeypatch.setenv("FAKE_TLC_FORCE_FP", "29")
+    proc = run_runner(
+        tmp_path, "--instance", "3", "--tlc-bin", str(FIXTURES / "fake_tlc_profile.py"),
+        "--heap-mib", "14336", "--fp-index", "28", "--seed", "1",
+    )
+    assert proc.returncode == 0, proc.stderr
+
+    row = rows(tmp_path)[0]
+    assert row["outcome"] == "error"
+    assert row["tlc"] is None
+    assert row["tlc_profile"]["requested"]["fp_index"] == 28
+    assert row["tlc_profile"]["observed"]["fp_index"] == 29
+    assert row["tlc_profile"]["heap_delivery"] == "-Xmx14336m"
+    assert "fp" in str(row["error"]).lower()
+    assert Path(row["artifacts"]["log"]).exists()
+
+
+def test_missing_java_heap_pickup_refuses_banner_only_success(tmp_path, monkeypatch):
+    """Scenario 8: the banner alone cannot attest delivery of an explicit -Xmx."""
+    monkeypatch.setenv("FAKE_TLC_SUPPRESS_PICKUP", "1")
+    proc = run_runner(
+        tmp_path, "--instance", "3", "--tlc-bin", str(FIXTURES / "fake_tlc_profile.py"),
+        "--heap-mib", "14336", "--fp-index", "28", "--seed", "1",
+    )
+    assert proc.returncode == 0, proc.stderr
+
+    row = rows(tmp_path)[0]
+    assert row["outcome"] == "error"
+    assert row["tlc"] is None
+    assert row["tlc_profile"]["requested"]["heap_mib"] == 14336
+    assert row["tlc_profile"]["observed"]["heap_mib"] == 12743
+    assert row["tlc_profile"]["heap_delivery"] is None
+    assert "heap" in str(row["error"]).lower()
+    assert Path(row["artifacts"]["log"]).exists()
+
+
+def test_explicit_heap_is_not_overridden_by_inherited_jvm_options(tmp_path, monkeypatch):
+    """Scenario 9: caller JVM flags cannot silently defeat a pinned TLC heap."""
+    monkeypatch.setenv("_JAVA_OPTIONS", "-Xmx1000m")
+    monkeypatch.setenv("JDK_JAVA_OPTIONS", "-Xmx1000m")
+    proc = run_runner(
+        tmp_path, "--instance", "3", "--tlc-bin", str(FIXTURES / "fake_tlc_profile.py"),
+        "--heap-mib", "14336", "--fp-index", "28", "--seed", "1",
+    )
+    assert proc.returncode == 0, proc.stderr
+
+    row = rows(tmp_path)[0]
+    assert row["outcome"] == "success"
+    assert row["tlc"]["distinct"] == 36
+    assert row["tlc_profile"]["requested"]["heap_mib"] == 14336
+    assert row["tlc_profile"]["heap_delivery"] == "-Xmx14336m"
+    assert row["tlc_profile"]["observed"]["heap_mib"] == 12743
+    assert "Picked up _JAVA_OPTIONS:" not in Path(row["artifacts"]["log"]).read_text()
