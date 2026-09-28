@@ -220,6 +220,19 @@ The four earlier task pairs also used the shared default-flag runner, so their e
 
 Required shape, for the contract — not yet authored: `prepare` takes the seed to attempt **and the seeds that attempt may see**, copying the attempted seed with its baseline plus exactly the declared dependencies, whose *text* is needed but whose *baseline* is not (a dependency is imported, never attempted), and refusing anything else; the receipt records which registered seeds were included and which were withheld, and why; and the allowlist check follows the same declaration rather than the full registered set. A tier-1 arm then declares `<Task>Proved.lean`, giving the audit's `promoted-proof` class a declared reason to find it, while a tier-2 arm declares nothing and the prior proof cannot be present at all. **This does not affect the running theorem cell** — `proofs/lean/paxos/seeds.json` registers no `Proved` seed, so its five packages are exactly what they should be — but it **blocks the remediation reruns as specified**, and it must be ruled and red-observed before them. Whether the fix is the declared-dependency form or a specific exemption for a `Proved` seed is a planner decision the contract will state; the observation above is what it has to satisfy.
 
+**The six arms' rerun recipe, fixed before the reruns.** Each arm is re-earned at the **headline** configuration, because it replaces a published headline cell: `--arms` at its default (`proof+refutation`), `--mode file`, one repetition per invocation, budgets unchanged at 7200 s / $50, and **no `--exploratory`** — the flag means "a setup that is not the headline one", so passing it on a replacement for a published cell would mislabel it, unlike the Paxos pilot where it is correct. Per attempt: one prepared package, one invocation, one results root.
+
+| arm | task | seed | tier | `--param-N` |
+| --- | --- | --- | --- | --- |
+| token-ring tier-2 | `tasks/token-ring.json` | `TokenRing.lean` | 2 | — |
+| bakery tier-2 | `tasks/bakery.json` | `Bakery.lean` | 2 | — |
+| lcr tier-2 | `tasks/lcr.json` | `LCR.lean` | 2 | — |
+| ewd998 tier-2 | `tasks/ewd998.json` | `EWD998.lean` | 2 | — |
+| bakery tier-1 | `tasks/bakery.json` | `BakeryN0.lean` | 1 | `9` |
+| lcr tier-1 | `tasks/lcr.json` | `LCRN0.lean` | 1 | `10` |
+
+The manifests carry `n0` for the four published tasks (token-ring 23, bakery 9, lcr 10, ewd998 3) and `repetitions: 5`, so a tier-1 arm is stated at its `n0` and `--param-N` is passed explicitly to be self-documenting rather than relying on the manifest default. The tier-2 arms take the general-theorem seed; the tier-1 arms take the corollary seed and import the proved theorem as the intended dependency. Because the row cannot record the per-package isolation (the finding above), each re-earned cell carries its provenance beside its rows — the prepare receipts, the exact commands and the arm's audit extract — which is what makes re-earned and superseded rows distinguishable at all. **None of this can run until the preparer blocker above is fixed and red-observed**, so the recipe is precommitted here and the execution waits behind that ruling.
+
 ```bash
 nix develop -c python -m harness.route_b --task tasks/paxos.json --proof proofs/lean/paxos/Paxos.lean --mode file --tier 2 --reps 5 --exploratory --results results/paxos-calibration
 CANDIDATE=3  # replace with each actually bracketed candidate acceptor count
