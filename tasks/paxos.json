@@ -44,6 +44,21 @@
   "n0": null,
   "calibration": {
     "n0_rule": "first adjacent under-cap successful TLC pair that brackets median theorem+own-corollary totals; select log-nearest N>=3 within factor 2, require a chosen-value witness at each N",
+    "selection_statistic": {
+      "rule": "the ordinary median of the actual elapsed wall-clock times of ALL fixed R>=5 attempts on one seed digest, including nonclosures and errors - not only the closed attempts",
+      "nonclosure_contribution": "a timeout contributes its actually recorded elapsed at the cap (about 7200 s); an early no_progress or provider/harness error contributes its own observed elapsed time, never an imputed full cap",
+      "settled_claim_gate": "the median is a cost-to-settle only when a strict majority of the attempts have final closure.verdict true (structural oracle AND intact file-mode boundary) AND the elapsed-duration-ranked median observation carries that same final verdict (for even R, both central observations must); otherwise report the outcome distribution, not a settled-claim crossover or n0",
+      "ordering": "by wall-clock value, not repetition number and not chronological run time",
+      "closed_only_median": "descriptive only, never the selection operand",
+      "outcome_vs_verdict": "a top-level outcome of 'closed' means the proof loop stopped at an oracle-closed file; it does NOT mean the final boundary-inclusive judgement stands. Read closure.verdict for that.",
+      "pass_rates": "report pass@1 and pass@R over final closure.verdict, plus the full ranges; an outcome-only pass rate is a different question and overstates",
+      "preregistered": "fixed before any pilot outcome was read, and recorded while the tier-2 cell was still running",
+      "citations": [
+        "docs/protocol.md section 4 item 7 (:152-170)",
+        "plans/2026-09-27-paxos-agreement.md D3 (:72, :76-102)"
+      ],
+      "applies_to": "Paxos theorem and own-corollary pilot cells only; the four earlier tasks' medians are not retroactively recomputed"
+    },
     "ballot_bound": 1,
     "n_cap": null,
     "n_cap_exploratory": 6,
