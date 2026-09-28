@@ -17,17 +17,29 @@ and the copied seed's ``seed_sha256``, and exits 0. A destination that already e
 attempt prepared twice — is refused (exit 2) rather than overwritten, so an existing attempt's
 evidence is never silently replaced.
 
-What the receipt asserts, and what it does not. It asserts a *filesystem* statement about the fresh
-tree: the named seed and ``baseline/<seed>`` are byte-identical to the registered digest in
-``seeds.json``, ``seed`` is inside ``package``, ``results`` is outside it (and its own per-attempt
-directory), the pinned cache is a symlink reused rather than a ≈7 GB copy, and the package's top level
-holds none of the template's ``.runs/``, promoted target, closure copies, other modules or results.
+What the *preparation* asserts, and what the *receipt* carries. The preparation enforces a
+*filesystem* statement about the fresh tree, refusing rather than proceeding when it cannot: the named
+seed and ``baseline/<seed>`` are byte-identical to the registered digest in ``seeds.json``, ``seed``
+is inside ``package``, ``results`` is outside it (and its own per-attempt directory), the pinned cache
+is a symlink reused rather than a ≈7 GB copy, and the package's top level holds none of the
+template's ``.runs/``, promoted target, closure copies, other modules or results. The receipt printed
+to stdout carries five fields — ``attempt``, ``package``, ``results``, ``seed`` and ``seed_sha256`` —
+and the seed digest is the one asserted property it also names; a reader who wants the rest of the
+statement above inspects the prepared tree, which is what the contract's scenarios do.
 It does **not** assert that earlier proofs are unreadable. This host has no enforced read sandbox
 (``harness/outside_watch.py:1-11``: ``unshare``/bubblewrap are denied, file-mode bash runs as the same
 UID, and ``outside_watch`` tracks writes only), so a same-UID session can still read any path it names.
 The accepted guarantee is **operational nonreuse**: the attempt's own tree offers no prior proof, and
 complete tool-call transcripts are audited afterwards, with any observed prior same-tier read
 invalidating that attempt. No comment, receipt or doc here claims otherwise.
+
+Four more things this boundary leaves alone, named so a reader need not infer them. The linked
+``.lake/packages`` is *shared mutable state*, not a per-attempt copy: a dependency rebuild or
+``lake update`` through it is visible to the template and to every other attempt. Nothing stops a
+session from reading a *sibling* attempt's results directory. Reads are unconstrained and no receipt
+records what was read, which is why the offered guarantee is operational nonreuse plus a post-hoc
+transcript audit rather than an enforced sandbox. And ``PaxosMutant.lean`` is copied beside
+``Paxos.lean``, so "the seed" here means the registered seed *set*, not a single file.
 
 The dependency cache is linked, not copied. ``.lake/packages`` in the template is the pinned Mathlib
 (and its own dependency) checkout — ≈7 GB, and a per-attempt copy would cost that per attempt. The new
@@ -59,9 +71,10 @@ ATTEMPT_DIR = "attempt-{attempt:03d}"
 
 
 class PrepareError(Exception):
-    """The attempt was not prepared. Either the request was refused before writing anything (an
-    existing destination) or the template does not hold what the contract requires, and the partially
-    created attempt directory has been removed.
+    """The attempt was not prepared. Either the request was refused before anything was written (an
+    existing destination, or a template that does not hold the required seeds or package
+    configuration), or the template changed under the copy, and the partially created attempt
+    directories have been removed.
     """
 
 
@@ -196,6 +209,14 @@ def prepare(
             template, Path(BASELINE_DIR) / registered, digest
         )
 
+    # The package configuration is checked before any destination exists, so an incompletely
+    # provisioned template is a diagnosed refusal (exit 2) rather than an I/O failure raised from the
+    # copy below, which would report a run that never started. The copies stay inside the cleanup
+    # ``try`` for the race where a member disappears after this check.
+    for config in PACKAGE_CONFIG:
+        if not (template / config).is_file():
+            raise PrepareError(f"template is missing {config}: {template / config}")
+
     attempt_dir = Path(ATTEMPT_DIR.format(attempt=attempt))
     workspace = (workspace_root / attempt_dir).resolve()
     results = (results_root / attempt_dir).resolve()
@@ -207,8 +228,8 @@ def prepare(
             )
     if results.is_relative_to(workspace) or workspace.is_relative_to(results):
         raise PrepareError(
-            f"the attempt workspace {workspace} and its results {results} are not separate roots; "
-            "pass a --results-root outside --workspace-root"
+            f"the attempt workspace {workspace} and its results {results} are not disjoint: the "
+            f"per-attempt {attempt_dir} directories must not nest, whatever the parent roots"
         )
 
     package = workspace / name
