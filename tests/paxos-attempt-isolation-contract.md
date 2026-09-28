@@ -17,8 +17,11 @@ The **per-attempt destinations**, not necessarily the parent directory names sup
 must be disjoint: `--workspace-root /tmp/x/nest --results-root /tmp/x/nest/inner` is allowed
 when the resulting `attempt-001` directories do not nest. The JSON receipt names the seed,
 package, result destination and digest; it does not enumerate every metadata file the preparer
-validated. A refusal from missing pinned package metadata has CLI exit code **2**, not the
-uncaught-I/O exit code **1**.
+validated. A refusal from missing **or non-regular** pinned package metadata has CLI exit code **2**,
+not the uncaught-I/O exit code **1**. When two refusal grounds apply at once — an existing destination
+*and* an unusable configuration — the status and the absence of residue are what this contract pins;
+which of the two reasons is reported is deliberately **not** contracted, so a caller keys off the exit
+status rather than the message.
 
 `prepare` is an executable **structural invariant** check rather than a full behavior scenario through a real model: the safety property here is the filesystem input boundary *before* any model session exists. Exercising the model would require a live external system, forbidden in pytest; the implementation session instead performs a throwaway local `lake env`/Lean import smoke on a prepared real Paxos package and later audits real transcripts. The executable scenarios use only pytest `tmp_path`, a local Python subprocess, and a tiny temporary package with a fake local dependency cache — no Lean build, model, network, clock or user filesystem.
 
@@ -42,24 +45,30 @@ uncaught-I/O exit code **1**.
 - **Why**: `--reps 1` alone sweeps only `<stem>-r*.lean` under the original shared package; it leaves helper files and old closure copies in reach.
 - **Expected pre-implementation failure**: the preparer CLI does not exist, so the first attempted preparation exits nonzero before any second descriptor is available.
 
-## Scenario 3 — missing pinned package metadata refuses cleanly
+## Scenario 3 — incomplete pinned package metadata refuses cleanly
 
-- **Actor**: the researcher preparing a proof cell from an incompletely provisioned package.
+- **Actor**: the researcher preparing a proof cell from an incompletely or wrongly provisioned package.
 - **Boundary**: the same preparation CLI and its exit status/output directories.
-- **Given**: a temporary registered seed and dependency-cache fixture, but either
-  `lean-toolchain` **or** `lake-manifest.json` has been removed before the invocation.
-- **When**: the researcher prepares attempt 1, once per removed file.
-- **Then**: the CLI refuses with exit **2** and its stderr names the missing metadata file; neither
-  an attempted package nor an attempted results directory is left behind, and no seed digest is
-  quietly re-pinned. An incomplete package is a diagnosed refusal, not an unexpected traceback
-  or a result row. Node:
-  `tests/test_paxos_attempt_isolation.py::test_missing_pinned_package_metadata_refuses_cleanly`,
-  parameterised over the removed file (`[lean-toolchain]`, `[lake-manifest.json]`) so each file's
-  refusal is its own collected node and its own reported outcome.
+- **Given**: a temporary registered seed and dependency-cache fixture in which a member of the pinned
+  package configuration — `lean-toolchain`, `lake-manifest.json` or `lakefile.toml` — has been either
+  **removed**, or **replaced by a directory**, before the invocation.
+- **When**: the researcher prepares attempt 1, once per (member, mode) pair.
+- **Then**: the CLI refuses with exit **2** and its stderr names the offending configuration member;
+  neither an attempted package nor an attempted results directory is left behind, and no seed digest is
+  quietly re-pinned. An incompletely or wrongly provisioned package is a diagnosed refusal, not an
+  unexpected traceback or a result row — and that holds for **every** member of the pinned
+  configuration, including the one the package-name lookup reads before the copy step. Node:
+  `tests/test_paxos_attempt_isolation.py::test_incomplete_pinned_package_metadata_refuses_cleanly`,
+  parameterised over the (member, mode) pairs so each is its own collected node and its own reported
+  outcome.
 - **Why**: callers must distinguish an invalid source package from a failed run after it starts.
-- **Expected pre-correction failure**: the current preparer copies config files inside the cleanup
-  `try` but handles their `FileNotFoundError` as a generic `OSError` (exit **1**), so the
-  CLI-return-code assertion fails while the temp fixture itself is valid.
+- **Expected pre-correction failure**: `lakefile.toml` is read by the package-name lookup *before* the
+  configuration gate, so a **directory** in its place raises `IsADirectoryError` into the generic
+  `OSError` handler — exit **1** — while a directory at the other two members is refused with exit
+  **2**. The same class of provisioning error would be reported two ways, so the CLI-return-code
+  assertion fails on that one node while the other five pass. (The earlier red this scenario carried —
+  a *removed* member exiting 1 because it was copied inside the cleanup `try` — is fixed and recorded
+  in the plan; a removed `lakefile.toml` already exits 2 through the package-name lookup.)
 
 ## Real-cell audit and acceptance, not a pytest mock
 
@@ -83,3 +92,50 @@ promoted target, closure copy, reference proof, result or transcript, and **writ
 a dependency rebuild or `lake update` by one attempt is visible to the template and to every other
 attempt, so each attempt's audit line records whether it wrote there and the cell claims no isolation
 from it.
+
+### The audit as a runnable step
+
+`scripts/audit_attempts.py` performs the scan, so the gate is executable and re-runnable rather than a
+narrative:
+
+```
+python -m scripts.audit_attempts --sessions <cell session root>          # one line per attempt
+python -m scripts.audit_attempts --sessions <cell session root> --json    # the committed report
+```
+
+Exit status **0** means every attempt is clean, **1** means at least one is contaminated, and **2**
+means at least one is unaudited — no readable transcript, or a session directory whose name does not
+identify the attempt — with 2 taking precedence so that a missing audit can never be read as a clean
+cell.
+
+What is scanned: **every** `toolCall` block in every `*.jsonl` under each attempt directory, not a
+search for path-shaped strings. Bare relative filenames, tokens inside dynamically generated shell
+loops and tokens inside heredoc bodies all count. Failed calls are scanned too: an attempted read is
+evidence about the attempt even when it errored, and a shell redirect creates its target even when the
+command then fails.
+
+What counts as a read: the effect of the leading verb on each artifact token. `cat`, `head`, `sed`,
+`grep`, `diff`, `cmp` and `sha256sum` read or compare; `cp` and `mv` copy their sources and write their
+last argument; `rm` deletes; `ls`, `find`, `stat` and `wc` merely enumerate. An **enumeration is not a
+read** — seeing a predecessor's filename in an `ls` does not invalidate an attempt, which is why the
+retired pilot's r3, which listed its predecessors and then failed its provider turn, is clean. An
+unrecognised verb is reported as a read on purpose: the instrument fails loud, because a missed read is
+the failure that matters and an over-reported one costs a human a glance.
+
+An attempt is **contaminated** when a token classified as an earlier attempt's working copy
+(`<stem>-r<j>` with `j` below its own repetition), a promoted or closure proof, or another attempt's
+transcript is read, copied or compared. Everything else — its own working file, the registered seed and
+`baseline/`, the pinned dependency cache, its own scratch files — is reported with its class and effect
+and does not invalidate the attempt. Each attempt's line names the session directory and the transcript
+paths it scanned; the auditor joins those to the cell's rows.
+
+The committed evidence is the run's output beside the cell's rows — `<cell>/audit.txt` for the
+per-attempt lines and `<cell>/audit.json` for the full report — both regenerated by the command above,
+so a reviewer re-runs one line rather than trusting a narrative, and the bounded extract survives the
+gitignored session store.
+
+Validated against the retired pilot `results/paxos-calibration/omp`, which it reproduces exactly: r1
+clean, r2 contaminated (`cat` and `cp Paxos-r1.lean`), r3 clean, r4 contaminated (`cp Paxos-r1.lean`),
+r5 contaminated (`cp .runs/Paxos-r4.lean`), exit 1, with the tool-call count summing to 224 across the
+five transcripts — the same chain the transcript audit established by hand, found by the matcher rather
+than by a path-shaped grep.

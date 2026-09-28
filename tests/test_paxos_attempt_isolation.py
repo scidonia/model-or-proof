@@ -113,14 +113,26 @@ def test_next_attempt_starts_clean_without_deleting_prior_evidence(tmp_path):
     assert (second_package / "Paxos.lean").read_text() == SEED
 
 
-@pytest.mark.parametrize("missing", ["lean-toolchain", "lake-manifest.json"])
-def test_missing_pinned_package_metadata_refuses_cleanly(tmp_path, missing):
+@pytest.mark.parametrize(
+    ("pinned", "mode"),
+    [
+        ("lean-toolchain", "missing"),
+        ("lake-manifest.json", "missing"),
+        ("lakefile.toml", "missing"),
+        ("lean-toolchain", "directory"),
+        ("lake-manifest.json", "directory"),
+        ("lakefile.toml", "directory"),
+    ],
+)
+def test_incomplete_pinned_package_metadata_refuses_cleanly(tmp_path, pinned, mode):
     template = template_package(tmp_path)
-    (template / missing).unlink()
+    (template / pinned).unlink()
+    if mode == "directory":
+        (template / pinned).mkdir()
 
     proc = prepare(tmp_path, template, 1)
 
     assert proc.returncode == 2, proc.stderr
-    assert missing in proc.stderr
+    assert pinned in proc.stderr
     assert not (tmp_path / "workspaces" / "attempt-001").exists()
     assert not (tmp_path / "results" / "attempt-001").exists()
