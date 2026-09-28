@@ -77,3 +77,9 @@ contamination was an explicit `cp Paxos-r1.lean Paxos-r2.lean` inside the permit
 (`plans/2026-09-27-paxos-agreement.md` §D3), and the published-cell audit's decisive commands were
 bare relative filenames inside a `for` loop that the first path-shaped scan missed. An attempt whose
 audit is missing or incomplete is *unaudited*, which is not the same as clean, and cannot be counted.
+The scan covers **two** channels, not one: prior-proof **reads** of any older same-tier working proof,
+promoted target, closure copy, reference proof, result or transcript, and **writes through the shared
+`.lake/packages` cache**, which is linked rather than copied and is therefore shared mutable state —
+a dependency rebuild or `lake update` by one attempt is visible to the template and to every other
+attempt, so each attempt's audit line records whether it wrote there and the cell claims no isolation
+from it.
