@@ -93,3 +93,15 @@ classification of that stream, a real invocation would be neither deterministic 
 line order was demonstrated once by hand and is the stream above. What the scenarios cannot show is that
 `inotifywait` prints nothing *else* benign — so a future line that trips the parser should be added to
 Scenario 1's stream by the planner, with its observation recorded, rather than tolerated by a looser rule.
+
+**The real invocation was exercised once, on both sides of the exemption, and that is what the exemption
+rests on.** Driving a real `OutsideWatch` over a temporary tree and creating a subdirectory **inside** the
+allowed path: the corrected module reports `blind: None`, does not report that inside write as an event,
+and still reports a genuine write outside the prefix — while the **pre-fix** module, under the same steps
+against the same real instrument, sets `blind` to *"the event stream is not readable: 'Watching new
+directory …/allowed/probe/'"*, **verbatim the message the theorem cell's attempt-005 recorded**. The link
+between that row's withheld verdict and this mechanism is therefore measured rather than narrated, and the
+exemption is known to be the *cause* of the difference rather than a coincidence beside it: a check that
+only ever ran against the corrected module would have been equally consistent with a probe that never
+reached the path at all. That is why this paragraph is here and not only in the commit that made the
+change — it is the record the next reader needs in order to know why the exemption exists.
