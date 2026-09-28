@@ -296,7 +296,10 @@ rewrites paths that live rows still point at. The complement is the negative con
 both sides: a run on the task's *mutant* must *fail to close* the weakened model, or the rig is what is
 being measured rather than the prover; and the refutation arm, handed a statement that is *false*, must
 *refute* it rather than prove it — the tactic battery's mutant rows record four `refuted` and one
-`timeout`, the same guarantee approached from the other direction.
+`timeout`, the same guarantee approached from the other direction. What a mutant run contributes is that
+*outcome*: its wall-clock and dollars are not the control, and two mutant rows that read the positive arm's
+proof file are quarantined as cost measurements for exactly that reason — `wiki/comparison-matrix.md` §7
+caveat 13, evidence `results/route-b-cell-reuse.md` §10.6.
 
 ## 9. Bakery: the second task
 
@@ -344,10 +347,17 @@ rather than forking a second apparatus. That choice is the reason this rung was 
 |---|---|
 | theorem, tier 2 | **closed**, 5 runs on one seed digest, one turn each: 148.0, 184.3, 216.0, 881.1, 970.8 s — median **216.0 s**, cost median **$0.00044** |
 | corollary, tier 1 | **closed**, 5 runs on one seed digest: 79.2, 94.3, 101.0, 102.8, 178.7 s — median **101.0 s**, cost median **$0.00042** |
-| mutant, tier 2 | **`no_progress`** → `fail_to_close`, 502.7 s — the weakened `ElectSelf` never closed, matching the TLA+ side's `UniqueLeader` violation at depth 3 |
+| mutant, tier 2 | **`no_progress`** → `fail_to_close`, 502.7 s † — the weakened `ElectSelf` never closed, matching the TLA+ side's `UniqueLeader` violation at depth 3 |
 | calibration | N = 3–10 single-worker; `n₀ = 10`, the first instance where nothing approached the cap |
 | same-claim pair | **measured, and TLC wins** — see below |
 | audit | `docs/equivalence-lcr.md` |
+
+† **The mutant row's `no_progress` is the control; its 502.7 s is not a measurement.** Row 70 read the
+positive arm's proof file through a bare relative filename (`cat LCR-r1.lean`) while refuting, so the
+attempt was neither isolated nor independent and its wall-clock is not an independent sample: the outcome
+stands, the figure does not. Nor is it to be rerun as a cost arm — the mutant's control is an outcome, not
+a median. Bakery's mutant row (65) is unaffected; EWD998's is quarantined for the same reason. Full
+statement: `wiki/comparison-matrix.md` §7 caveat 13; evidence: `results/route-b-cell-reuse.md` §10.6.
 
 **The corollary being cheaper than the theorem holds here too** — 101.0 s against 216.0 s, a
 factor of 2.1, against token-ring's 4.0 and Bakery's 5.8. Instantiating a general theorem is a

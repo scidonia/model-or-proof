@@ -35,12 +35,17 @@ for concurrent-system verification — and at what wall-clock and dollar differe
 | **Route B tier 1** (corollary at `n₀`) | **closed**, n=7, median **38.5 s** | **closed**, n=5, median **76.6 s** | **closed**, n=5, median **101.0 s** | **closed**, n=6, median **112.3 s** |
 | tier-1 cost median | **$0.00023** | **$0.00048** | **$0.00042** | **$0.00062** |
 | tier-1 range | 25.1 – 64.8 s | 64.7 – 88.4 s | 79.2 – 178.7 s | — |
-| **Mutant control** | TLC `violation` (23 states, depth 5) | `no_progress` → `fail_to_close`, 273.2 s | `no_progress` → `fail_to_close`, 502.7 s | `no_progress` → `fail_to_close`, 572.7 s |
+| **Mutant control** | TLC `violation` (23 states, depth 5) | `no_progress` → `fail_to_close`, 273.2 s | `no_progress` → `fail_to_close`, 502.7 s † | `no_progress` → `fail_to_close`, 572.7 s † |
 | **Human comparator** | **none published** | IJCAR 2010, 800 lines (no time) | **none published** | **1 person-day** (ISoLA 2022) |
 | Equivalence audit | `docs/equivalence-token-ring.md` | `docs/equivalence-bakery.md` | `docs/equivalence-lcr.md` | `docs/equivalence-ewd998.md` |
 
 **Read the tier-1 row as the comparable one.** Tier 2 answers a question Route A cannot ask, so it is not
 a like-for-like cost comparison — §3 handles it separately.
+
+† **Two mutant cells record an outcome, not a cost.** The `lcr` and `ewd998` mutation-arm attempts read
+the positive arm's proof file while developing their refutation, so only their failure to close is
+evidence — their wall-clock and dollar figures are not measurements of anything. The `bakery` mutant row
+is unaffected. §7 caveat 13, evidence at `results/route-b-cell-reuse.md` §10.6.
 
 ---
 
@@ -134,12 +139,25 @@ at 361.5 s ×2, zero turns — the rig, not the prover) and three mutant `no_pro
 | Task | outcome | wall-clock | cost | turns | evidence |
 |---|---|---|---|---|---|
 | bakery | `no_progress` → `fail_to_close` | 273.2 s | $0.00474 | 6 | weakened `Enter` guard never closed |
-| lcr | `no_progress` → `fail_to_close` | 502.7 s | $0.00558 | 6 | weakened `ElectSelf` never closed |
-| ewd998 | `no_progress` → `fail_to_close` | 572.7 s | $0.01077 | 6 | axioms still contain `sorryAx`; `no_progress_rounds=5` |
+| lcr † | `no_progress` → `fail_to_close` | 502.7 s | $0.00558 | 6 | weakened `ElectSelf` never closed |
+| ewd998 † | `no_progress` → `fail_to_close` | 572.7 s | $0.01077 | 6 | axioms still contain `sorryAx`; `no_progress_rounds=5` |
 
-**Mutants cost more than the proofs they control** (4–10 millidollars against 0.3–0.8), because they pay
-for repeated refusals before `no_progress` ends them. Those rounds are the evidence the detector was
-needed.
+**† Two of these rows are quarantined: the outcome stands, the figures do not.** Rows 70 (`lcr`) and 88
+(`ewd998`) read the positive arm's proof file through **bare relative filenames** — `cat LCR-r1.lean`,
+`cat EWD998-r1.lean` — while developing their refutation, so neither attempt was isolated or independent.
+The wall-clock, dollar and round figures in those two rows are therefore **not independent sample
+statistics**: they must not be averaged, compared or quoted as rates, and must not be used to validate the
+checker. The **outcome** evidence does stand: `no_progress` → `fail_to_close` is sound because the mutant
+is a *false* statement, and reading a proof of the *true* theorem cannot make it closable — which is why
+the rows are **retained and quarantined, never deleted**. The bakery row (65) is unaffected. Full caveat:
+§7 caveat 13; the commands and transcript lines: `results/route-b-cell-reuse.md` §10.6. This is a separate
+matter from the published-cell remediation and from the replaced boundary watch, which concern the
+positive cells and do not repair these two.
+
+**Mutants cost more than the proofs they control** — bakery's $0.00474 against $0.00062, the one of these
+three rows whose figures are not quarantined; the 4–10 millidollar range this paragraph used to quote is
+withdrawn with the two rows above — because they pay for repeated refusals before `no_progress` ends them.
+Those rounds are the evidence the detector was needed.
 
 **Tactic battery** (a separate configuration, never pooled with the above): 47 rows, 40 `success`,
 4 `refuted`, 2 `timeout`, 1 `error` — the refutation arm, from the other direction.
@@ -202,6 +220,27 @@ Protocol §3 names three readings and §11 decision 1 makes **reading 2 the head
     sweep through the runner is in flight so the evidence becomes a row.
 12. **Fingerprint-collision caveat** on the 248 M-state N=4 count: TLC reported `7.0E-8` actual against an
     optimistic `0.033`.
+13. **Two mutation-arm rows are quarantined: usable as outcomes, never as costs.** Rows 70 (`lcr`, session
+    `LCRMutant-mutant-20260926T230410-r1`) and 88 (`ewd998`, session
+    `EWD998Mutant-mutant-20260927T010250-r1`) read the positive arm's proof file through **bare relative
+    filenames** (`cat LCR-r1.lean`, `cat EWD998-r1.lean`) while developing their refutation, so neither
+    attempt was isolated or independent. Four consequences — none of which the published-cell remediation
+    or the replaced boundary watch alters, since those concern the positive cells:
+
+    - **Their outcome evidence stands.** The mutant is a *false* statement, so reading a proof of the
+      *true* theorem cannot make it closable; the non-closure result is sound, and the rows are
+      **retained and quarantined rather than deleted** to keep exactly that evidence.
+    - **Their wall-clock and dollar figures are not independent sample statistics.** They must not be
+      averaged, quoted as rates, or used to validate the checker. The §4 table's 4–10 millidollar range
+      is withdrawn for that reason.
+    - **They must not be rerun as cost arms.** The mutant's required control is a falsifiability
+      *outcome*, not a median, and it is not part of `K`.
+    - **A mutant row ever reporting `closure.verdict: true`** after copying a true proof would be a rig
+      failure requiring separate action — never a cell to average. None has been observed.
+
+    The commands, transcript paths and line numbers, and each session's own words, are in
+    `results/route-b-cell-reuse.md` §10.6, a correction to that file's own §5; the rows themselves are
+    `results/proof.jsonl` rows 70 and 88. The bakery mutation arm (row 65) is unaffected.
 
 ---
 
@@ -258,6 +297,7 @@ quoted with ranges and why no figure here is a single run's.
 |---|---|
 | Every Route A row | `results/tlc.jsonl`, logs under `results/logs/` |
 | Every Route B row | `results/proof.jsonl` (88 rows: 41 file-mode, 47 tactic battery), closure copies under `results/closures/<task>/` |
+| The mutation-arm caveat (§7.13) | `results/route-b-cell-reuse.md` §10.6 — the two affected transcripts with their commands, paths and line numbers; the rows are `results/proof.jsonl` rows 70 and 88 |
 | Human comparators | `results/human.jsonl` (4 records), quotes pinned in `docs/human-baseline.md` |
 | `n₀` definitions and budgets | `docs/protocol.md` §11 decisions 1–5, §3 |
 | The closure criterion | `harness/closure_oracle.py`, `tools/checker/PROVENANCE.md` |

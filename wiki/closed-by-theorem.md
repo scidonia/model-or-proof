@@ -57,10 +57,19 @@ loop against the task's *mutant*: a weakened model it must **fail** to close.
 | Task | Arm | Result | Wall-clock | Meaning |
 |---|---|---|---|---|
 | **bakery** | weakened `Enter` guard | `no_progress` → `fail_to_close` | 273.2 s | the loop never closed the false statement |
-| **lcr** | weakened `ElectSelf` | `no_progress` → `fail_to_close` | 502.7 s | matches the TLA+ side's `UniqueLeader` violation at depth 3 |
-| **ewd998** | weakened model | `no_progress` → `fail_to_close` | 572.7 s | the loop never closed the false statement |
+| **lcr** † | weakened `ElectSelf` | `no_progress` → `fail_to_close` | 502.7 s † | matches the TLA+ side's `UniqueLeader` violation at depth 3 |
+| **ewd998** † | weakened model | `no_progress` → `fail_to_close` | 572.7 s † | the loop never closed the false statement |
 | **token-ring** | mutant | TLC reports `violation` | 0.666 s | the TLA+ side refutes it (23 distinct states, depth 5) |
 | **tactic battery** | false statements | 4 `refuted`, 40 `success`, 1 `timeout` | — | the refutation arm, approached from the other direction |
+
+† **Those two rows are quarantined as *cost measurements* — the outcome stands, the figure does not.**
+Rows 70 (`lcr`) and 88 (`ewd998`) read the positive arm's proof file through **bare relative filenames**
+while refuting, so neither attempt was isolated or independent; their wall-clock and dollar figures are
+not independent sample statistics and must not be quoted, averaged, or used to validate the checker. The
+`no_progress` verdict each records is still sound — a *false* statement cannot be closed by a proof of the
+*true* theorem — so the rows are retained rather than deleted, and they must **not** be rerun as cost arms:
+the mutant's control is an outcome, not a median. The bakery row (65) is unaffected. Full statement:
+`wiki/comparison-matrix.md` §7 caveat 13; evidence: `results/route-b-cell-reuse.md` §10.6.
 
 **The mutant can cost more than the proofs it controls** — bakery's $0.0047 against $0.00062 — because
 it paid for six rounds of the same refusal before `no_progress` ended it. Those rounds *are* the
@@ -269,13 +278,13 @@ set is four tasks rather than a sampled population.
 | Number | Where it comes from |
 |---|---|
 | Closures, per cell | `results/proof.jsonl` — `mode=file, outcome=closed`, grouped by `task` and `tier`; each cell shares one seed digest |
-| Negative controls | `results/proof.jsonl` — `mutant=true, outcome=no_progress` |
+| Negative controls | `results/proof.jsonl` — `mutant=true, outcome=no_progress`; rows 70 and 88 are quarantined as *cost* measurements while their outcomes stand (§2 †) |
 | Tactic battery | `results/proof.jsonl` — `task=battery` (45 rows) |
 | Route A, token-ring N=23 | `results/tlc.jsonl` — `task=token-ring, param_N=23`: 837.938 s / $0.04655 / 289,406,976 distinct at `workers=8`; 6,748.604 s / $0.37492 at `workers=1` |
 | Route A, bakery N=9 | `results/tlc.jsonl` — `task=bakery, param_N=9`: 4,847.749 s / $0.26932 / 238,803,200 distinct, `workers=1` |
 | Route A, lcr N=10 | `results/tlc.jsonl` — `task=lcr, param_N=10`: 2.670 s / $0.00015 / 177,147 distinct |
 | Route A, token-ring N=3 | `results/tlc.jsonl` — 5 runs, 0.656–0.669 s, 36 distinct; the mutant `violation` at 23 distinct |
-| EWD998 (Route B) | `results/proof.jsonl` — `task=ewd998, mode=file`: tier 2 `closed` 1009.538 s / $0.000814, tier 1 `closed` 101.217 s / $0.00062086, tier 2 `mutant=true` `no_progress` 572.665 s |
+| EWD998 (Route B) | `results/proof.jsonl` — `task=ewd998, mode=file`: tier 2 `closed` 1009.538 s / $0.000814, tier 1 `closed` 101.217 s / $0.00062086, tier 2 `mutant=true` `no_progress` 572.665 s (that last figure is quarantined — §2 †) |
 | Route A, ewd998 N=3 | `results/tlc.jsonl` — six runs, 35.484–44.249 s, $0.00197–$0.00246, 1,520,618 distinct each; the N=4 completion (248,006,200 distinct, depth 104, 2h 36min, exit 0) is in the calibration log, not yet a row |
 | Human prior art | `results/human.jsonl` — quotes and pinned sources; `machine_checked: false` throughout |
 | The equivalence audits | `docs/equivalence-token-ring.md`, `docs/equivalence-bakery.md`, `docs/equivalence-lcr.md`, `docs/equivalence-ewd998.md` |
