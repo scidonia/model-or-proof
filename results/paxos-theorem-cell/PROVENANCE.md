@@ -79,3 +79,46 @@ The audit scans both channels: prior-proof reads, and writes through the shared 
 which is linked rather than copied and is therefore shared mutable state — a dependency rebuild by one
 attempt is visible to the template and to every other attempt, and this cell claims no isolation from
 it.
+
+
+## The code revision this cell ran under
+
+A file-mode row records **no** `harness_revision`, so this cell's rows cannot state which code produced
+them. It is captured here instead, computed by the runner's own `harness_revision`
+(`harness/route_b.py:217-232`) over the prepared package and the tree as it stood at capture. Combined
+digest:
+
+    8fcea371daabcfc77a8e84fd427aa2ee5df7691ba470a6497375f87bf5bf7607
+
+Captured at HEAD `eb1f85f5e6908641499669857960a57f1990c0b2` on 2026-09-28T15:06:07Z, over these inputs:
+
+| input | sha256 |
+| --- | --- |
+| `harness/__init__.py` | `7ff4ca89bba7f2acdadd9c77cf3ab184c68b7617f3cb06eb7bf6f985a223c198` |
+| `harness/attempt_workspace.py` | `d89aba5952ed18f10aad8f134c2b65329cfecc3e7e4c46df841b4e600b83fa89` |
+| `harness/closure.py` | `e7e14d5754ee109f7c1e51cbd880d9042e3eea542e7032ea9941c3894d54862c` |
+| `harness/closure_oracle.py` | `539b3b94d85a0ba5d359fe0a5d3cf18beb04b5cd4be993aa7adaf78fe3d3b551` |
+| `harness/file_mode.py` | `dc3027f0e06bb7e5bcb0c18dff45384068f862d3fd19007835be6617752a4d7b` |
+| `harness/lean_lex.py` | `2b00edfe9fe04b3f01f000e1015a02c22713af968964bd37b5bec80a0f696c5d` |
+| `harness/lean_repl.py` | `f8e2811b9bde970ac49099c54864f10d00024ea0348b2bc9c3132ee22ed8c4ef` |
+| `harness/model.py` | `78bc99d611fccddd0fa5a0ddfbc643f21ca75e9fad8385228395779533ca85a0` |
+| `harness/outside_watch.py` | `41c996a779ad32268fb75b92068ff2d7aff9f8196cd988a73f58622861a490dd` |
+| `harness/result.py` | `ab9ccd96f993e2d7b6652e0b712a974415bfe24ae85d0d09b1e0fb8a54534b32` |
+| `harness/route_b.py` | `ab5c0227c37f89b92f277ac0efe844b488ad7a1240472546a534376d8a1b1d6f` |
+| `harness/tlc_run.py` | `8188b83804beb3fa1b4f05fdc11ac8d83cb4482344eae6727a1df9576f14e4ce` |
+| `proofs/lean/token-ring/prompt_examples.lean` | `86e0d649ec8931602f249eb185793feeba47067cf976a501bbcb399ad795db63` |
+| `results/paxos-theorem-cell/workspaces/attempt-001/paxos/Paxos.lean` | `0d29361497a893f3ce2ca30d108161486a40cb4aec0ce6efae810986066f184e` |
+| `results/paxos-theorem-cell/workspaces/attempt-001/paxos/seeds.json` | `8fa7f689ee3e8914dcbb68fc9a7d72645960bce4cb82ce3fa82439c25d9cb47d` |
+
+The attempted seed's digest is the registered `0d29361497a893f3ce2ca30d108161486a40cb4aec0ce6efae810986066f184e`
+that every prepare receipt recorded, so this map is anchored to the same bytes the cell was launched
+from.
+
+**What it licenses, and what it does not.** It pins the twelve `harness/*.py` files, the few-shot
+examples the prompt reads, the attempted seed and the package's `seeds.json`. It is the revision for
+attempt 1, and for every later attempt **only for as long as no `harness/*.py` file changes** — a
+file-mode row records no revision, so a mid-cell harness edit would leave the later rows produced by
+different code with nothing in them to show it. Recompute this section when the cell ends; any
+difference splits the cell's five rows across two revisions and must be recorded rather than smoothed
+over. That is why no harness edit may land while a cell is in flight, and why this capture exists: the
+row cannot say it, so the provenance file must.
