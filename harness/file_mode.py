@@ -259,6 +259,12 @@ def run_file(
         name: (closure_oracle.sha256_text(path.read_text()) if path.is_file() else None)
         for name, path in outside.items()
     }
+    # The seed as **loaded**, distinctly from the seed as **left** (the end-state `seed_intact`, filled
+    # after the loop). The row's tactic path already reads `matches` as the loaded value
+    # (`route_b.py`'s `load_baseline` and its baseline block), so this is the same key meaning on both
+    # paths: a run that began from an edited seed and was repaired mid-run says so, rather than
+    # reporting only the hopeful end state.
+    seed_matches_loaded = outside_before["seed"] == pristine_sha
 
     turns = 0
     rounds = 0
@@ -554,7 +560,7 @@ def run_file(
             # sidecar beside it and checks this file's digest against the field above.
             "closure_copy": str(copy_path) if copy_path is not None else None,
             "omp_sessions": str(run_dir),
-            "baseline": {"seed": str(seed_path), "sha256": pristine_sha, "matches": seed_intact},
+            "baseline": {"seed": str(seed_path), "sha256": pristine_sha, "matches": seed_matches_loaded},
         },
         "setup": {**setup, "mode": "file", "tools": DEFAULT_TOOLS},
         "error": error,

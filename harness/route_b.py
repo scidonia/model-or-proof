@@ -744,6 +744,15 @@ def run_file_mode(
     """
     from harness import file_mode, model  # file mode pulls in the transport only when it is used
 
+    # The marking the tactic path derives rather than promises (`main`'s line for the tactic branch):
+    # file mode fields the same race under the same rule, so a run whose arms are not the headline ones
+    # is exploratory by construction and is never pooled with them.
+    exploratory = bool(args.exploratory) or args.arms != HEADLINE_ARMS
+    # What this run *is* (plan D17): the harness sources and the data the prompt reads, digested once
+    # for the invocation, so a re-earned file-mode row is distinguishable by content from the row it
+    # replaces (the tactic path records the same value in its setup).
+    revision = harness_revision(seed, baseline)
+
     swept = sweep_working_copies(seed)
     if swept:
         heartbeat(f"phase: swept {len(swept)} stale working copy/copies of {relative(seed)}")
@@ -766,6 +775,9 @@ def run_file_mode(
             "cwd": relative(copy.parent),
             "prompt": {"sections": list(file_mode.FILE_MODE_PROMPT_SECTIONS)},
             "system_prompt": "harness.model.FILE_MODE_SYSTEM_PROMPT",
+            # The revision of the harness that produced this row (plan D17), the same value the tactic
+            # setup carries: sources and the data the prompt reads, digested at run start.
+            "harness_revision": revision,
             # The nested invocation as it actually ran: one role, the working copy's directory. Without these
             # the block would record the tactic roles and a temporary cwd for a session that never ran
             # (finding F7's remainder).
@@ -807,6 +819,12 @@ def run_file_mode(
             )
         finally:
             session.close()
+        # The arm configuration that produced this row and its marking, at the row's top level: a
+        # file-mode row is what the published cells are built from, so it must say which race ran and
+        # whether it may be pooled with the headline numbers (plan D16/D17) — the same two facts the
+        # tactic row carries.
+        row["arms"] = args.arms
+        row["exploratory"] = exploratory
         rows_path = append_row(results_dir, "proof", row, load_before=load_before)
         # F6: the closure's bytes and the sidecar that binds them to this row, written the moment the row
         # exists — before anything can sweep `.runs/`.
