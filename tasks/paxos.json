@@ -62,12 +62,13 @@
     "fp_index": 28,
     "seed": 1,
     "workers": 1,
-    "rationale": "approximates the 14247MB effective heap observed in the exploratory banners, keeping the N=2-6 rows comparable; 8 GiB would define a different experiment",
-    "caveat": "the historical 14247MB origin is unresolved (the same pinned wrapper/JRE now reports 16806576128 B MaxHeapSize with no heap option), so 14 GiB does not reproduce the historical launcher conditions",
+    "rationale": "14336 MiB is the pinned requested ceiling (-Xmx14336m). Measured on the pinned JRE (OpenJDK 1.8.0_504, ParallelGC), the TLC banner's usable heap is floor(-Xmx * 8/9) = 12743 MB, NOT 14336 and NOT the exploratory 14247. The user chose this value with that consequence stated: it is a different, ~10% smaller effective heap than the exploratory rows, accepted as a distinct configuration.",
+    "caveat": "The historical 14247 MB is no longer unresolved: it is 16027 * 8/9. 16027 MiB was the pinned JRE's default MaxHeapSize (one quarter of this host's ~62 GiB), and the banner reports Runtime.maxMemory(), which excludes one survivor space at the default SurvivorRatio=8. No launcher or cgroup mystery remains. 14 GiB therefore does not reproduce the historical launcher conditions; reproducing the historical *banner* would require about -Xmx16028m.",
     "delivery": "must reach the TLC child as JAVA_TOOL_OPTIONS=-Xmx14336m; tlc -Xmx was observed rejected; the wrapper execs Java with TLC args after the main class",
     "row_requirement": "rows record tlc_profile.requested {heap_mib, fp_index, seed} with explicit null for each omitted flag, and tlc_profile.observed with the parsed banner values",
     "measured_demand": "observed exploratory N=7 RSS peak 5535.5 MB (whole-process used memory); fixed-profile memory demand is NOT yet measured. Comparing RSS with the 14 GiB java-heap maximum is an illustrative ratio, not evidence of headroom, and it does not establish that no other limit (offheap, disk, host) binds.",
     "implemented": true,
-    "established": "N=7 reached 10,850,698 distinct states and timed out at the 7200 s cap rather than dying on a resource error; that is the only resource claim stage 1 supports"
+    "established": "N=7 reached 10,850,698 distinct states and timed out at the 7200 s cap rather than dying on a resource error; that is the only resource claim stage 1 supports",
+    "measured_relationship": "banner effective heap = floor(-Xmx * 8/9); measured -Xmx4096m->3641MB, 9216m->8192MB, 14336m->12743MB, 16384m->14564MB"
   }
 }
