@@ -38,8 +38,9 @@ CFG_INVARIANT_RE = re.compile(r"(?m)^\s*INVARIANTS?\s+(\S+)")
 TLC_VERSION_RE = re.compile(r"Version ([\d.]+) of")
 # TLC's banner states the effective profile of the run it is about to start, e.g.
 # "Running breadth-first search Model-Checking with fp 28 and seed 1 with 1 worker on 20 cores with
-# 14336MB heap and 64MB offheap memory (…)". These three fields are what a pinned Route A cell claims
-# the run used, so they are read back from the run's own output rather than from the request.
+# 12743MB heap and 64MB offheap memory (…)" — the real banner for -Xmx14336m on the pinned JRE, whose
+# heap is the JVM's usable maximum rather than the requested option. These fields are what a pinned
+# Route A cell claims the run used, so they are read back from the run's own output, not the request.
 BANNER_HEAP_RE = re.compile(r"\bwith (\d+)MB heap\b")
 BANNER_FP_RE = re.compile(r"\bwith fp (\d+)\b")
 BANNER_SEED_RE = re.compile(r"\band seed (-?\d+)\b")
