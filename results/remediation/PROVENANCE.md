@@ -66,9 +66,72 @@ inputs; each attempt's own `harness_revision` additionally digests its seed, whi
 section is to be **recomputed when the run ends** and a difference means the arms span two revisions —
 which is why no `harness/*.py` file may be edited while this is in flight.
 
-## How the result is to be read
+## Result: the re-earned arms are contaminated, and `K` cannot be recomputed from them
+
+All thirty attempts landed and every arm was audited with the revision record before its rows were read.
+**The revision is `ok` for all six arms** — no `harness/*.py` file changed during the run, so the arms do
+not span two revisions. The audit's exit status is `0` for `tok2` and `1` for the other five, and the
+per-attempt classification is what that status means:
+
+| arm | clean attempts | verdict-true of clean | walls of clean attempts (s) | median | excluded, with class |
+| --- | --- | --- | --- | --- | --- |
+| `tok2` | **5/5** | 4/5 | 166.3, 209.8, 310.9, 405.5, 439.8 | **310.9** | — |
+| `bak2` | 2/5 | 2/2 | 545.2, 635.8 | — | a1 *attempted*; a2, a4 prior-proof read |
+| `lcr2` | 3/5 | 2/3 | 381.1, 405.1, 522.0 | 405.1 | a2, a3 prior-proof read (a2 cross-task) |
+| `ewd2` | 2/5 | 1/2 | 869.8, 1265.0 | — | a1, a2, a4 prior-proof read |
+| `bak1` | 3/5 | 3/3 | 63.7, 72.8, 76.6 | 72.8 | a1, a3 **prior transcript read** |
+| `lcr1` | 4/5 | 3/4 | 66.4, 70.7, 73.3, 207.8 | 72.0 | a2 **prior transcript read** |
+
+**Withholdings, in their three classes, named:** five attempts were withheld on a **boundary artifact**
+(`tok2` a1, `lcr2` a1, `ewd2` a5, `lcr1` a1 — each `outside_events`, a scratch file landing outside the
+allowed prefix) and **none on instrument blindness** and **none as a proof failure**: every withheld
+attempt's `integrity`, `elaborates`, axiom set and `seed_intact` were clean. `bak2` and `ewd2` have only
+**two clean attempts of five**, which is **not a strict majority**, so by the preregistered rule their
+cells cannot support a settled claim at all.
+
+**Two mechanisms caused the contamination, and both are new doors into the room the isolation was meant to
+close.**
+
+1. **A tier-2 attempt read the *shared template's* `<Task>Proved.lean` by absolute path** — `bak2` a2 and
+   a4, `lcr2` a2 and a3, `ewd2` a1, a2 and a4, plus `lcr2` a2 reading **`TokenRingProved.lean`**, another
+   task's completed proof. The prepared package does **not** contain that module — the receipts show it
+   withheld, and `bak2`'s package holds only `Bakery.lean` — so the read reaches the *repository*, which the
+   per-package isolation never removed. The contract's first half ("the attempt's own tree offers no prior
+   proof") held exactly; its second half ("no observed prior same-tier read") is what failed, and the audit
+   is the only reason it is visible.
+2. **A tier-1 attempt read prior *evidence* rather than a proof**: `bak1` a1 read the published cell's OMP
+   transcript under `results/omp/`, a sibling attempt's `proof.jsonl` and `prepare-receipts.jsonl`; `bak1`
+   a3 and `lcr1` a2 read a sibling attempt's `proof.jsonl`. The declared `<Task>Proved.lean` reads that the
+   same audit flags are the **intended dependency** and are excluded here — they are why the raw rule's
+   output and the classification differ, and why each offence is named rather than counted.
+
+`bak2` a1 is recorded separately as **attempted but not observed**: it read a relative `BakeryProved.lean`
+that its package does not contain, so no bytes could enter. That is a different finding from a leak, and
+the distinction is behavioural by the contract's own words — "an observed read/copy … invalidates".
+
+**`K` is therefore not recomputed.** Five arms are invalidated in at least one attempt, two fall below the
+strict-majority gate, and the remaining three rest on 3–4 clean attempts each; a recomputed `K` from these
+rows would be the plausible number built out of contaminated samples that this whole exercise exists to
+stop. What the run establishes instead is a finding about the rig: **per-package isolation is necessary and
+insufficient on a host with no read sandbox**, because the attempt's shell can reach the repository's
+templates and results — and the models do reach them, unprompted, by absolute path. Any clean re-earning of
+these four tasks needs the *reachable* corpus changed (the promoted modules and the published transcripts
+absent from the tree the attempt runs in), not just the package's contents.
+
+**The Paxos cell is unaffected, and the reason matters:** `proofs/lean/paxos/seeds.json` registers no
+`Proved` seed, so mechanism 1 has no door there, and its own audit found all five attempts clean with no
+offender of either kind. That is why the Paxos half of the paper and the remediation half are separable
+rather than merely sequenced.
+
+**Load, restated beside these numbers:** 2.26 / 2.15 / 1.71 on 20 cores at launch, against the theorem
+cell's ~0.5 — a quieter machine is an alternative explanation for any wall-clock difference, and the
+comparison against the published figures remains **indicative** in any case, since those rows predate the
+`withheld` field and were produced under a different verdict rule.
 
 The recomputed `K`, the per-arm pass rates and the wall/dollar distributions come from **these** rows only.
+**That remains the rule, and the Result above is why no such recomputation is reported: five arms are
+invalidated in at least one attempt, two fall below the strict-majority gate, and the survivors rest on
+three or four clean attempts each.**
 Because five published rows carry `outside_events` with `withheld: None` — they predate the field — a
 recomputed pass rate and a published one are computed under two different verdict rules, so the comparison
 is presented as **indicative** rather than as a like-for-like correction. Every recomputed table states
