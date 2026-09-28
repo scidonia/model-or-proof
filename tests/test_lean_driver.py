@@ -28,8 +28,11 @@ def test_unclosed_handles_comment_and_identifier_edge_cases():
     assert count_unclosed("/- outer /- sorry -/ -/") == 0  # nested block comment
     assert count_unclosed("/-- sorry -/") == 0  # doc comment
     assert count_unclosed("/-! sorry -/") == 0  # doc comment
-    assert count_unclosed("theorem t : True := by\n  exact ?h\n") > 0  # a named metavariable is a hole
+    assert count_unclosed("theorem t : True := by\n  exact ?h\n") == 0  # a placeholder is decided by elaboration, not by its name
     assert count_unclosed("refine ⟨?_, ?_⟩") == 0  # the anonymous hole is legitimate syntax
+    # A *named* placeholder discharged by the following bullets is the same construct as `?_`, and the
+    # artifact that forced this revision uses exactly this idiom in a proof the oracle certifies closed.
+    assert count_unclosed("refine Reachable.rec (motive := fun s _ => Inv s) ?init ?step hs") == 0
     assert count_unclosed("def sorryful : Nat := 1") == 0  # a longer identifier is not the word
     assert count_unclosed("theorem t : True := by\n  sorry\n/- unterminated") > 0  # unterminated comment must not hide a real sorry
 

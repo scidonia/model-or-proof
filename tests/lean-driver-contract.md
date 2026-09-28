@@ -17,14 +17,21 @@ the repl process — the plan's "a scripted lean-repl responder, no real Lean").
   is `trivial`, and texts whose only `sorry` is in a `--` comment, a `/- … -/` block comment, or a
   string literal.
 - **When**: `count_unclosed` is applied to each.
-- **Then**: the count is positive for every spelling and for a `?ident` metavariable (`?h`, `?motive`;
-  the anonymous `?_` is **not** a hole — `refine ⟨?_, ?_⟩` is the ordinary constructor idiom and each
-  `?_` is discharged by the following tactics), zero for the clean proof, zero for the comment/string-only
-  mentions (including nested `/- … -/` and doc `/--`/`/-!` comments), zero for `sorry` inside a longer
-  identifier, and an unterminated literal must not hide a real `sorry`.
-- **Why**: protocol §8 — the artifact must have zero unclosed goals, and `admit`/`sorryAx`/`Admitted`
-  are the same hole under other names; but a `sorry` mentioned only in prose must not refuse a genuinely
-  closed proof (and lose its row).
+- **Then**: the count is positive for every hole spelling (`sorry`, `sorryAx`, `admit`, `Admitted`,
+  `axiom`), zero for the clean proof, zero for the comment/string-only mentions (including nested
+  `/- … -/` and doc `/--`/`/-!` comments), zero for `sorry` inside a longer identifier, and — for a
+  **synthetic placeholder** — **zero whether it is anonymous or named**: `?_`, `?h` and `?init` are one
+  construct, and whether one *survives* is decided by **elaboration** and the axiom report rather than by
+  its name. An unterminated literal must not hide a real `sorry`.
+- **Why**: protocol §8 — the artifact must have zero unclosed goals, and `admit`/`sorryAx`/`Admitted` are
+  the same hole under other names; but a `sorry` mentioned only in prose must not refuse a genuinely
+  closed proof (and lose its row). **A placeholder is a hole only if it survives, and no lexical scan can
+  know that.** The artifact that forced this revision uses `refine … ?init ?step hs` and then discharges
+  both with the following bullets, so a named-placeholder clause counted two holes in a proof the oracle
+  certifies as closed (`axioms ⊆ {propext, Classical.choice, Quot.sound}`, no `sorryAx`). The decider
+  exists at both call sites and is not lexical: elaboration for an artifact — measured, `exact ?nope`
+  fails with `unsolved goals` and exit 1 — and `lake build` for an import. Exempting `?_` while counting
+  `?init` was a distinction the language does not make; both are discharged the same way, or not at all.
 
 ## Scenario 2 — the driver reads the goals the responder reports
 
