@@ -258,20 +258,31 @@ withholding changes is only the naive pass rate: reported without reading it, th
 the honest sentence is **two attempts, two complete proofs, two withholdings for compiling**, with the event
 list beside it rather than behind it.
 
-**One more gate gap, found while verifying this cell's own claim, and it is the sharpest one yet.**
-`own-copy` is decided by **name** — `<stem>-r<k>.lean` at the attempt's own repetition — so a read of
-**another attempt's** identically named working file classifies as the reader's own and passes silently.
-Each attempt gets its own package, but every cell starts at `r1`, so the name collides across attempts
-*and* across cells. The contract's name rule is there for a good reason (an attempt reading its own working
-file is ordinary, and "seeing a predecessor's filename in an `ls` is not opening it"), but a name cannot
-tell the two apart. Measured for this cell by a method the audit does not have — scanning all five
-transcripts for another attempt's `.lean` path inside a read/copy/compare segment — the answer is **zero**,
-so this cell's rows stand and its provenance says on what evidence; the gap is recorded because the *next*
-cell's independence claim would otherwise rest on an assumption rather than a measurement.
-**The fix, when the classifier is next opened:** an identically named working file **outside the attempt's
-own package** is suspect, not own. The stated reason for name-based classification — that a `cp` into one's
-own directory would defeat a path rule — does not apply here, because the copy's own *source* read is
-already an invalidating hit, so a path-aware `own-copy` closes the collision without opening that door.
+**One more gate gap, and fixing it changed this cell's own verdict — which is the argument for having
+fixed it.** `own-copy` was decided by **name** — `<stem>-r<k>.lean` at the attempt's own repetition — so a
+read of another attempt's identically named working file classified as the reader's own and passed silently;
+every attempt and every cell starts at `r1`, so the name collides across attempts *and* across cells. The
+contract's name rule exists for a good reason (reading one's own working file is ordinary), but a name
+cannot answer *who wrote this file*. It was recorded here as a gap and then landed as **Scenario 7**: a
+working file under the repository but outside both the package the row names and the attempt's own results
+tree is class `foreign-copy`, which invalidates; the path is compared lexically and without asking whether
+the file still exists, because an artifact read before it was moved is still a read, and a token that merely
+looks absolute (`$dir/.runs/X-r1.lean` tokenises as `/.runs/X-r1.lean`) is not a path at all. With no row,
+the name rule stands.
+
+**What it caught is a real contamination in this very cell, invisible to the check that had licensed it.**
+attempt-003's transcript contains `cat` of
+`results/paxos-corollary-pilot-killed-attempt-003/attempt-003-workspace/paxos/.runs/PaxosN6Pilot-r1.lean` —
+the working file of the *first* attempt-003, the one the launcher's death killed and whose workspace was
+preserved as evidence. A partial proof of the same statement, read by the attempt that replaced it. The
+hand-run transcript scan that had licensed the cell's earlier clean verdict missed it for exactly the reason
+the name rule did: the path names `attempt-003`, so a scan comparing attempt numbers skipped it. So
+attempt-003 is **contaminated and excluded**, and **the audit makes this check itself now** — which is the
+point, since a remediation of six arms cannot rest on a manual scan per arm. The exclusion moves the H2
+operand from the all-attempt median 418.929 s to the clean median **267.315 s**, so
+`P(6) = 1640.69 + 267.315 = **1908.005 s**` against `A(6) = 1405.943 s`: still above, so **the nonviability
+verdict is unchanged**, and both medians are reported because the rule takes all precommitted attempts while
+a contaminated one is excluded rather than pooled.
 
 **Planner-owned prep contract, pre-implementation red (`then`), now implemented:** `tests/paxos-attempt-isolation-contract.md`
 and `tests/test_paxos_attempt_isolation.py` define a

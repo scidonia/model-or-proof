@@ -1,11 +1,6 @@
+warning: Git tree '/home/gavin/dev/model-or-proof' is dirty
 {
-  "revision": {
-    "recorded_digest": "4adf11cea8673bbf74a217576006b3b419e4250f2fc960fae9bff418612d29bd",
-    "recorded_at": "164e311164c633307edc061db92ab276fc0df4c7",
-    "differing": [],
-    "missing": [],
-    "verdict": "ok"
-  },
+  "revision": null,
   "attempts": [
     {
       "attempt": "PaxosN6Pilot-20260928T223124-r1",
@@ -484,8 +479,18 @@
         "results/paxos-corollary-pilot/results/attempt-003/omp/PaxosN6Pilot-20260928T224909-r1/file/2026-09-28T20-49-11-547Z_01a0e9c7-5b7b-75f6-be15-c5966ad525b6.jsonl"
       ],
       "calls": 81,
-      "verdict": "clean",
-      "offenders": [],
+      "verdict": "contaminated",
+      "offenders": [
+        {
+          "line": 186,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "foreign-copy",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot-killed-attempt-003/attempt-003-workspace/paxos/.runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        }
+      ],
       "hits": [
         {
           "line": 6,
@@ -835,7 +840,7 @@
           "tool": "bash",
           "verb": "cat",
           "effect": "read",
-          "class": "own-copy",
+          "class": "foreign-copy",
           "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot-killed-attempt-003/attempt-003-workspace/paxos/.runs/PaxosN6Pilot-r1.lean",
           "cwd": null
         },

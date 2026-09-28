@@ -31,6 +31,9 @@ recorded ``cwd`` is context for the reader, not an input to the classification:
 
 ``seed``            the registered pristine seed, its ``Mutant`` sibling, or anything under ``baseline/`` — a legitimate input.
 ``own-copy``        ``<stem>-r<k>`` where ``k`` is this attempt's repetition — the attempt's own working file.
+``foreign-copy``    a working file with this attempt's stem **but outside the package it was given** — a
+                    sibling attempt's or another cell's, since every attempt and every cell starts at
+                    ``r1`` and the name alone cannot tell them apart (contract Scenario 7).
 ``prior-copy``      ``<stem>-r<j>`` with ``j < k`` — an earlier attempt's working file.
 ``later-copy``      ``<stem>-r<j>`` with ``j > k`` — a later attempt's file.
 ``promoted-proof``  a ``*Proved*`` file or a closure copy under ``closures/``.
@@ -108,7 +111,7 @@ READ = {
 # A command that runs a tool over a named proof file reads it; python and lake both count.
 RUNS = {"python", "python3", "lean", "lake", "elan", "bash", "sh", "nix", "timeout"}
 
-INVALIDATING_CLASSES = {"prior-copy", "promoted-proof", "other-transcript"}
+INVALIDATING_CLASSES = {"prior-copy", "promoted-proof", "other-transcript", "foreign-copy"}
 INVALIDATING_EFFECTS = {"read", "compare", "copy"}
 
 # A session transcript, as the store names it: `<stamp>_<uuid>.jsonl`. The class means *transcript* — an
@@ -118,9 +121,49 @@ INVALIDATING_EFFECTS = {"read", "compare", "copy"}
 TRANSCRIPT_NAME = re.compile(r"^\d{4}-\d{2}-\d{2}T[\d\-]+Z_[0-9a-fA-F\-]{8,}\.jsonl$")
 
 
-def classify(token: str, stem: str, repetition: int, own_transcript: Path) -> str:
+def _under(path: Path, root: Path) -> bool:
+    """Whether `path` is lexically inside `root` — no symlink resolution, deliberately."""
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def _resolve(token: str, cwd: str | None) -> Path | None:
+    """The token as an absolute path when it can be placed without guessing, else ``None``.
+
+    An absolute token is unambiguous. A relative one is locatable only against an **absolute** recorded
+    cwd: a relative cwd, or none, would be a guess, and a guess here is what decides whether an attempt is
+    called contaminated. When the path cannot be placed the name rule stands (Scenario 7).
+    """
+    path = Path(token)
+    if path.is_absolute():
+        return path
+    base = Path(cwd) if cwd else None
+    if base is not None and base.is_absolute():
+        return base / path
+    return None
+
+
+def classify(
+    token: str,
+    stem: str,
+    repetition: int,
+    own_transcript: Path,
+    package: Path | None = None,
+    resolved: Path | None = None,
+    attempt_root: Path | None = None,
+) -> str:
     """The token's class, by name and location. Lexical on purpose: a name-shaped rule cannot be
-    defeated by choosing a different directory, which is what a path-prefix rule can."""
+    defeated by choosing a different directory, which is what a path-prefix rule can.
+
+    ``package`` is the package this attempt was given, when the row names it; ``attempt_root`` is its own
+    attempt directory (whose results tree holds the harness's copy of the working file); and ``resolved``
+    is the token as a path when it could be placed. Together they separate an attempt's own working file
+    from an identically named one — same stem, same ``r1`` — in a sibling's package or another cell's
+    (Scenario 7). When the path cannot be placed, the name rule stands.
+    """
     name = Path(token).name
     if "baseline/" in token or name in (f"{stem}.lean", f"{stem}Mutant.lean"):
         return "seed"
@@ -132,6 +175,19 @@ def classify(token: str, stem: str, repetition: int, own_transcript: Path) -> st
         return "promoted-proof"
     work = WORK_COPY.match(name)
     if work and work["stem"] == stem:
+        # The path decides, lexically and without asking whether the file is still there: an artifact read
+        # before it was moved or renamed is still a read, and a token can be a shell-expansion fragment
+        # that merely looks absolute (`$dir/.runs/X-r1.lean` tokenises as `/.runs/X-r1.lean`), which is why
+        # the path must also be inside the repository to count. Inside the repository, but in neither the
+        # package this attempt was given nor its own results tree, it is a sibling's or another cell's
+        # working file — and every attempt and every cell calls its own `<stem>-r1.lean` (Scenario 7).
+        if (
+            package is not None
+            and resolved is not None
+            and _under(resolved, REPO)
+            and not (_under(resolved, package) or (attempt_root is not None and _under(resolved, attempt_root)))
+        ):
+            return "foreign-copy"
         found = int(work["repetition"])
         if found == repetition:
             return "own-copy"
@@ -172,11 +228,20 @@ def segment_effects(segment: str) -> list[tuple[str, str, int]]:
     return found
 
 
-def scan_transcript(path: Path, stem: str, repetition: int, declared: str | None = None) -> list[dict]:
+def scan_transcript(
+    path: Path,
+    stem: str,
+    repetition: int,
+    declared: str | None = None,
+    package: Path | None = None,
+    attempt_root: Path | None = None,
+) -> list[dict]:
     """Every artifact-touching tool call in one transcript, with its class and effect.
 
     ``declared`` is the module this attempt's row declares as its own dependency, or ``None``; a
-    ``promoted-proof`` hit naming it is marked so the verdict can tell the design from reuse.
+    ``promoted-proof`` hit naming it is marked so the verdict can tell the design from reuse. ``package``
+    is the package the row says this attempt was given, or ``None``; with it, an identically named working
+    file outside that package is `foreign-copy` rather than the attempt's own (Scenario 7).
     """
     hits = []
     with path.open() as handle:
@@ -203,7 +268,15 @@ def scan_transcript(path: Path, stem: str, repetition: int, declared: str | None
                     for verb, effect, _, token in segment_effects(segment):
                         if token.startswith("/dev/null") or token in {".", ".."}:
                             continue
-                        klass = classify(token, stem, repetition, path)
+                        klass = classify(
+                            token,
+                            stem,
+                            repetition,
+                            path,
+                            package,
+                            _resolve(token, cwd),
+                            attempt_root,
+                        )
                         hit = {
                             "line": lineno,
                             "tool": block.get("name"),
@@ -223,6 +296,30 @@ def scan_transcript(path: Path, stem: str, repetition: int, declared: str | None
     return hits
 
 
+def sibling_row(directory: Path) -> dict | None:
+    """The row beside the session — ``<attempt>/omp/<session>`` → ``<attempt>/proof.jsonl`` — or ``None``."""
+    row_path = directory.parent.parent / "proof.jsonl"
+    try:
+        rows = [json.loads(line) for line in row_path.read_text().splitlines() if line.strip()]
+    except (OSError, json.JSONDecodeError):
+        return None
+    return rows[0] if rows else None
+
+
+def package_root(directory: Path) -> Path | None:
+    """The package this attempt was given, from its own row's ``artifacts.baseline.seed``, or ``None``.
+
+    Taken from the row rather than from any path on disk, so a package the model wrote to cannot become
+    "its own" by being there. ``None`` when there is no row to read, and then the name rule stands
+    (Scenario 7) — an attempt that never wrote a row cannot prove which package it was given.
+    """
+    row = sibling_row(directory)
+    if not row:
+        return None
+    seed = ((row.get("artifacts") or {}).get("baseline") or {}).get("seed")
+    return (REPO / seed).parent if seed else None
+
+
 def declared_dependency(directory: Path) -> str | None:
     """The proved module this attempt's own row declares, or ``None`` when nothing is declared.
 
@@ -238,25 +335,18 @@ def declared_dependency(directory: Path) -> str | None:
     ``*Proved*.lean`` all yield ``None``, and then every ``promoted-proof`` hit invalidates as before.
     An attempt that never wrote a row cannot claim a declaration.
     """
-    row_path = directory.parent.parent / "proof.jsonl"
+    row = sibling_row(directory)
+    if not row or row.get("tier") != 1 or not row.get("task"):
+        return None
+    registry = REPO / "proofs" / "lean" / str(row["task"]) / "seeds.json"
     try:
-        rows = [json.loads(line) for line in row_path.read_text().splitlines() if line.strip()]
+        seeds = json.loads(registry.read_text())
     except (OSError, json.JSONDecodeError):
         return None
-    for row in rows:
-        if row.get("tier") != 1 or not row.get("task"):
-            continue
-        registry = REPO / "proofs" / "lean" / str(row["task"]) / "seeds.json"
-        try:
-            seeds = json.loads(registry.read_text())
-        except (OSError, json.JSONDecodeError):
-            continue
-        if not isinstance(seeds, dict):
-            continue
-        proven = sorted(name for name in seeds if Path(name).match("*Proved*.lean"))
-        if len(proven) == 1:
-            return proven[0]
-    return None
+    if not isinstance(seeds, dict):
+        return None
+    proven = sorted(name for name in seeds if Path(name).match("*Proved*.lean"))
+    return proven[0] if len(proven) == 1 else None
 
 
 def audit_attempt(directory: Path) -> dict:
@@ -286,7 +376,13 @@ def audit_attempt(directory: Path) -> dict:
         }
     stem, repetition = match["stem"], int(match["repetition"])
     declared = declared_dependency(directory)
-    hits = [hit for path in transcripts for hit in scan_transcript(path, stem, repetition, declared)]
+    package = package_root(directory)
+    attempt_root = (REPO / directory).parent.parent
+    hits = [
+        hit
+        for path in transcripts
+        for hit in scan_transcript(path, stem, repetition, declared, package, attempt_root)
+    ]
     calls = sum(
         1
         for path in transcripts

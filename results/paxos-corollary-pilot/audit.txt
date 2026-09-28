@@ -1,4 +1,4 @@
-revision     ok           recorded 4adf11cea8673bbf… at 164e311164c633307edc061db92ab276fc0df4c7
+warning: Git tree '/home/gavin/dev/model-or-proof' is dirty
 clean        PaxosN6Pilot-20260928T223124-r1  calls=25   hits=32
     own-copy         read     cat    PaxosN6Pilot-r1.lean  (line 6, cwd None)
     promoted-proof   mention  find   PaxosProved.lean  (line 9, cwd None)
@@ -49,7 +49,7 @@ clean        PaxosN6Pilot-20260928T223322-r1  calls=16   hits=16
     other            read     lake   .runs/checkax.lean  (line 43, cwd None)
     own-copy         read     lake   .runs/PaxosN6Pilot-r1.lean  (line 46, cwd None)
     other            delete   rm     .runs/checkax.lean  (line 46, cwd None)
-clean        PaxosN6Pilot-20260928T224909-r1  calls=81   hits=54
+contaminated PaxosN6Pilot-20260928T224909-r1  calls=81   hits=54
     own-copy         read     cat    PaxosN6Pilot-r1.lean  (line 6, cwd None)
     promoted-proof   mention  find   PaxosProved.lean  (line 9, cwd None)
     other            mention  find   Paxos.lean  (line 9, cwd None)
@@ -87,7 +87,7 @@ clean        PaxosN6Pilot-20260928T224909-r1  calls=81   hits=54
     other            read     for    /home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/results/attempt-001/proof.jsonl  (line 171, cwd None)
     other            read     $LEAN  A.lean  (line 177, cwd None)
     other            read     $LEAN  B.lean  (line 177, cwd None)
-    own-copy         read     cat    /home/gavin/dev/model-or-proof/results/paxos-corollary-pilot-killed-attempt-003/attempt-003-workspace/paxos/.runs/PaxosN6Pilot-r1.lean  (line 186, cwd None)
+    foreign-copy     read     cat    /home/gavin/dev/model-or-proof/results/paxos-corollary-pilot-killed-attempt-003/attempt-003-workspace/paxos/.runs/PaxosN6Pilot-r1.lean  (line 186, cwd None)
     own-transcript   read     <none> /home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/results/attempt-003/omp/PaxosN6Pilot-20260928T224909-r1/file/2026-09-28T20-49-11-547Z_01a0e9c7-5b7b-75f6-be15-c5966ad525b6.jsonl  (line 191, cwd None)
     other            read     do     .jsonl  (line 200, cwd None)
     other            read     do     .jsonl  (line 203, cwd None)

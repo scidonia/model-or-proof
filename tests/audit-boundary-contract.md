@@ -71,3 +71,29 @@ never wrote a row cannot claim a declaration, and a missing declaration is never
   distinction the caller is expected to make. The guard-rail is what keeps the exception honest — a read
   of another attempt's *transcript* must still invalidate, so the fix narrows the class to the file kind
   and does not simply drop it.
+
+## Scenario 7 — an identically named file outside the attempt's own package is suspect, not own
+
+- **Actor**: the audit, over one attempt directory.
+- **Boundary**: `scripts.audit_attempts.audit_attempt(directory) -> verdict`.
+- **Given**: three synthetic tier-1 attempts, each whose transcript reads a `<stem>-r1.lean` — (a) its own
+  package's `.runs/` copy; (b) a **sibling attempt's** `.runs/` copy, with the same stem *and* the same
+  repetition number, because every attempt and every cell starts at `r1`; (c) the same foreign read in an
+  attempt with **no row**, so no package can be determined.
+- **When**: each is audited.
+- **Then**: (a) is **clean** — an attempt reading its own working file is ordinary; (b) is
+  **contaminated**, classed `foreign-copy`, because the name cannot tell the two apart and the path can;
+  (c) keeps today's behaviour (`own-copy`), because with no row the audit cannot say which package is the
+  attempt's own.
+- **Expected pre-correction failure**: (b) reports **clean** today. `own-copy` is decided by name alone, so
+  a read of another attempt's identically named working file is indistinguishable from the reader's own —
+  and since every cell restarts at `r1`, the file the remediation will be able to reach for a re-earned arm
+  is the published cell's, under the same stem.
+- **Why**: the class answers *who wrote this file* from *what is it called*, and the name genuinely cannot
+  answer it when two packages both call their working copy `<stem>-r1.lean`. The path can, and the row
+  already carries it: `artifacts.baseline.seed` names the package the attempt was given. The fallback for an
+  attempt with no row is deliberate rather than fail-closed — the conservative direction would flag every
+  attempt's read of its own working file wherever a row is absent, which is not a safer instrument but a
+  broken one. What this buys is that **the audit makes this check itself, per attempt**, instead of the
+  hand-run transcript scan that licensed the tier-1 pilot's clean verdict; a remediation of six arms cannot
+  rest on a manual check per arm.
