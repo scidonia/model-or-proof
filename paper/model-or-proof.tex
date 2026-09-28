@@ -44,8 +44,12 @@ because the attempt's shell still reaches the repository's templates and results
 holds no prior proof. That is a result about running a priced AI proof loop, and it is reported here in
 place of a table built on contaminated samples. On a fresh Paxos cell --- the task whose general theorem
 and bounded instance are the same claim --- the loop settled the general statement in a strict majority of
-five attempts with \emph{no} proof failures, at a median of 1640.7\,s and \$0.00498; that is the theorem
-operand only, with no corollary cell, so no crossing, no parity verdict and no $n_0$.
+five attempts with \emph{no} proof failures, at a median of 1640.7\,s and \$0.00472. A tier-1 corollary
+pilot at the same instance adds 418.9\,s, so the same-claim proof total is \textbf{2059.6\,s} against
+TLC's \textbf{1405.9\,s} --- and because the corollary term cannot be negative while every measured
+instance costs less and the next one cannot be exhausted inside the budget, \textbf{the crossing is
+nonviable} for every instance TLC completes. That \emph{supports} H1 rather than leaving its crossover
+unmeasured, and it is the pre-registered prediction under H1.
 
 We report the method, the four tasks, the measured matrix, and at length what the result does
 \emph{not} establish.
@@ -343,17 +347,31 @@ verdict} --- a strict majority --- and \textbf{zero attempts failed to prove any
 non-certified attempts had clean integrity, elaboration, permitted axioms and an intact seed, and were
 withheld for rig reasons only (one put a scratch file outside the allowed prefix; one lost its verdict to
 an instrument fault, below). The all-attempt median is \textbf{1{,}640.690\,s} (range 386.999--1{,}716.946)
-at a cell cost of \textbf{\$0.00498}, with the withheld attempts' actual elapsed times included --- the
-selection operand is never a median over closures only.
+at a cell cost of \textbf{\$0.00472} (the five rows' own \texttt{cost\_usd} summed), with the withheld
+attempts' actual elapsed times included --- the selection operand is never a median over closures only.
 
-\textbf{What it licences, narrowly.} This is the \emph{theorem operand only}. The same-claim proof total
-is the theorem median \emph{plus} the median of Paxos's own tier-1 corollary cell at the selected $N$,
-and no such corollary cell exists, so \textbf{no crossing, no parity verdict and no $n_0$} follow; the
-manifest's \texttt{n\_cap} and \texttt{n\_0} remain null. The cell is an exploratory pilot and is
-\textbf{never pooled} with the earlier five-row Paxos pilot, whose oracle certified a decoy declaration
-and whose repetitions copied each other's proofs: that pilot is retained as diagnostic, and its single
-independent datum was 1{,}934.76\,s. Nothing here is a Route~A/Route~B ratio and nothing here should be
-divided by another task's total.
+\textbf{What it licences, and why the crossing is settled rather than merely absent.} This median is one
+of the two operands of the same-claim proof total $P(N) = \text{median}(\text{tier-2 theorem}) +
+\text{median}(\text{tier-1 corollary at }N)$, and the other is now measured. A tier-1 corollary pilot at
+the fixed six-acceptor instance --- the loop instantiating the proved general theorem, five attempts on one
+seed digest, each in its own prepared package whose receipt lists \texttt{PaxosProved} as a dependency it
+may see --- gives an all-attempt median of \textbf{418.929\,s}, so \textbf{$P(6) = 2{,}059.619$\,s} against
+Route~A's measured \textbf{$A(6) = 1{,}405.943$\,s}. The corollary therefore costs about a quarter of the
+theorem --- H2's ``instantiation is free'' made concrete --- and the sum still exceeds the largest instance
+TLC completes. The corollary term cannot be negative, so $P(N) \ge 1{,}640.690$\,s for every $N$, while
+every measured $A(N) \le 1{,}405.943$\,s and the next candidate has no successfully exhausted row at all:
+the crossing's second conjunct fails at every candidate, so \textbf{the crossing is nonviable}, and no
+further corollary measurement can change it. That \emph{supports} H1 rather than leaving a gap in it ---
+for every instance TLC completes, the proof route costs more --- with H2's crossover lying beyond the
+pinned family, which is the pre-registered prediction under H1. \texttt{n\_cap} and \texttt{n\_0} remain
+null, now for a settled reason rather than a missing operand. The comparison is also conservative in the
+claim's favour: the corollary instantiates the general theorem with unbounded $\mathbb{N}$ ballots, while
+the bounded TLC row it is priced against checks a single-ballot projection, so the priced pair is not two
+measurements of one claim and the figure above is not flattered by the difference. Both cells are
+exploratory pilots, and neither is \textbf{pooled} with the earlier five-row Paxos pilot, whose oracle
+certified a decoy declaration and whose repetitions copied each other's proofs: that pilot is retained as
+diagnostic, and its single independent datum was 1{,}934.76\,s. Nothing here is a Route~A/Route~B ratio and
+nothing here should be divided by another task's total.
 
 \textbf{A result about the rig, which stands on its own.} Re-earning the six contaminated published arms
 --- thirty attempts, each in its own prepared package whose receipt shows exactly what it could see ---

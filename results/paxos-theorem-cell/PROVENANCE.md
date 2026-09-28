@@ -67,7 +67,9 @@ All five attempts completed and the audit is committed beside them (`audit.txt`,
 
 **Pass rate 3 of 5 verdict-true**, a strict majority, so the cell supports a settled claim. All-attempt
 wall times with both withheld attempts' actual elapsed times included: min 386.999, **median 1640.690**,
-max 1716.946 s; cell cost $0.00498. A closed-only median is not reported, because it is not the selection
+max 1716.946 s; cell cost $0.00472 (the five rows' own `cost_usd` summed — the record previously said
+$0.00498, which does not reproduce from the rows; the difference is the aborted third invocation's spend,
+which is not part of the cell). A closed-only median is not reported, because it is not the selection
 operand.
 
 **The audit passes.** `scripts/audit_attempts.py --expect-revision` over
