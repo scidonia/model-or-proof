@@ -265,8 +265,13 @@ class OutsideWatch:
             return
         # `-c` terminates every record, so the last record must end at a terminator, outside every quote.
         # `csv.reader` accepts an unterminated quoted field at end of stream without complaint, so the
-        # check is made here: a well-formed record text holds an even number of `"`, one closed pair per
-        # quoted field and one per escaped quote.
+        # check is made here. It is *adequate for this instrument*, not a termination proof: an even quote
+        # count alone has a passing counterexample (`/root"x/,CREATE,"abc` is accepted though it ends
+        # mid-quote). What rules that out is the instrument's own quoting — every `"` inside a field is
+        # doubled, so a raw odd quote cannot appear — together with the only other thing on the raw stream,
+        # `Couldn't watch <path>: <strerror>`, whose second field always carries `': '` and so can never
+        # equal a bare event name. A future reader should not lean on the count as an invariant; the
+        # reachability argument is why it holds here.
         if final_raw and (not final_raw.endswith(("\n", "\r")) or final_raw.count('"') % 2):
             self.blind = self.blind or f"the event stream ended mid-record: {final_raw!r}"
 

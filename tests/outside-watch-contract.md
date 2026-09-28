@@ -115,10 +115,15 @@ says so rather than implying the loop is airtight.
 
 - **Quoted, one record:** a newline in a filename; a newline in the `%w` directory component; a comma; a
   doubled quote.
-- **Not quoted, splits the record — a lone CR (`0x0D`).** A CR fragment degrades to **blindness**, not to
-  certification: the truncated first field still carries the directory prefix that decides allowed-ness,
-  and a filename fragment cannot contain `/`. `[INFERENCE]` — that reasoning is not built end-to-end, and
-  the contract states it as the argument for calling this direction safe rather than as a measurement.
+- **A lone CR (`0x0D`) is not quoted, and where it sits decides what happens.** *Inside* a name the record
+  splits, and the fragment cannot be read as an event, so it is **blindness** — a false withholding, the
+  safe direction. *Trailing* a name it arrives as `…,CREATE,trail\r\n`, which `newline=""` reads as one
+  CRLF line ending, so `csv` strips the CR: the event **is** reported, without that one byte. Both cases
+  leave the directory field — the one that decides allowed-ness — intact, so neither hides an outside
+  write, and the trailing case is **unfixable at the parse layer** because the byte sequence is genuinely
+  ambiguous between a name ending in CR and a record ended by CRLF. This clause previously claimed that a
+  lone CR "degrades to blindness" and labelled the reasoning `[INFERENCE]`; measurement retired it, and the
+  one-byte path truncation is recorded as the known cost rather than as a refusal.
 - **Quoted but mangled by universal newlines:** a `\r\n` inside a name survives `-c` quoting and is then
   rewritten to `\n` by `text=True`'s newline translation, corrupting the path
   (`'f\r\ncrnl.lean'` → `'f\ncrnl.lean'`). Which is why the read specifies `newline=""`.
