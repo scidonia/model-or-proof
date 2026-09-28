@@ -1,0 +1,42 @@
+{
+  "artifact": "results/remediation/lcr2/results/attempt-005/closures/lcr/LCR-20260928T203847-r1.lean",
+  "artifact_sha256": "b43b76b98befb04ba0b053ee4bed99ff740c17bb888abf05b060f2299b2f643f",
+  "closure": {
+    "axiom_report": "ok",
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "closed": true,
+    "elaborates": true,
+    "errors": [],
+    "integrity": true,
+    "lean_path": "/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/Cli/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/batteries/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/Qq/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/aesop/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/importGraph/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/plausible/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/lcr/.lake/packages/mathlib/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/results/remediation/lcr2/workspaces/attempt-005/lcr/.lake/build/lib/lean:/home/gavin/.elan/toolchains/leanprover--lean4---v4.35.0-rc3/lib/lean",
+    "module": "LCR",
+    "no_progress_rounds": 0,
+    "outside_events": [],
+    "outside_writes": [],
+    "pristine_sha256": "f8a6dcebc328ee4b843ef488c0e3ae63da35b99df76d41ba9634de88cd44c102",
+    "raw_tail": [
+      "Quot.sound",
+      "propext",
+      "resolved LCR.unique_leader"
+    ],
+    "rounds": 1,
+    "seed_intact": true,
+    "theorem": "LCR.unique_leader",
+    "timed_out": false,
+    "verdict": true,
+    "watch_blind": null,
+    "withheld": []
+  },
+  "digests_agree": true,
+  "mode": "file",
+  "omp_sessions": "/home/gavin/dev/model-or-proof/results/remediation/lcr2/results/attempt-005/omp/LCR-20260928T203847-r1",
+  "pristine_sha256": "f8a6dcebc328ee4b843ef488c0e3ae63da35b99df76d41ba9634de88cd44c102",
+  "row": "results/remediation/lcr2/results/attempt-005/proof.jsonl:1",
+  "row_artifact_sha256": "b43b76b98befb04ba0b053ee4bed99ff740c17bb888abf05b060f2299b2f643f",
+  "task": "lcr",
+  "tier": 2
+}
