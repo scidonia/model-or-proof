@@ -33,7 +33,7 @@ change the agreement property.
 Status of this audit: the two tables below are the real mapping against the committed artifacts. The
 Lean theorem is a statement with a `sorry` placeholder — the proof is the closure loop's, so this audit
 is about the *statements*, not the tactics that close them (closure is asserted separately and
-structurally by the harness: zero `sorry`/`Admitted`/`axiom` in the artifact, plan D6).
+structurally by the harness: zero `sorry`/`Admitted`/`axiom` in the **proved** artifact, plan D6).
 
 ## 1. Imported Paxos → finite TLC projection
 
@@ -61,7 +61,7 @@ classification is for **this** direction: what the projection does to the import
 | ChosenIn | `ChosenIn(v, b) == ...` (131–132) | `ChosenIn(v, b) == ...` (146–147) | identical — a quorum all of whose members voted for `v` in `b` |
 | Chosen | `Chosen(v) == \E b \in Ballots : ChosenIn(v, b)` (134) | `Chosen(v) == \E b \in Ballots : ChosenIn(v, b)` (149) | identical — derived from votes, never stored |
 | Consistency | `Consistency == ...` (140) | `Consistency == ...` (155) | identical — two chosen values are equal |
-| Messages | `Messages == ...` (145–148) | `Messages == ...` (162–165) | bounded restriction — the four record shapes are identical; only the `bal` field's domain shrinks with the Ballots row |
+| Messages | `Messages == ...` (145–149) | `Messages == ...` (162–166) | bounded restriction — the four record shapes are identical; only the `bal` field's domain shrinks with the Ballots row |
 | TypeOK | `TypeOK == ...` (152–156) | `TypeOK == ...` (168–172) | identical — the same five conjuncts over the projection's domains (it is available for the audit and is not the checked property of this task) |
 
 ### Proof-only declarations, classified as outside the TLC checking predicate
@@ -69,7 +69,7 @@ classification is for **this** direction: what the projection does to the import
 These imported declarations are not state generation and are **not** reproduced in the projection. They
 are named here so that they are classified rather than silently dropped:
 
-- `WontVoteIn` (`Paxos.tla:162–163`), `SafeAt` (`:169–172`), `MsgInv` (`:174–209`), `AccInv`
+- `WontVoteIn` (`Paxos.tla:162–163`), `SafeAt` (`:169–172`), `MsgInv` (`:174–195`), `AccInv`
   (`:211–218`) and `Inv == TypeOK /\ MsgInv /\ AccInv` (`:223`) — TLAPS proof text, i.e. the inductive
   invariant the import's proof carries. They are **not** part of the TLC checking predicate, and the
   Lean model seeds none of them (see table 2).
@@ -112,8 +112,8 @@ of the projection, not a bounded instance of it.
 | ChosenIn | `ChosenIn(v, b) == ...` (146–147) | `ChosenIn` (227): `∃ Q ∈ Quorums, ∀ a ∈ Q, VotedForIn s a v b` | identical |
 | Chosen | `Chosen(v) == \E b \in Ballots : ChosenIn(v, b)` (149) | `Chosen` (232): `∃ b : ℕ, ChosenIn Quorums s v b` | identical — derived from `2b` votes, never stored as a decision |
 | Consistency | `Consistency == ...` (155) | `Consistency` (237): `∀ v₁ v₂ : V, Chosen ... v₁ → Chosen ... v₂ → v₁ = v₂` | identical |
-| Messages | `Messages == ...` (162–165) | the inductive `Message N V` (68) with its accessors `tag`/`ballot`/`maxVBal`/`maxVal`/`val`/`acc` (83–118), and `msgs : Set (Message N V)` (128) | idiomatic representation — the union of record shapes becomes an inductive type; `msgs \in SUBSET Messages` is the field's type, and duplicate-per-acceptor responses are sets, as the source's are |
-| TypeOK | `TypeOK == ...` (168–172) | the type of `State` plus the `TypeOK` predicate (251): `IsBallot (s.maxBal a)`, `IsBallot (s.maxVBal a)`, `s.maxBal a ≥ s.maxVBal a` | idiomatic representation — two conjuncts are carried by the types (`msgs ∈ SUBSET Messages`, `maxVal ∈ [Acceptors → Values ∪ {None}]`) and the remaining three are the explicit predicate; it is an inductive consequence of `Init`/`Next`, not a hypothesis of `agreement` |
+| Messages | `Messages == ...` (162–166) | the inductive `Message N V` (68) with its accessors `tag`/`ballot`/`maxVBal`/`maxVal`/`val`/`acc` (83–118), and `msgs : Set (Message N V)` (128) | idiomatic representation — the union of record shapes becomes an inductive type; `msgs \in SUBSET Messages` is the field's type, and duplicate-per-acceptor responses are sets, as the source's are |
+| TypeOK | `TypeOK == ...` (168–172) | the type of `State` plus the `TypeOK` predicate (251): `IsBallot (s.maxBal a)`, `IsBallot (s.maxVBal a)`, `s.maxBal a ≥ s.maxVBal a` | idiomatic representation — two conjuncts are carried by the types up to unreachable values (`msgs ∈ SUBSET Messages` — exact for `maxVal`, and for `maxVBal` only up to negative values the source's `Ballots ∪ {-1}` rejects, which `Init`/`Next` cannot reach since the Lean type is `ℤ`; and `maxVal ∈ [Acceptors → Values ∪ {None}]`) and the remaining three are the explicit predicate; it is an inductive consequence of `Init`/`Next`, not a hypothesis of `agreement` |
 
 ### The theorem, and what is deliberately not in the Lean proof
 
