@@ -19,6 +19,13 @@ it is the contract of the experiment.
   nothing about Paxos's runtime.
 - Every new or changed scenario is observed failing before the code that satisfies it; the failure is
   reported, not asserted from memory.
+- A scenario's **expected-failure field is itself a claim about the code**, so it is measured like any
+  other before it is written down: run the scenario against the unmodified code and record what actually
+  happened. Asserted from reading, it produces the specific error this rule exists to prevent — a
+  **guard-rail written as a red**, where a test that never failed is filed as one that needed a fix, and
+  the passing test then reads as a satisfied requirement although nothing was ever unsatisfied. The
+  scenario itself is still not the place to guess: if the baseline has not been run, say so in the field
+  rather than describing the behaviour you expect.
 - A command whose **exit status carries meaning** is read with its output captured or left unmodified.
   A pipeline's status belongs to its last stage, and `| head`/`| tail` can also turn the writer's own
   zero into a nonzero through a broken pipe — so `… | tail -3` shows what ran, never whether it passed.
