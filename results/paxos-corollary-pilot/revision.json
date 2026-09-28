@@ -1,0 +1,23 @@
+{
+  "cell": "results/paxos-corollary-pilot",
+  "digest": "4adf11cea8673bbf74a217576006b3b419e4250f2fc960fae9bff418612d29bd",
+  "files": {
+    "harness/__init__.py": "7ff4ca89bba7f2acdadd9c77cf3ab184c68b7617f3cb06eb7bf6f985a223c198",
+    "harness/attempt_workspace.py": "2fd8f3c8c79c6a162087139a4948f9a972bae0c33767af3e456a31d7ed668e4a",
+    "harness/closure.py": "e7e14d5754ee109f7c1e51cbd880d9042e3eea542e7032ea9941c3894d54862c",
+    "harness/closure_oracle.py": "539b3b94d85a0ba5d359fe0a5d3cf18beb04b5cd4be993aa7adaf78fe3d3b551",
+    "harness/file_mode.py": "718e7e21c59c7c91b2fd5a3cd2fb0bc9e5a3dcb3666a4521375e06c1b3094da0",
+    "harness/lean_lex.py": "9d0d48aa51753a1836b99cbc0ac6208b06b5ada6ba2d8c1384359a3eafe1ce12",
+    "harness/lean_repl.py": "c9c44d8aa01cb9baa9e806c9dad91b397ed96f244f95e2eceb66caa19bf38738",
+    "harness/model.py": "78bc99d611fccddd0fa5a0ddfbc643f21ca75e9fad8385228395779533ca85a0",
+    "harness/outside_watch.py": "2de0372c47bb4ff9f9a22de16f608874608c6927ee9db5fae8c804753774440d",
+    "harness/result.py": "ab9ccd96f993e2d7b6652e0b712a974415bfe24ae85d0d09b1e0fb8a54534b32",
+    "harness/route_b.py": "f875e2333367b8554ac357b9847bc95de8ce1d1ba09af8f0de78af84676804b6",
+    "harness/tlc_run.py": "26d5b68057d257b15f3ce5ddab180eda955caab05898cfe820af4466e772be12",
+    "proofs/lean/token-ring/prompt_examples.lean": "86e0d649ec8931602f249eb185793feeba47067cf976a501bbcb399ad795db63",
+    "results/paxos-corollary-pilot/workspaces/attempt-001/paxos/PaxosN6Pilot.lean": "d3043114fe8aa46fd4ca9eee1000e85dcc2e4a6d430c0333626ef61f51917950",
+    "results/paxos-corollary-pilot/workspaces/attempt-001/paxos/seeds.json": "0ea144937ce817ab0634992234dde1217539dc9c91b9e76c633f741e1445f3b0"
+  },
+  "head": "164e311164c633307edc061db92ab276fc0df4c7",
+  "method": "harness.route_b.harness_revision over the prepared attempt-001 package and the tree as it stood at capture. Captured after launch rather than before it, and therefore re-verified at cell end; the harness was frozen for this cell, so the only files that can move under it are the package's own copies, which the run's rows record separately (pristine_sha256 and baseline.matches). Load at launch was 1.18 / 1.20 / 1.24 on 20 cores."
+}

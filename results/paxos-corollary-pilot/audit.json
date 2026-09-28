@@ -1,0 +1,1752 @@
+{
+  "revision": {
+    "recorded_digest": "4adf11cea8673bbf74a217576006b3b419e4250f2fc960fae9bff418612d29bd",
+    "recorded_at": "164e311164c633307edc061db92ab276fc0df4c7",
+    "differing": [],
+    "missing": [],
+    "verdict": "ok"
+  },
+  "attempts": [
+    {
+      "attempt": "PaxosN6Pilot-20260928T223124-r1",
+      "session": "results/paxos-corollary-pilot/results/attempt-001/omp/PaxosN6Pilot-20260928T223124-r1",
+      "stem": "PaxosN6Pilot",
+      "repetition": 1,
+      "transcripts": [
+        "results/paxos-corollary-pilot/results/attempt-001/omp/PaxosN6Pilot-20260928T223124-r1/file/2026-09-28T20-31-26-062Z_01a0e9b7-196e-705f-802e-3a64c66ed9cd.jsonl"
+      ],
+      "calls": 25,
+      "verdict": "clean",
+      "offenders": [],
+      "hits": [
+        {
+          "line": 6,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 9,
+          "tool": "bash",
+          "verb": "find",
+          "effect": "mention",
+          "class": "promoted-proof",
+          "token": "PaxosProved.lean",
+          "cwd": null,
+          "declared": true,
+          "reason": "the attempt's own declared dependency (tier 1): its row records the tier and its package holds this module, copied in for the attempt to import"
+        },
+        {
+          "line": 9,
+          "tool": "bash",
+          "verb": "find",
+          "effect": "mention",
+          "class": "other",
+          "token": "Paxos.lean",
+          "cwd": null
+        },
+        {
+          "line": 12,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "promoted-proof",
+          "token": "../PaxosProved.lean",
+          "cwd": null,
+          "declared": true,
+          "reason": "the attempt's own declared dependency (tier 1): its row records the tier and its package holds this module, copied in for the attempt to import"
+        },
+        {
+          "line": 17,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos/.runs"
+        },
+        {
+          "line": 23,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos"
+        },
+        {
+          "line": 32,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos"
+        },
+        {
+          "line": 35,
+          "tool": "bash",
+          "verb": "p",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos/.runs"
+        },
+        {
+          "line": 35,
+          "tool": "bash",
+          "verb": "grep",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos/.runs"
+        },
+        {
+          "line": 38,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos"
+        },
+        {
+          "line": 41,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "seed",
+          "token": "../PaxosN6Pilot.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos/.runs"
+        },
+        {
+          "line": 41,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos/.runs"
+        },
+        {
+          "line": 44,
+          "tool": "bash",
+          "verb": "by_contra\"",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos/.runs"
+        },
+        {
+          "line": 47,
+          "tool": "bash",
+          "verb": "syntax\"",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos/.runs"
+        },
+        {
+          "line": 47,
+          "tool": "bash",
+          "verb": "grep",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos/.runs"
+        },
+        {
+          "line": 50,
+          "tool": "bash",
+          "verb": "\\baxiom\\b\"",
+          "effect": "read",
+          "class": "promoted-proof",
+          "token": "../PaxosProved.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos/.runs",
+          "declared": true,
+          "reason": "the attempt's own declared dependency (tier 1): its row records the tier and its package holds this module, copied in for the attempt to import"
+        },
+        {
+          "line": 53,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "write",
+          "class": "other",
+          "token": "AxiomsCheck.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos"
+        },
+        {
+          "line": 53,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "other",
+          "token": ".runs/AxiomsCheck.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos"
+        },
+        {
+          "line": 59,
+          "tool": "bash",
+          "verb": "find",
+          "effect": "mention",
+          "class": "other",
+          "token": "AxiomsCheck.lean",
+          "cwd": null
+        },
+        {
+          "line": 59,
+          "tool": "bash",
+          "verb": "find",
+          "effect": "mention",
+          "class": "other",
+          "token": "AxiomsCheck.lean",
+          "cwd": null
+        },
+        {
+          "line": 62,
+          "tool": "bash",
+          "verb": "rm",
+          "effect": "delete",
+          "class": "other",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos/AxiomsCheck.lean",
+          "cwd": null
+        },
+        {
+          "line": 62,
+          "tool": "bash",
+          "verb": "find",
+          "effect": "mention",
+          "class": "other",
+          "token": "AxiomsCheck.lean",
+          "cwd": null
+        },
+        {
+          "line": 65,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "write",
+          "class": "other",
+          "token": ".runs/AxiomsCheck.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos"
+        },
+        {
+          "line": 65,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "other",
+          "token": ".runs/AxiomsCheck.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos"
+        },
+        {
+          "line": 68,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "copy",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos"
+        },
+        {
+          "line": 68,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "write",
+          "class": "other",
+          "token": ".runs/AxiomsCheck.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos"
+        },
+        {
+          "line": 68,
+          "tool": "bash",
+          "verb": "printf",
+          "effect": "write",
+          "class": "other",
+          "token": ".runs/AxiomsCheck.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos"
+        },
+        {
+          "line": 68,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "other",
+          "token": ".runs/AxiomsCheck.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos"
+        },
+        {
+          "line": 71,
+          "tool": "bash",
+          "verb": "rm",
+          "effect": "delete",
+          "class": "other",
+          "token": ".runs/AxiomsCheck.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos"
+        },
+        {
+          "line": 74,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "seed",
+          "token": "../PaxosN6Pilot.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos/.runs"
+        },
+        {
+          "line": 74,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos/.runs"
+        },
+        {
+          "line": 77,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-001/paxos"
+        }
+      ]
+    },
+    {
+      "attempt": "PaxosN6Pilot-20260928T223322-r1",
+      "session": "results/paxos-corollary-pilot/results/attempt-002/omp/PaxosN6Pilot-20260928T223322-r1",
+      "stem": "PaxosN6Pilot",
+      "repetition": 1,
+      "transcripts": [
+        "results/paxos-corollary-pilot/results/attempt-002/omp/PaxosN6Pilot-20260928T223322-r1/file/2026-09-28T20-33-23-909Z_01a0e9b8-e5c5-726b-9aea-595f28954d3b.jsonl"
+      ],
+      "calls": 16,
+      "verdict": "clean",
+      "offenders": [],
+      "hits": [
+        {
+          "line": 6,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 11,
+          "tool": "bash",
+          "verb": "find",
+          "effect": "mention",
+          "class": "other",
+          "token": "Paxos.lean",
+          "cwd": null
+        },
+        {
+          "line": 16,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "promoted-proof",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-002/paxos/PaxosProved.lean",
+          "cwd": null,
+          "declared": true,
+          "reason": "the attempt's own declared dependency (tier 1): its row records the tier and its package holds this module, copied in for the attempt to import"
+        },
+        {
+          "line": 21,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 29,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 32,
+          "tool": "bash",
+          "verb": "p",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 35,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 38,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "seed",
+          "token": "PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 38,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 38,
+          "tool": "bash",
+          "verb": "axiom'",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 43,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "copy",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 43,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "write",
+          "class": "other",
+          "token": "checkax.lean",
+          "cwd": null
+        },
+        {
+          "line": 43,
+          "tool": "bash",
+          "verb": "printf",
+          "effect": "write",
+          "class": "other",
+          "token": "checkax.lean",
+          "cwd": null
+        },
+        {
+          "line": 43,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "other",
+          "token": ".runs/checkax.lean",
+          "cwd": null
+        },
+        {
+          "line": 46,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 46,
+          "tool": "bash",
+          "verb": "rm",
+          "effect": "delete",
+          "class": "other",
+          "token": ".runs/checkax.lean",
+          "cwd": null
+        }
+      ]
+    },
+    {
+      "attempt": "PaxosN6Pilot-20260928T224909-r1",
+      "session": "results/paxos-corollary-pilot/results/attempt-003/omp/PaxosN6Pilot-20260928T224909-r1",
+      "stem": "PaxosN6Pilot",
+      "repetition": 1,
+      "transcripts": [
+        "results/paxos-corollary-pilot/results/attempt-003/omp/PaxosN6Pilot-20260928T224909-r1/file/2026-09-28T20-49-11-547Z_01a0e9c7-5b7b-75f6-be15-c5966ad525b6.jsonl"
+      ],
+      "calls": 81,
+      "verdict": "clean",
+      "offenders": [],
+      "hits": [
+        {
+          "line": 6,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 9,
+          "tool": "bash",
+          "verb": "find",
+          "effect": "mention",
+          "class": "promoted-proof",
+          "token": "PaxosProved.lean",
+          "cwd": null,
+          "declared": true,
+          "reason": "the attempt's own declared dependency (tier 1): its row records the tier and its package holds this module, copied in for the attempt to import"
+        },
+        {
+          "line": 9,
+          "tool": "bash",
+          "verb": "find",
+          "effect": "mention",
+          "class": "other",
+          "token": "Paxos.lean",
+          "cwd": null
+        },
+        {
+          "line": 12,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "promoted-proof",
+          "token": "/home/gavin/dev/model-or-proof/proofs/lean/paxos/PaxosProved.lean",
+          "cwd": null,
+          "declared": true,
+          "reason": "the attempt's own declared dependency (tier 1): its row records the tier and its package holds this module, copied in for the attempt to import"
+        },
+        {
+          "line": 12,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "other",
+          "token": "/home/gavin/dev/model-or-proof/proofs/lean/paxos/Paxos.lean",
+          "cwd": null
+        },
+        {
+          "line": 17,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 29,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 35,
+          "tool": "bash",
+          "verb": "sha256sum",
+          "effect": "compare",
+          "class": "promoted-proof",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-003/paxos/PaxosProved.lean",
+          "cwd": null,
+          "declared": true,
+          "reason": "the attempt's own declared dependency (tier 1): its row records the tier and its package holds this module, copied in for the attempt to import"
+        },
+        {
+          "line": 35,
+          "tool": "bash",
+          "verb": "sha256sum",
+          "effect": "compare",
+          "class": "promoted-proof",
+          "token": "/home/gavin/dev/model-or-proof/proofs/lean/paxos/PaxosProved.lean",
+          "cwd": null,
+          "declared": true,
+          "reason": "the attempt's own declared dependency (tier 1): its row records the tier and its package holds this module, copied in for the attempt to import"
+        },
+        {
+          "line": 35,
+          "tool": "bash",
+          "verb": "sha256sum",
+          "effect": "compare",
+          "class": "seed",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-003/paxos/PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 35,
+          "tool": "bash",
+          "verb": "sha256sum",
+          "effect": "compare",
+          "class": "seed",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-003/paxos/baseline/PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 35,
+          "tool": "bash",
+          "verb": "sha256sum",
+          "effect": "compare",
+          "class": "own-copy",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-003/paxos/.runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 44,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 47,
+          "tool": "bash",
+          "verb": "p",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 47,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 50,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 53,
+          "tool": "bash",
+          "verb": "grep",
+          "effect": "read",
+          "class": "promoted-proof",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-003/paxos/PaxosProved.lean",
+          "cwd": null,
+          "declared": true,
+          "reason": "the attempt's own declared dependency (tier 1): its row records the tier and its package holds this module, copied in for the attempt to import"
+        },
+        {
+          "line": 53,
+          "tool": "bash",
+          "verb": "base",
+          "effect": "read",
+          "class": "seed",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-003/paxos/baseline/PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 53,
+          "tool": "bash",
+          "verb": "work",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 58,
+          "tool": "bash",
+          "verb": "base",
+          "effect": "read",
+          "class": "seed",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-003/paxos/baseline/PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 58,
+          "tool": "bash",
+          "verb": "work",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 61,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "write",
+          "class": "other",
+          "token": ".axiom_check.lean",
+          "cwd": null
+        },
+        {
+          "line": 61,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "other",
+          "token": ".axiom_check.lean",
+          "cwd": null
+        },
+        {
+          "line": 61,
+          "tool": "bash",
+          "verb": "rm",
+          "effect": "delete",
+          "class": "other",
+          "token": ".axiom_check.lean",
+          "cwd": null
+        },
+        {
+          "line": 64,
+          "tool": "bash",
+          "verb": "grep",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 70,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 126,
+          "tool": "bash",
+          "verb": "printf",
+          "effect": "write",
+          "class": "other",
+          "token": "A.lean",
+          "cwd": null
+        },
+        {
+          "line": 126,
+          "tool": "bash",
+          "verb": "printf",
+          "effect": "write",
+          "class": "other",
+          "token": "B.lean",
+          "cwd": null
+        },
+        {
+          "line": 126,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "other",
+          "token": "B.lean",
+          "cwd": null
+        },
+        {
+          "line": 129,
+          "tool": "bash",
+          "verb": "$LEAN",
+          "effect": "read",
+          "class": "other",
+          "token": "B.lean",
+          "cwd": null
+        },
+        {
+          "line": 165,
+          "tool": "bash",
+          "verb": "for",
+          "effect": "read",
+          "class": "other",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/results/attempt-001/proof.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 165,
+          "tool": "bash",
+          "verb": "for",
+          "effect": "read",
+          "class": "other",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/results/attempt-002/proof.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 168,
+          "tool": "bash",
+          "verb": "for",
+          "effect": "read",
+          "class": "other",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/results/attempt-001/proof.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 168,
+          "tool": "bash",
+          "verb": "for",
+          "effect": "read",
+          "class": "other",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/results/attempt-002/proof.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 171,
+          "tool": "bash",
+          "verb": "for",
+          "effect": "read",
+          "class": "other",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/results/attempt-001/proof.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 177,
+          "tool": "bash",
+          "verb": "$LEAN",
+          "effect": "read",
+          "class": "other",
+          "token": "A.lean",
+          "cwd": null
+        },
+        {
+          "line": 177,
+          "tool": "bash",
+          "verb": "$LEAN",
+          "effect": "read",
+          "class": "other",
+          "token": "B.lean",
+          "cwd": null
+        },
+        {
+          "line": 186,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot-killed-attempt-003/attempt-003-workspace/paxos/.runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 191,
+          "tool": "bash",
+          "verb": "<none>",
+          "effect": "read",
+          "class": "own-transcript",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/results/attempt-003/omp/PaxosN6Pilot-20260928T224909-r1/file/2026-09-28T20-49-11-547Z_01a0e9c7-5b7b-75f6-be15-c5966ad525b6.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 200,
+          "tool": "bash",
+          "verb": "do",
+          "effect": "read",
+          "class": "other",
+          "token": ".jsonl",
+          "cwd": null
+        },
+        {
+          "line": 203,
+          "tool": "bash",
+          "verb": "do",
+          "effect": "read",
+          "class": "other",
+          "token": ".jsonl",
+          "cwd": null
+        },
+        {
+          "line": 206,
+          "tool": "bash",
+          "verb": "*.jsonl",
+          "effect": "read",
+          "class": "other",
+          "token": ".jsonl",
+          "cwd": null
+        },
+        {
+          "line": 227,
+          "tool": "bash",
+          "verb": "sorry'",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 227,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 235,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 238,
+          "tool": "bash",
+          "verb": "printf",
+          "effect": "write",
+          "class": "other",
+          "token": ".axchk.lean",
+          "cwd": null
+        },
+        {
+          "line": 238,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "other",
+          "token": ".axchk.lean",
+          "cwd": null
+        },
+        {
+          "line": 238,
+          "tool": "bash",
+          "verb": "rm",
+          "effect": "delete",
+          "class": "other",
+          "token": ".axchk.lean",
+          "cwd": null
+        },
+        {
+          "line": 241,
+          "tool": "bash",
+          "verb": "printf",
+          "effect": "write",
+          "class": "other",
+          "token": ".runs/.axchk.lean",
+          "cwd": null
+        },
+        {
+          "line": 241,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "other",
+          "token": ".runs/.axchk.lean",
+          "cwd": null
+        },
+        {
+          "line": 241,
+          "tool": "bash",
+          "verb": "rm",
+          "effect": "delete",
+          "class": "other",
+          "token": ".runs/.axchk.lean",
+          "cwd": null
+        },
+        {
+          "line": 244,
+          "tool": "bash",
+          "verb": "tail",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 244,
+          "tool": "bash",
+          "verb": "grep",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 247,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        }
+      ]
+    },
+    {
+      "attempt": "PaxosN6Pilot-20260928T230016-r1",
+      "session": "results/paxos-corollary-pilot/results/attempt-004/omp/PaxosN6Pilot-20260928T230016-r1",
+      "stem": "PaxosN6Pilot",
+      "repetition": 1,
+      "transcripts": [
+        "results/paxos-corollary-pilot/results/attempt-004/omp/PaxosN6Pilot-20260928T230016-r1/file/2026-09-28T21-00-18-598Z_01a0e9d1-8926-7460-a7f7-7c82a5238bb2.jsonl"
+      ],
+      "calls": 79,
+      "verdict": "clean",
+      "offenders": [],
+      "hits": [
+        {
+          "line": 9,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 9,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "seed",
+          "token": "../PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 14,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "promoted-proof",
+          "token": "../PaxosProved.lean",
+          "cwd": null,
+          "declared": true,
+          "reason": "the attempt's own declared dependency (tier 1): its row records the tier and its package holds this module, copied in for the attempt to import"
+        },
+        {
+          "line": 23,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 41,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 44,
+          "tool": "bash",
+          "verb": "p",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 44,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 47,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 50,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "seed",
+          "token": "../PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 50,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 53,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "copy",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 53,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "write",
+          "class": "other",
+          "token": "/tmp/PaxosN6Pilot-r1.bak.lean",
+          "cwd": null
+        },
+        {
+          "line": 53,
+          "tool": "bash",
+          "verb": "printf",
+          "effect": "write",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 53,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 53,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "copy",
+          "class": "other",
+          "token": "/tmp/PaxosN6Pilot-r1.bak.lean",
+          "cwd": null
+        },
+        {
+          "line": 53,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "write",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 53,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "seed",
+          "token": "../PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 53,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 56,
+          "tool": "bash",
+          "verb": "admit'",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 62,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 136,
+          "tool": "bash",
+          "verb": "find",
+          "effect": "mention",
+          "class": "other",
+          "token": ".jsonl",
+          "cwd": null
+        },
+        {
+          "line": 139,
+          "tool": "bash",
+          "verb": "echo",
+          "effect": "read",
+          "class": "other",
+          "token": "proof.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 139,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "other",
+          "token": "results/attempt-004/proof.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 139,
+          "tool": "bash",
+          "verb": "wc",
+          "effect": "mention",
+          "class": "other",
+          "token": ".jsonl",
+          "cwd": null
+        },
+        {
+          "line": 142,
+          "tool": "bash",
+          "verb": "tail",
+          "effect": "read",
+          "class": "other",
+          "token": ".jsonl",
+          "cwd": null
+        },
+        {
+          "line": 145,
+          "tool": "bash",
+          "verb": "do",
+          "effect": "read",
+          "class": "other",
+          "token": "proof.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 145,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "other",
+          "token": "results/attempt-$a/proof.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 148,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "other",
+          "token": "results/attempt-$a/proof.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 154,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "other",
+          "token": "results/attempt-001/proof.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 187,
+          "tool": "bash",
+          "verb": "f",
+          "effect": "read",
+          "class": "other",
+          "token": ".jsonl",
+          "cwd": null
+        },
+        {
+          "line": 208,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 214,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 217,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "copy",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 217,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "write",
+          "class": "seed",
+          "token": "$TMP/PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 217,
+          "tool": "bash",
+          "verb": "env",
+          "effect": "read",
+          "class": "seed",
+          "token": "PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 223,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "copy",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 223,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "write",
+          "class": "seed",
+          "token": "$TMP/PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 223,
+          "tool": "bash",
+          "verb": "env",
+          "effect": "read",
+          "class": "seed",
+          "token": "PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 229,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "seed",
+          "token": "PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 229,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 229,
+          "tool": "bash",
+          "verb": "axiom)\\b'",
+          "effect": "read",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 229,
+          "tool": "bash",
+          "verb": "sha256sum",
+          "effect": "compare",
+          "class": "seed",
+          "token": "PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 229,
+          "tool": "bash",
+          "verb": "sha256sum",
+          "effect": "compare",
+          "class": "seed",
+          "token": "baseline/PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 232,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 232,
+          "tool": "bash",
+          "verb": "wc",
+          "effect": "mention",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 241,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "copy",
+          "class": "own-copy",
+          "token": ".runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 241,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "write",
+          "class": "seed",
+          "token": "$TMP/PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 241,
+          "tool": "bash",
+          "verb": "env",
+          "effect": "read",
+          "class": "seed",
+          "token": "PaxosN6Pilot.lean",
+          "cwd": null
+        }
+      ]
+    },
+    {
+      "attempt": "PaxosN6Pilot-20260928T230956-r1",
+      "session": "results/paxos-corollary-pilot/results/attempt-005/omp/PaxosN6Pilot-20260928T230956-r1",
+      "stem": "PaxosN6Pilot",
+      "repetition": 1,
+      "transcripts": [
+        "results/paxos-corollary-pilot/results/attempt-005/omp/PaxosN6Pilot-20260928T230956-r1/file/2026-09-28T21-09-58-295Z_01a0e9da-6197-7569-ad34-88442da135cc.jsonl"
+      ],
+      "calls": 82,
+      "verdict": "clean",
+      "offenders": [],
+      "hits": [
+        {
+          "line": 9,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 12,
+          "tool": "bash",
+          "verb": "find",
+          "effect": "mention",
+          "class": "promoted-proof",
+          "token": "PaxosProved.lean",
+          "cwd": null,
+          "declared": true,
+          "reason": "the attempt's own declared dependency (tier 1): its row records the tier and its package holds this module, copied in for the attempt to import"
+        },
+        {
+          "line": 12,
+          "tool": "bash",
+          "verb": "find",
+          "effect": "mention",
+          "class": "other",
+          "token": ".lean",
+          "cwd": null
+        },
+        {
+          "line": 17,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "promoted-proof",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-005/paxos/PaxosProved.lean",
+          "cwd": null,
+          "declared": true,
+          "reason": "the attempt's own declared dependency (tier 1): its row records the tier and its package holds this module, copied in for the attempt to import"
+        },
+        {
+          "line": 22,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "copy",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 22,
+          "tool": "bash",
+          "verb": "cp",
+          "effect": "write",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 22,
+          "tool": "bash",
+          "verb": "p",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 22,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 25,
+          "tool": "bash",
+          "verb": "p",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 25,
+          "tool": "bash",
+          "verb": "exact",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 28,
+          "tool": "bash",
+          "verb": "lake",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 60,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 72,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 75,
+          "tool": "bash",
+          "verb": "src",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 75,
+          "tool": "bash",
+          "verb": "chk",
+          "effect": "read",
+          "class": "other",
+          "token": "CheckAxioms.lean",
+          "cwd": null
+        },
+        {
+          "line": 75,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "other",
+          "token": "CheckAxioms.lean",
+          "cwd": null
+        },
+        {
+          "line": 78,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "seed",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-005/paxos/baseline/PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 78,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 83,
+          "tool": "bash",
+          "verb": "rm",
+          "effect": "delete",
+          "class": "other",
+          "token": "CheckAxioms.lean",
+          "cwd": null
+        },
+        {
+          "line": 83,
+          "tool": "bash",
+          "verb": "rm",
+          "effect": "delete",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 86,
+          "tool": "bash",
+          "verb": "lean",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 89,
+          "tool": "bash",
+          "verb": "sed",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 145,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "seed",
+          "token": "/home/gavin/dev/model-or-proof/proofs/lean/paxos/PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 168,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "own-transcript",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/results/attempt-005/omp/PaxosN6Pilot-20260928T230956-r1/file/2026-09-28T21-09-58-295Z_01a0e9da-6197-7569-ad34-88442da135cc.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 212,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/results/attempt-005/omp/PaxosN6Pilot-20260928T230956-r1/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 218,
+          "tool": "bash",
+          "verb": "find",
+          "effect": "mention",
+          "class": "other",
+          "token": ".jsonl",
+          "cwd": null
+        },
+        {
+          "line": 221,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "other",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/results/attempt-$a/proof.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 224,
+          "tool": "bash",
+          "verb": "p",
+          "effect": "read",
+          "class": "other",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/results/attempt-{a}/proof.jsonl",
+          "cwd": null
+        },
+        {
+          "line": 230,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "seed",
+          "token": "/home/gavin/dev/model-or-proof/results/paxos-corollary-pilot/workspaces/attempt-005/paxos/baseline/PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 230,
+          "tool": "bash",
+          "verb": "diff",
+          "effect": "compare",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 235,
+          "tool": "bash",
+          "verb": "candidate_path",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "/.runs/PaxosN6Pilot-r1.lean",
+          "cwd": null
+        },
+        {
+          "line": 235,
+          "tool": "bash",
+          "verb": "seed_path",
+          "effect": "read",
+          "class": "seed",
+          "token": "/PaxosN6Pilot.lean",
+          "cwd": null
+        },
+        {
+          "line": 238,
+          "tool": "bash",
+          "verb": "cat",
+          "effect": "read",
+          "class": "own-copy",
+          "token": "PaxosN6Pilot-r1.lean",
+          "cwd": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+name = "paxos"
+# Matches `lean-toolchain` (elan's pin): tag `v4.35.0-rc3` is Mathlib's release for
+# `leanprover/lean4:v4.35.0-rc3`, whose own `lean-toolchain` this project copies verbatim.
+
+# The Route B artifacts (plan D2, `plans/2026-09-27-paxos-agreement.md`): the unbounded-ballot model and
+# its general `agreement` theorem, and the mutant that must not close (the negative control). The tier-1
+# corollary `PaxosN0.lean` and the promoted `PaxosProved.lean` land later — the corollary once
+# `tasks/paxos.json`'s `n0` is calibrated, and the proof when the closure loop closes the general
+# theorem; `promote.py`'s `register_module` adds each to `defaultTargets` and to an `[[lean_lib]]` table
+# as it is written. Until then the targets below name only the two seeds that exist.
+# `defaultTargets` has to precede the `[[…]]` tables below: once a dependency table starts, a bare key
+# belongs to that dependency table rather than to the package.
+defaultTargets = ["PaxosN6Pilot", "PaxosProved"]
+
+[[lean_lib]]
+name = "PaxosProved"
+
+[[lean_lib]]
+name = "PaxosN6Pilot"
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "v4.35.0-rc3"
