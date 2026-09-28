@@ -1616,3 +1616,206 @@ tiers, all repetitions, plus their mutant rows. Row list with session mapping:
 | 95 | ewd998 | 2 | 1 | closed | `results/omp/EWD998-20260927T210656-r1` |
 | 96 | ewd998 | 2 | 1 | closed | `results/omp/EWD998-20260927T210910-r1` |
 | 97 | ewd998 | 2 | 1 | closed | `results/omp/EWD998-20260927T211021-r1` |
+
+---
+
+## 10. Addendum — same-tier sibling reads (extends §2–§5)
+
+This section is appended; nothing above is rewritten. The rows, closure copies and transcripts are
+untouched. Where this section refines §2–§5 it is authoritative, because the planner re-checked the
+raw sessions and found that the act classified in §4 as *intended dependency* was in three cells
+accompanied by a different act that the two-class scheme of §2 did not name.
+
+### 10.1 The three classes (refinement of §2)
+
+- **Intended dependency** — importing the task's own general theorem (`*Proved`). This is declared in
+  the experiment design: tier 1 *is* the general theorem instantiated at `N₀`.
+- **Same-tier sibling read** — a repetition reading another *repetition's* working file within the same
+  cell and tier. This breaks attempt independence **regardless of how trivial the proof is**: the second
+  repetition is no longer an independent attempt, it has seen the first one's answer. It is
+  contamination in the sense that matters for a cost/independence claim, even though the proof text is
+  one tactic.
+- **Cross-tier copy** — a tier-2 attempt writing an already-proved theorem into its own working file
+  (the promoted `*Proved.lean`, the committed `reference/` fixture, or a sibling repetition's file).
+  These are the twelve rows of §3.
+
+The classification is behavioural: a row counts as a sibling read only if a sibling read is *observed*
+in its transcript. Being tier 1 is not sufficient — the other twenty-one tier-1 entries stay *intended*
+dependency (§10.5).
+
+### 10.2 Added extracts — same-tier sibling reads (tier 1)
+
+#### Row 83 — bakery tier 1, repetition 4 (`closed`) — same-tier sibling read
+
+- session: `results/omp/BakeryN0-20260926T234408-r4`
+- transcript: `results/omp/BakeryN0-20260926T234408-r4/file/2026-09-26T21-44-09-636Z_01a0dfac-f6a4-7366-9878-a6443cf85bb2.jsonl`
+- closure copy: `results/closures/bakery/BakeryN0-20260926T234408-r4.lean`
+
+**`results/omp/BakeryN0-20260926T234408-r4/file/2026-09-26T21-44-09-636Z_01a0dfac-f6a4-7366-9878-a6443cf85bb2.jsonl:37`** — reads the same-tier siblings `BakeryN0-r3.lean` and then all of r1/r2/r3, before writing its own corollary. Its observation at line 42 is “Interesting: the earlier r1/r2/r3 already have the proof `exact mutual_exclusion (by decide : 2 ≤ 9) s hs`, not `sorry`.”
+
+```sh
+cat BakeryN0-r3.lean
+# --- next bash call in the same record ---
+for f in BakeryN0-r1.lean BakeryN0-r2.lean BakeryN0-r3.lean; do echo "== $f =="; cat "$f"; done
+```
+
+> The session's own words at line 42: “Interesting: the earlier r1/r2/r3 already have the proof `exact mutual_exclusion (by decide : 2 ≤ 9) s hs`, not `sorry`. So the seed for r4 was the file with `sorry` (we saw that initially). The previous runs had already solved it with `2 ≤ 9`. The seed comment says `exact mutual_exclusion (by decide : 2 ≤ 9) s hs` — so the original seed had `sorry`, and prior runs wrote the proof with `2 ≤ 9`. Ou…”
+
+**`results/omp/BakeryN0-20260926T234408-r4/file/2026-09-26T21-44-09-636Z_01a0dfac-f6a4-7366-9878-a6443cf85bb2.jsonl:48`** — compares its own file against the sibling r3 again (`diff BakeryN0-r3.lean BakeryN0-r4.lean`).
+
+```sh
+diff BakeryN0-r3.lean BakeryN0-r4.lean; echo "diff exit: $?"; rm -f axcheck_tmp.lean; ls
+# --- next bash call in the same record ---
+cd .. && lake env lean .runs/BakeryN0-r4.lean && echo "ELABORATES OK"
+```
+
+#### Row 74 — lcr tier 1, repetition 2 (`closed`) — same-tier sibling read
+
+- session: `results/omp/LCRN0-20260926T232148-r2`
+- transcript: `results/omp/LCRN0-20260926T232148-r2/file/2026-09-26T21-21-49-501Z_01a0df98-83bd-77c7-b78d-d23c32f0f851.jsonl`
+- closure copy: `results/closures/lcr/LCRN0-20260926T232148-r2.lean`
+
+**`results/omp/LCRN0-20260926T232148-r2/file/2026-09-26T21-21-49-501Z_01a0df98-83bd-77c7-b78d-d23c32f0f851.jsonl:9`** — reads the same-tier sibling `LCRN0-r1.lean` (inside a command that also cats the tier-2 working file, the mutant and two scratch files). Its observation at line 12 is “There's a `LCRN0-r1.lean` which already has the proof: `exact unique_leader (by norm_num) s hs`. … So the proof should be trivial”.
+
+```sh
+cat LCR-r1.lean && echo "===MUTANT===" && cat LCRMutant-r1.lean && echo "===N0-r1===" && cat LCRN0-r1.lean && echo "===check_axioms===" && cat check_axioms.lean && echo "===test_N0===" && cat test_N0.lean
+```
+
+> The session's own words at line 12: “Interesting. The working file is `LCRN0-r2.lean` which imports `LCRProved`. There's a `LCRN0-r1.lean` which already has the proof: ``` exact unique_leader (by norm_num) s hs ``` And the `check_axioms.lean` and `test_N0.lean` also contain similar proofs. So the proof should be trivial: `exact unique_leader (by norm_num) s hs`. But wait — the file `LCRN0-r2.lean` is what I need to edit. It currently…”
+
+#### Row 76 — lcr tier 1, repetition 4 (`closed`) — same-tier sibling read
+
+- session: `results/omp/LCRN0-20260926T232450-r4`
+- transcript: `results/omp/LCRN0-20260926T232450-r4/file/2026-09-26T21-24-51-705Z_01a0df9b-4b79-7630-9f9c-2216839989ea.jsonl`
+- closure copy: `results/closures/lcr/LCRN0-20260926T232450-r4.lean`
+
+**`results/omp/LCRN0-20260926T232450-r4/file/2026-09-26T21-24-51-705Z_01a0df9b-4b79-7630-9f9c-2216839989ea.jsonl:15`** — reads all three same-tier siblings (`for f in LCRN0-r1.lean LCRN0-r2.lean LCRN0-r3.lean; … cat "$f"`). Its observation at line 18 is “Interesting, r1/r2/r3 already have attempts with `exact unique_leader (by norm_num) s hs`.”
+
+```sh
+for f in LCRN0-r1.lean LCRN0-r2.lean LCRN0-r3.lean; do echo "=== $f ==="; cat "$f"; done
+```
+
+> The session's own words at line 18: “Interesting, r1/r2/r3 already have attempts with `exact unique_leader (by norm_num) s hs`. But note `unique_leader`'s first argument is `hN : 2 ≤ N` where `N` is implicit. Actually looking at the signature: `theorem unique_leader (hN : 2 ≤ N) (s : State N) (hs : Reachable s) : UniqueLeader s`. `N` is an implicit argument via `variable {N : ℕ}`. So the first explicit argument is `hN`. In r1/r2: `ex…”
+
+### 10.3 The three added extracts individually
+
+Same rows as §10.2, stated in the report format (task, tier, repetition, session, line, raw command,
+what it read):
+
+| row | task | tier | rep | session (`results/omp/…`, relative to repo root) | line | raw command | what it read |
+|----:|------|-----:|----:|---------------------------------------------------|-----:|-------------|--------------|
+| 83 | bakery | 1 | 4 | `BakeryN0-20260926T234408-r4` | 37 | `cat BakeryN0-r3.lean` | reads `BakeryN0-r3.lean` |
+| 83 | bakery | 1 | 4 | `BakeryN0-20260926T234408-r4` | 37 | `for f in BakeryN0-r1.lean BakeryN0-r2.lean BakeryN0-r3.lean; do echo "== $f =="; cat "$f"; done` | reads `BakeryN0-r1.lean`, `BakeryN0-r2.lean`, `BakeryN0-r3.lean` |
+| 83 | bakery | 1 | 4 | `BakeryN0-20260926T234408-r4` | 48 | `diff BakeryN0-r3.lean BakeryN0-r4.lean; echo "diff exit: $?"; rm -f axcheck_tmp.lean; ls` | reads `BakeryN0-r3.lean` |
+| 74 | lcr | 1 | 2 | `LCRN0-20260926T232148-r2` | 9 | `cat LCR-r1.lean && echo "===MUTANT===" && cat LCRMutant-r1.lean && echo "===N0-r1===" && cat LCRN0-r1.lean && echo "===check_axioms===" && cat check_axioms.lean …` | reads `LCR-r1.lean`, `LCRN0-r1.lean` |
+| 76 | lcr | 1 | 4 | `LCRN0-20260926T232450-r4` | 15 | `for f in LCRN0-r1.lean LCRN0-r2.lean LCRN0-r3.lean; do echo "=== $f ==="; cat "$f"; done` | reads `LCRN0-r1.lean`, `LCRN0-r2.lean`, `LCRN0-r3.lean` |
+
+### 10.4 Widened count: four tier-2 arms become six task-tier arms
+
+| arm | rows | class |
+|-----|------|-------|
+| token-ring tier 2 | 48, 59, 60, 62 | cross-tier / cross-repetition copy (§3) |
+| bakery tier 2 | 68 | cross-repetition graft (§3) |
+| lcr tier 2 | 77, 78, 79 | cross-tier copy of `LCRProved.lean` (§3) |
+| ewd998 tier 2 | 94, 95, 96, 97 | cross-tier copy of `EWD998Proved.lean` (§3) |
+| **bakery tier 1** | **83** | **same-tier sibling read (§10.2)** |
+| **lcr tier 1** | **74, 76** | **same-tier sibling read (§10.2)** |
+| token-ring tier 1 | 50, 51, 54, 55, 56, 57, 63, 64 | intended dependency — no sibling read observed |
+| ewd998 tier 1 | 87, 89, 90, 91, 92, 93 | intended dependency — no sibling read observed |
+| bakery tier 1 | 80, 81, 82, 84 | intended dependency — no sibling read observed |
+| lcr tier 1 | 72, 73, 75 | intended dependency — no sibling read observed |
+
+So the contaminated set is **six task-tier arms**: the four tier-2 arms (twelve rows, §3) plus the
+bakery tier-1 arm (row 83) and the lcr tier-1 arm (rows 74 and 76). The row count is fifteen. Note the
+asymmetry inside the two tier-1 arms: only some repetitions of each show the sibling read, but every
+tier-1 row in an affected arm is the same one-tactic corollary — they differ at most in how the
+numeric bound is discharged (`by decide : 2 ≤ 9` vs `by decide : 2 ≤ N₀` in bakery; `by norm_num`
+vs `by norm_num : 2 ≤ N₀` in lcr) — so the arm's repetitions are not independent of one another. The
+token-ring and ewd998 tier-1 arms show **no** sibling read and are not
+swept in.
+
+### 10.5 The other twenty-one tier-1 entries stay *intended dependency*
+
+Rows 50, 51, 54, 55, 56, 57, 63, 64 (token-ring), 80, 81, 82, 84 (bakery), 72, 73, 75 (lcr) and 87, 89,
+90, 91, 92, 93 (ewd998) show no read of a same-tier sibling file anywhere in their transcripts. Each
+reads or imports its own task's general theorem and applies it; that is the declared dependency of
+§2/§4. They are *not* reclassified. In particular the lcr tier-1 arm is not contaminated as a whole
+because two of its five rows read siblings, and the bakery tier-1 arm is not contaminated as a whole
+because one of its five rows did.
+
+### 10.6 Correction to §5: two mutant rows do read the positive arm
+
+§5 said of rows 70 and 88 that their mutant sessions read no positive proof. That was wrong: the search
+behind §5 looked for path-shaped references (`…/…-rN.lean`, `.runs/…`), and these two reads are bare
+relative filenames executed from inside the working directory. The commands are:
+
+**Row 70 — lcr tier 2 mutation arm (`no_progress`)**
+
+- session: `results/omp/LCRMutant-mutant-20260926T230410-r1`
+- transcript: `results/omp/LCRMutant-mutant-20260926T230410-r1/file/2026-09-26T21-04-11-521Z_01a0df88-5f01-714c-8240-9669be7297ad.jsonl`
+
+```sh
+cat LCR-r1.lean
+```
+
+- transcript `results/omp/LCRMutant-mutant-20260926T230410-r1/file/2026-09-26T21-04-11-521Z_01a0df88-5f01-714c-8240-9669be7297ad.jsonl:9`; what it read: the positive arm's tier-2 working file (`LCR-r1.lean`), read two minutes into that cell's own session (that cell ran 21:02:05Z-21:18:15Z, so the file it read was still being written).
+- the tool result is at line 11.
+- the session's own words at that line: “The file is a "mutant" negative control. The theorem `unique_leader` is false in this model. The instructions say to "close the theorem" and the check decides based on three conditions: 1. file elaborates 2. statement and definitions byte-identical to seed, replace `sorry` and nothing else 3. What y…”
+
+**Row 88 — ewd998 tier 2 mutation arm (`no_progress`)**
+
+- session: `results/omp/EWD998Mutant-mutant-20260927T010250-r1`
+- transcript: `results/omp/EWD998Mutant-mutant-20260927T010250-r1/file/2026-09-26T23-02-51-225Z_01a0dff5-0259-72ac-9e6f-886f2d2a8c78.jsonl`
+
+```sh
+cat EWD998-r1.lean
+# --- next bash call in the same record ---
+cat EWD998N0-r1.lean
+```
+
+- transcript `results/omp/EWD998Mutant-mutant-20260927T010250-r1/file/2026-09-26T23-02-51-225Z_01a0dff5-0259-72ac-9e6f-886f2d2a8c78.jsonl:11`; what it read: the positive arm's tier-2 working file (the closed proof of row 86); the same session's `ls` at line 10 shows `.runs/EWD998-r1.lean` at 26194 bytes, timestamped 00:58 local.
+- the tool result is at line 12.
+- the session's own words at that line: “I need to understand the task. The file is `EWD998Mutant-r1.lean`. There's also `EWD998-r1.lean` (the seed?) which is 26194 bytes and `EWD998N0-r1.lean`. Let me look at those. The theorem `inv` in the mutant has a `RecvMsg` that drops the counter decrement, so the invariant should NOT hold. Wait, bu…”
+
+This does **not** change the classification of the positive cells, whose proof sources are documented
+in §3, and it does not add rows to the *contaminated cell* count of §10.4 — the mutation arm is a
+separate negative control. It does mean the mutation arm's own independence is not established for
+those two rows: row 88's session listed and read the closed positive proof (timestamped 00:58) and the
+tier-1 corollary, and row 70's session read the tier-2 working file of a cell that was still running.
+Anyone using the
+mutant rows as negative controls should note this.
+
+### 10.7 Cross-tier reads recorded but not classified as contamination
+
+The scan that produced §10.2 also enumerated every reference to a `<Task>-rN.lean` / `<Task>N0-rN.lean`
+file in all four tasks' transcripts, so that the negative statements above are exhaustive. Two
+cross-tier patterns exist and neither is a copy:
+
+- Tier-1 sessions reading the *tier-2* working file `<Task>-r1.lean`: `LCRN0-20260926T232004-r1:9`,
+  `LCRN0-20260926T232007-r1:9` and `LCRN0-20260926T232148-r2:9` (`cat LCR-r1.lean`), and the
+  `EWD998N0-*` sessions' reads of `../EWD998.lean`. This file is where the general theorem lives
+  before promotion, so this is the intended import being inspected, not an extra dependency.
+- Tier-2 (and mutant) sessions reading a *tier-1* file: `LCR-20260926T232709-r1:9` (`cat
+  LCRN0-r4.lean`), and `EWD998-20260927T210313-r1:12`, `EWD998-20260927T210325-r1:11`, and row 94's
+  `EWD998-20260927T210412-r1:9` (`cat EWD998N0-r1.lean`). A tier-1 file is the one-tactic corollary
+  plus its import; it cannot confer the tier-2 theorem these cells are asked to prove, and each of
+  these cells' actual proof source is already documented in §3.
+
+They are listed so that no reader has to re-run the scan to discover them, and so that this addendum's
+“no sibling read observed” statements are understood as covering the sibling pattern specifically.
+
+### 10.8 Amended inventory (authoritative)
+
+| class | rows | count |
+|-------|------|------:|
+| cross-tier copy / graft (tier 2, §3) | 48, 59, 60, 62, 68, 77, 78, 79, 94, 95, 96, 97 | 12 |
+| same-tier sibling read (tier 1, §10.2) | 74, 76, 83 | 3 |
+| intended dependency, no sibling read (§10.5) | 50, 51, 54, 55, 56, 57, 63, 64, 72, 73, 75, 80, 81, 82, 84, 87, 89, 90, 91, 92, 93 | 21 |
+| no reuse observed (tier 2, §5) | 49, 52, 53, 58, 61, 66, 67, 69, 71, 85, 86 | 11 |
+| no transcript recorded | 1, 2 | 2 |
+| mutant arm, no positive-file read (tier 2) | 65 | 1 |
+| mutant arm, read the positive arm's file (§10.6) | 70, 88 | 2 |
+
+Total: **52 rows**, i.e. every `results/proof.jsonl` row of `token-ring`, `bakery`, `lcr` and
+`ewd998` (12 + 3 + 21 + 11 + 2 + 1 + 2 = 52). The `battery` rows 3–47 are a fifth task and remain
+outside this extract's scope.
