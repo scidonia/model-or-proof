@@ -25,7 +25,9 @@
     "n0_rule": "first adjacent under-cap successful TLC pair that brackets median theorem+own-corollary totals; select log-nearest N>=3 within factor 2, require a chosen-value witness at each N",
     "ballot_bound": 1,
     "n_cap": null,
-    "status": "tlc_curve_in_progress"
+    "n_cap_exploratory": 6,
+    "heap_profile": "observed implicit 14247MB heap, mechanism unknown; -fp/-seed random per run (protocol 4.4 not satisfied); curve is exploratory, not a pinned-profile row set",
+    "status": "tlc_curve_measured"
   },
   "budgets": {
     "wall_clock_s": 7200,
