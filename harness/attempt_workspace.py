@@ -193,6 +193,15 @@ def prepare(
     if attempt < 1:
         raise PrepareError(f"--attempt must be at least 1, got {attempt}")
 
+    # The package configuration is checked before the package-name lookup reads lakefile.toml and
+    # before any destination exists, so an incompletely or wrongly provisioned template is a diagnosed
+    # refusal (exit 2) rather than an I/O failure, whether the member is absent or not a regular file.
+    # The copies stay inside the cleanup ``try`` for the race where a member disappears after this
+    # check.
+    for config in PACKAGE_CONFIG:
+        if not (template / config).is_file():
+            raise PrepareError(f"template is missing or has a non-regular {config}: {template / config}")
+
     name = package_name(template)
     seeds = registered_seeds(template)
     if seed not in seeds:
@@ -208,14 +217,6 @@ def prepare(
         sources[Path(BASELINE_DIR) / registered] = _checked_source(
             template, Path(BASELINE_DIR) / registered, digest
         )
-
-    # The package configuration is checked before any destination exists, so an incompletely
-    # provisioned template is a diagnosed refusal (exit 2) rather than an I/O failure raised from the
-    # copy below, which would report a run that never started. The copies stay inside the cleanup
-    # ``try`` for the race where a member disappears after this check.
-    for config in PACKAGE_CONFIG:
-        if not (template / config).is_file():
-            raise PrepareError(f"template is missing {config}: {template / config}")
 
     attempt_dir = Path(ATTEMPT_DIR.format(attempt=attempt))
     workspace = (workspace_root / attempt_dir).resolve()
