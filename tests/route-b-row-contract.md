@@ -253,6 +253,66 @@ and break the scenario; stubs ignore `harness.closure.AUTOMATION_TACTICS`.
 - **Why**: the per-turn deadline is *our* budget choice; a reader must draw the distinction from the row
   alone, the same `lean` vs `transport` separation.
 
+## Scenario 21 — a file-mode row records the seed as *loaded*, distinctly from the seed as *left*
+
+- **Actor**: a reader of a file-mode row whose run began from a committed seed that had been edited.
+- **Boundary**: `harness/file_mode.run_file` and the row it returns.
+- **Given**: a package whose `baseline/<seed>` is the recorded pristine text; a committed seed that has
+  been **edited** before the call, so the session-open snapshot does not match the record; and a stub
+  session whose first `usage()` **restores** the pristine text during the run, as the retired pilot's
+  row-58 model did with `cp baseline/TokenRing.lean TokenRing.lean`.
+- **When**: the row is produced.
+- **Then**: `artifacts.baseline.matches` reports the **session-open** comparison and is `False`, while
+  `closure.seed_intact` reports the end-state comparison and is `True` — two facts from two snapshots,
+  both present. A second run of the same scenario with the seed left pristine reports `True` and `True`.
+- **Why**: `matches` is the name the tactic path already gives the loaded value
+  (`harness/route_b.py:1057`, and `load_baseline`'s own `matches`), while the file-mode path fills the
+  same key from the post-run check (`harness/file_mode.py:557`: `"matches": seed_intact`). One key name,
+  two meanings depending on the mode — and the file-mode reading cannot express this scenario's case at
+  all: row 58 began from a seed hashing `9c992250…` against a recorded `e1d65f1a…`, the model restored it
+  mid-run, and the row reported `matches: true`, with `outside_writes: ['seed']` the only trace that the
+  run had not started from the recorded text.
+- **Interface**: no new argument is needed. Both facts are already computable inside `run_file`, which
+  takes the session-open snapshot (`outside_before`) before the session opens and the end-state snapshot
+  (`outside_after`) after the loop; the defect is that one field was filled from the second. `artifacts.baseline`
+  keeps `seed` and `sha256` and reports `matches` from the first; the end state stays in
+  `closure.seed_intact`, where it already is.
+- **Expected first failure before correction**: with the seed edited and restored, the row's
+  `artifacts.baseline.matches` is today `seed_intact`, so `assert matches is False` fails — and the
+  pristine case passes, which is why the pair is needed: one node alone could not tell "reports the
+  loaded value" from "always reports the end state".
+
+## Scenario 22 — a file-mode row records its arm configuration, its marking and the harness revision
+
+- **Actor**: a reader comparing a re-earned cell against the published one it replaces.
+- **Boundary**: `harness/route_b.run_file_mode` and the row it writes.
+- **Given**: a stub-driven file-mode invocation — no model, no network, no Lean elaboration — over a
+  minimal package (`lakefile.toml`, `lean-toolchain`, `lake-manifest.json`, the seed and its baseline,
+  `seeds.json`, and a working copy under `.runs/`), run once with the headline arms and not exploratory,
+  and once with `--arms proof`.
+- **When**: each row is written.
+- **Then**: the row carries **`arms`** reflecting the configuration that ran, **`exploratory`** — `False`
+  for the headline configuration and `True` for the non-headline one, derived exactly as
+  `harness/route_b.py:982` already derives it for the tactic path — and a **`harness_revision`** whose
+  digest equals `route_b.harness_revision(seed, baseline)` computed independently in the test. **Each
+  value must track its input**: a field that is always `true`, always `False` or always the same string
+  would pass a presence assertion while telling a reader nothing, so the scenario runs two configurations
+  and compares the digest against a value it computes itself.
+- **Why**: every Route B cell the published `K` is built from is file-mode, and file-mode rows record
+  none of the three — 0 of 55 carry the marking and 0 of 5 the revision, measured over the 213 row files
+  under `results/` — so "never pooled" rests on which `--results` root was used, and a re-earned row is
+  indistinguishable by content from the row it replaces. The module docstring already claims a row
+  carries "the setup that produced it … and an `exploratory` marking derived from that setup"
+  (`harness/route_b.py:28-30`); that is true of tactic rows and unmet here.
+- **Why the red is cheap, recorded so the opposite is not re-derived**: `run_file`'s entire session
+  surface is `usage()` and `attempt(prompt)` (`harness/file_mode.py:285,305,442`), so a stub session
+  produces a row with no model. Measured: a stub-driven row costs about **0.08 s**. An earlier plan note
+  claimed this red "needs a live file-mode session (a model turn)"; that was wrong, and this is where the
+  correction lives.
+- **Expected first failure before correction**: the row has no `arms` key, no `exploratory` key and no
+  `setup.harness_revision`, so every assertion fails on a missing key. Running two configurations is what
+  makes the *second* failure mode visible too — keys that exist but never vary.
+
 ## Expected failure before implementation
 
 The row's `load` field is `{"before": [f64; 3] | null, "after": [f64; 3]}`, filled by `append_row` for
