@@ -77,7 +77,15 @@ MAX_ERROR_CHARS = 6000
 
 
 def _namespace_of(text: str, theorem: str) -> str | None:
-    """The namespace the theorem is declared in, if the seed declares one."""
+    """The namespace the theorem is declared in, if the seed declares one.
+
+    A scope closes on ``end <Name>`` as well as on a bare ``end``: Lean's ``end <Name>`` is the ordinary
+    form, and only popping on a bare ``end`` left an inner namespace open past its close. Paxos.lean
+    declares ``namespace Paxos`` then ``namespace Message`` and closes the inner one with ``end Message``,
+    so the stack still held ``Message`` at ``theorem agreement`` and the name asked of the checker was
+    ``Message.agreement`` — the decoy an appended root-level ``Message.agreement`` satisfies while the
+    real ``Paxos.agreement`` is still a ``sorry``.
+    """
     namespaces: list[str] = []
     for line in text.splitlines():
         stripped = line.strip()
@@ -86,7 +94,7 @@ def _namespace_of(text: str, theorem: str) -> str | None:
             namespaces.append(match.group(1))
         if re.match(rf"theorem\s+{re.escape(theorem)}\b", stripped):
             return namespaces[-1] if namespaces else None
-        if stripped == "end" and namespaces:
+        if re.fullmatch(r"end(\s+[A-Za-z_][\w'.]*)?", stripped) and namespaces:
             namespaces.pop()
     return namespaces[-1] if namespaces else None
 
