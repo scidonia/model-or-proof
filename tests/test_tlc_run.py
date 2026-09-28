@@ -199,3 +199,23 @@ def test_explicit_heap_is_not_overridden_by_inherited_jvm_options(tmp_path, monk
     assert row["tlc_profile"]["heap_delivery"] == "-Xmx14336m"
     assert row["tlc_profile"]["observed"]["heap_mib"] == 12743
     assert "Picked up _JAVA_OPTIONS:" not in Path(row["artifacts"]["log"]).read_text()
+
+
+def test_unlaunchable_tlc_binary_yields_error_row_and_no_metadir(tmp_path):
+    """Scenario 10: an unlaunchable TLC binary leaves a diagnosed error row and no metadir."""
+    states = REPO / "specs" / "tla" / "token-ring" / ".tlc-states"
+    before = set(states.glob("run-*")) if states.is_dir() else set()
+
+    proc = run_runner(
+        tmp_path, "--instance", "3", "--reps", "1", "--tlc-bin", str(tmp_path / "no-such-tlc"),
+    )
+
+    after = set(states.glob("run-*")) if states.is_dir() else set()
+    assert after == before, f"a state pool was left behind: {sorted(after - before)}"
+    assert proc.returncode == 0, proc.stderr
+    rows_ = rows(tmp_path)
+    assert len(rows_) == 1
+    row = rows_[0]
+    assert row["outcome"] == "error"
+    assert row["tlc"] is None
+    assert "no-such-tlc" in json.dumps(row["error"]), row["error"]

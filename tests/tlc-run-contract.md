@@ -154,6 +154,28 @@ completed proof of the property, and a run that was killed must not be reported 
   into the TLC child; it appends `outcome: success` with **958MB observed**, so the assertion that
   `tlc_profile.observed.heap_mib == 12743` fails (not a missing fixture or argument).
 
+## Scenario 10 — an unlaunchable TLC binary leaves a diagnosed error row and no metadir
+
+- **Actor**: the researcher launching a TLC row with a mistyped or missing `--tlc-bin` (a typo'd
+  path, an absent fixture, a bad nix store path).
+- **Boundary**: the runner CLI, its persisted row and its per-invocation state pool.
+- **Given**: the token-ring N3 manifest and a `--tlc-bin` naming a path that does not exist.
+- **When**: the researcher runs the row.
+- **Then**: the invocation **completes normally** rather than crashing — it appends exactly one row
+  with `outcome: "error"`, `tlc: null`, and an `error` diagnostic that **names the unlaunchable
+  binary**; its CLI exit status is the normal status of a finished row; the row carries its log
+  artifact like every other row; and the spec's `.tlc-states/` holds **no new** `run-*` directory,
+  because the metadir's `finally` owns the pool from before the launch rather than after it.
+- **Why**: a launch failure is a diagnosis about the caller's input, and today it is
+  indistinguishable from a crashed harness. The row a reader needs in order to see *what* failed is
+  missing, and the pool directory the code's own comment promises never survives a sweep is left
+  behind — an empty directory nobody can attribute, in the one place a stale pool would be read as a
+  sibling run's sabotage.
+- **Expected first failure before correction**: `subprocess.Popen` raises `FileNotFoundError`
+  **outside** the `try/finally` whose `finally` removes the metadir, so the CLI exits non-zero with a
+  traceback, writes no row at all, and leaves the `run-*` directory in place. Both the row assertion
+  and the metadir-set assertion fail, and neither failure is a missing fixture or a bad argument.
+
 This fake is a local parser/provenance substitute; it makes **no** model, network, clock or external
 filesystem call. The coder additionally smokes the *actual* measured-fast token-ring N3 with the
 explicit chosen profile after implementation to verify the real wrapper's `JAVA_TOOL_OPTIONS` and TLC
@@ -168,4 +190,8 @@ heap-delivery correction. Scenario 8 is non-vacuous under a faithful reviewer sc
 **was not observed red before the satisfying code landed**; that failure-first violation remains
 reported in the plan/review record rather than silently reclassified as a red. Scenario 9 above
 must be observed failing for its specific **ambient override** assertion before its production fix.
+Scenario 10's contract and its red are authored now, while the fresh theorem cell runs, because
+authoring costs no measurement load; its **fix waits** for that cell to finish and be audited, since it
+touches the shared TLC runner and the host must stay serial and unloaded for the cell. Its red is
+observed on both assertions — no row written, and a leaked `run-*` metadir — before any implementation.
 No scenario explores an unmeasured Paxos instance in pytest.
