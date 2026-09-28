@@ -12,13 +12,34 @@
     "config": "specs/tla/paxos/PaxosMutant.cfg"
   },
   "instances": [
-    {"param_N": 2, "config": "specs/tla/paxos/PaxosN2.cfg"},
-    {"param_N": 3, "config": "specs/tla/paxos/PaxosN3.cfg"},
-    {"param_N": 4, "config": "specs/tla/paxos/PaxosN4.cfg"},
-    {"param_N": 5, "config": "specs/tla/paxos/PaxosN5.cfg"},
-    {"param_N": 6, "config": "specs/tla/paxos/PaxosN6.cfg"},
-    {"param_N": 7, "config": "specs/tla/paxos/PaxosN7.cfg"},
-    {"param_N": 8, "config": "specs/tla/paxos/PaxosN8.cfg"}
+    {
+      "param_N": 2,
+      "config": "specs/tla/paxos/PaxosN2.cfg"
+    },
+    {
+      "param_N": 3,
+      "config": "specs/tla/paxos/PaxosN3.cfg"
+    },
+    {
+      "param_N": 4,
+      "config": "specs/tla/paxos/PaxosN4.cfg"
+    },
+    {
+      "param_N": 5,
+      "config": "specs/tla/paxos/PaxosN5.cfg"
+    },
+    {
+      "param_N": 6,
+      "config": "specs/tla/paxos/PaxosN6.cfg"
+    },
+    {
+      "param_N": 7,
+      "config": "specs/tla/paxos/PaxosN7.cfg"
+    },
+    {
+      "param_N": 8,
+      "config": "specs/tla/paxos/PaxosN8.cfg"
+    }
   ],
   "n0": null,
   "calibration": {
@@ -33,5 +54,19 @@
     "wall_clock_s": 7200,
     "usd": 50
   },
-  "repetitions": 5
+  "repetitions": 5,
+  "heap_profile": {
+    "status": "decided_by_user",
+    "decision": "14 GiB (14336 MiB), chosen over 8 GiB at the stage-2 checkpoint",
+    "heap_mib": 14336,
+    "fp_index": 28,
+    "seed": 1,
+    "workers": 1,
+    "rationale": "approximates the 14247MB effective heap observed in the exploratory banners, keeping the N=2-6 rows comparable; 8 GiB would define a different experiment",
+    "caveat": "the historical 14247MB origin is unresolved (the same pinned wrapper/JRE now reports 16806576128 B MaxHeapSize with no heap option), so 14 GiB does not reproduce the historical launcher conditions",
+    "delivery": "must reach the TLC child as JAVA_TOOL_OPTIONS=-Xmx14336m; tlc -Xmx was observed rejected; the wrapper execs Java with TLC args after the main class",
+    "row_requirement": "rows record tlc_profile.requested {heap_mib, fp_index, seed} with explicit null for each omitted flag, and tlc_profile.observed with the parsed banner values",
+    "measured_demand": "exploratory N=7 peaked at 5535.5 MB, so 14 GiB leaves roughly 2.6x headroom and no stage-1 instance would bind on memory",
+    "implemented": false
+  }
 }
