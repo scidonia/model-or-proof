@@ -1,11 +1,18 @@
 """Behavior scenarios for the extended Route B row (tests/route-b-row-contract.md)."""
 
+import hashlib
+import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
+from harness import file_mode, model  # noqa: E402
+from harness import route_b  # noqa: E402
 from harness.closure import AUTOMATION_TACTICS, ProviderError, ProverError, detect_assisted, run_loop  # noqa: E402
 
 
@@ -640,3 +647,102 @@ def test_human_supplied_helper_is_assisted():
                            human=True)
     assert diff["assisted"] is True, diff
     assert diff["auxiliary_invariants"] == ["inv"], diff
+
+
+# --- file-mode rows: the seed as loaded, and the configuration that produced the row -----------------
+
+SEED = "import Mathlib\nnamespace Paxos\ntheorem agreement : True := by\n  sorry\nend Paxos\n"
+EDITED = SEED.replace("\nnamespace Paxos\n", "\n-- edited before the run\nnamespace Paxos\n")
+
+
+def file_mode_package(tmp_path):
+    """The minimal package a file-mode row needs: seed, baseline, config, manifest, working copy.
+
+    Measured cost of one stub-driven row: about 0.08 s, because `run_file`'s whole session surface is
+    `usage()` and `attempt()` — no model, no network, no elaboration.
+    """
+    package = tmp_path / "paxos"
+    (package / "baseline").mkdir(parents=True)
+    (package / "Paxos.lean").write_text(SEED)
+    (package / "baseline" / "Paxos.lean").write_text(SEED)
+    (package / "seeds.json").write_text(json.dumps({"Paxos.lean": hashlib.sha256(SEED.encode()).hexdigest()}))
+    (package / "lakefile.toml").write_text('name = "paxos"\n')
+    (package / "lean-toolchain").write_text("leanprover/lean4:v4.35.0-rc3\n")
+    (package / "lake-manifest.json").write_text(json.dumps({"packages": []}))
+    working = package / ".runs" / "Paxos-r1.lean"
+    working.parent.mkdir()
+    working.write_text(SEED)
+    return package, working
+
+
+class RepairingSession:
+    """A file-mode session that restores the committed seed mid-run, as the row-58 model did."""
+
+    def __init__(self, seed_path, pristine):
+        self.seed_path = seed_path
+        self.pristine = pristine
+        self.seen = False
+
+    def usage(self):
+        if not self.seen:
+            self.seed_path.write_text(self.pristine)
+            self.seen = True
+        return {"cost_usd": 0.0}
+
+    def attempt(self, prompt):
+        raise AssertionError("no round should run at cap_s=0")
+
+
+def test_file_mode_row_records_the_seed_as_loaded_not_only_as_left(tmp_path):
+    """Scenario 21: a run that began off-pristine and was repaired must be able to say both."""
+    package, working = file_mode_package(tmp_path)
+    seed_path = package / "Paxos.lean"
+    seed_path.write_text(EDITED)
+
+    row = file_mode.run_file(
+        RepairingSession(seed_path, SEED),
+        task="paxos", tier=2, repetition=1, mutant=False,
+        working=working, run_dir=tmp_path / "session", seed_path=seed_path, package=package,
+        pristine=SEED, cap_s=0.0, cap_usd=50.0, setup={"mode": "file"}, statement="",
+    )
+
+    assert row["artifacts"]["baseline"]["matches"] is False, "the run did not start from pristine text"
+    assert row["closure"]["seed_intact"] is True, "and it left pristine text behind"
+
+
+class StubFileSession:
+    """A file-mode session with no transport: `attempt` is never reached at cap_s=0."""
+
+    def __init__(self, **_kwargs):
+        pass
+
+    def usage(self):
+        return {"cost_usd": 0.0}
+
+    def attempt(self, prompt):
+        raise AssertionError("no round should run at cap_s=0")
+
+    def close(self):
+        pass
+
+
+@pytest.mark.parametrize(("arms", "marking"), [("proof+refutation", False), ("proof", True)])
+def test_file_mode_row_carries_its_configuration_and_revision(tmp_path, monkeypatch, arms, marking):
+    """Scenario 22: the row must say which configuration produced it, and the revision must be real."""
+    package, _ = file_mode_package(tmp_path)
+    seed_path = package / "Paxos.lean"
+    baseline = route_b.load_baseline(seed_path)
+    results = tmp_path / "results"
+    results.mkdir()
+
+    monkeypatch.setattr(model, "OmpFileModel", StubFileSession)
+    args = SimpleNamespace(reps=1, mutant=False, tier=2, arms=arms, exploratory=False)
+    route_b.run_file_mode(
+        args, task="paxos", results_dir=results, seed=seed_path, baseline=baseline,
+        cap_s=0.0, cap_usd=50.0,
+    )
+
+    row = next(json.loads(line) for line in (results / "proof.jsonl").read_text().splitlines() if line.strip())
+    assert row["arms"] == arms
+    assert row["exploratory"] is marking
+    assert row["setup"]["harness_revision"]["digest"] == route_b.harness_revision(seed_path, baseline)["digest"]
