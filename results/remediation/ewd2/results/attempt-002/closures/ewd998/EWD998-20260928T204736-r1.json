@@ -1,0 +1,42 @@
+{
+  "artifact": "results/remediation/ewd2/results/attempt-002/closures/ewd998/EWD998-20260928T204736-r1.lean",
+  "artifact_sha256": "0a882734d3a71de4ef8fd65f03c7ed942fcaf3b9f6634c3715a993a5cbf68ac2",
+  "closure": {
+    "axiom_report": "ok",
+    "axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "closed": true,
+    "elaborates": true,
+    "errors": [],
+    "integrity": true,
+    "lean_path": "/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/Cli/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/batteries/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/Qq/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/aesop/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/proofwidgets/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/importGraph/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/plausible/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/proofs/lean/ewd998/.lake/packages/mathlib/.lake/build/lib/lean:/home/gavin/dev/model-or-proof/results/remediation/ewd2/workspaces/attempt-002/ewd998/.lake/build/lib/lean:/home/gavin/.elan/toolchains/leanprover--lean4---v4.35.0-rc3/lib/lean",
+    "module": "EWD998",
+    "no_progress_rounds": 0,
+    "outside_events": [],
+    "outside_writes": [],
+    "pristine_sha256": "57065d1c09012d744ac277f542851dfeafad0c533bde850eea4e3d00f56fb5ca",
+    "raw_tail": [
+      "Quot.sound",
+      "propext",
+      "resolved EWD998.inv"
+    ],
+    "rounds": 1,
+    "seed_intact": true,
+    "theorem": "EWD998.inv",
+    "timed_out": false,
+    "verdict": true,
+    "watch_blind": null,
+    "withheld": []
+  },
+  "digests_agree": true,
+  "mode": "file",
+  "omp_sessions": "/home/gavin/dev/model-or-proof/results/remediation/ewd2/results/attempt-002/omp/EWD998-20260928T204736-r1",
+  "pristine_sha256": "57065d1c09012d744ac277f542851dfeafad0c533bde850eea4e3d00f56fb5ca",
+  "row": "results/remediation/ewd2/results/attempt-002/proof.jsonl:1",
+  "row_artifact_sha256": "0a882734d3a71de4ef8fd65f03c7ed942fcaf3b9f6634c3715a993a5cbf68ac2",
+  "task": "ewd998",
+  "tier": 2
+}
