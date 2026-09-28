@@ -126,6 +126,13 @@ withholding by widening the prefix would trade the experiment's substance for it
 belongs in the prompt — say where an attempt's scratch lives — and because that is a setup change it must
 be **preregistered and stated as a configuration difference** rather than applied silently mid-remediation.
 
+A **write to the committed seed** is its own class within that rule, and it is withheld for the same
+reason. It is worth stating separately because the row cannot currently say the run began off-pristine:
+`seed_intact` is a **post-run** check (`outside_after["seed"] == pristine_sha`), so it reports `true`
+both for a seed never touched and for a seed repaired after the run had begun, and file mode populates no
+drift or `assisted` field at all. A row that started from an edited seed must be readable as having done
+so — today it is not, and the only trace is `outside_writes`.
+
 ## Real-cell audit and acceptance, not a pytest mock
 
 After the preparer passes all three scenarios, prepare **five separate packages** from the *same registered seed*, each in a different workspace with a different result/session root; run one detached `harness.route_b --mode file --tier 2 --arms proof+refutation --reps 1 --exploratory` per package under the unchanged 7200s/$50 per-run budgets. The conductor archives the five rows and source/package/seed digests as one named pilot cell without silently merging invocation-local `repetition: 1` values. No earlier result root or closure copy is placed in the new package. Before interpreting its median, an independent reader inspects **every** attempt's complete OMP tool-call transcript, naming the row, session path and every read/copy of an older same-tier working proof, closure copy, reference proof, result or transcript. An observed prior-proof read invalidates that attempt's independent-cost evidence even if `closure.verdict: true`; preserve the row and label it contaminated, **never** pool it or replace it with a cheapest clean closure. A tier-1 corollary intentionally importing the established general theorem is a different, allowed dependency. This gives an **operationally independent, transcript-audited** result, *not* a guarantee that an unsandboxed same-UID shell could not read arbitrary absolute paths (`harness/outside_watch.py:1-11`). Do not launch this cell until corrected-FQN verification and the offline real-package smoke are accepted — the smoke's commands and outputs, including the dead-port proxy run and the zero-`connect` syscall evidence on a prepared package, are recorded in `plans/2026-09-27-paxos-agreement.md`. Old pilot rows remain diagnostic.
