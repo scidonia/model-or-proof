@@ -33,6 +33,56 @@ def watch_over(tmp_path, process):
     return watch
 
 
+def watch_over_package(tmp_path, process):
+    """A watch constructed as the file-mode runner constructs it for one attempt.
+
+    The package is the root and the allowed prefixes are the ones the working copy needs — the working
+    file's own directory and the toolchain's local build output. This mirrors `harness.file_mode`; when
+    that changes, this changes with it, and Scenario 5 is what pins the pair.
+    """
+    root = tmp_path / "pkg"
+    for sub in (".runs", ".lake/build", ".lake/packages"):
+        (root / sub).mkdir(parents=True)
+    watch = OutsideWatch(
+        root, (root / ".runs", root / ".lake"), denied=(root / ".lake" / "packages",)
+    )  # as harness.file_mode constructs it
+    watch._process = process
+    watch._read()
+    return watch
+
+
+def test_the_toolchains_own_build_output_is_not_an_outside_event(tmp_path):
+    """Scenario 5: `lake build` inside the attempt's own package is not a boundary violation."""
+    root = tmp_path / "pkg"
+    payload = (
+        f"{root}/.lake/build,CREATE,ir/PaxosProved.setup.json\n"
+        f"{root}/.lake/build,CREATE,lib/lean/PaxosProved.olean.tmp.4105234\n"
+        f"{root}/.lake/config,CREATE,1/lakefile.olean.trace\n"
+        f"{root}/.lake/config,CREATE,1/lakefile.olean.tmp.4134109\n"
+        f"{root}/.runs,CREATE,PaxosN6Pilot-r1.lean\n"
+    )
+
+    watch = watch_over_package(tmp_path, text_stream(payload))
+
+    assert watch.events == [], watch.events
+
+
+def test_the_shared_cache_and_a_root_write_are_still_outside(tmp_path):
+    """Scenario 5's guard-rail: the carve is `.lake/build`, not `.lake`, and not the whole package."""
+    root = tmp_path / "pkg"
+    payload = (
+        f"{root}/.lake/packages,CREATE,mathlib/Mathlib/Init.olean\n"
+        f"{root}/,CREATE,check_axioms.lean\n"
+    )
+
+    watch = watch_over_package(tmp_path, text_stream(payload))
+
+    assert watch.events == [
+        "CREATE " + str(root) + "/.lake/packages/mathlib/Mathlib/Init.olean",
+        "CREATE " + str(root) + "/check_axioms.lean",
+    ]
+
+
 def test_an_undecodable_filename_is_a_path_not_a_dead_watcher(tmp_path):
     """Scenario 1: an invalid UTF-8 byte in a name must not silently kill the reader."""
     root = tmp_path / "pkg"

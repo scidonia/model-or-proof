@@ -275,10 +275,17 @@ def run_file(
     # candidate digest, and how many consecutive rounds have matched it exactly.
     previous_signature: tuple | None = None
     no_progress_rounds = 0
-    # The working-copy-only boundary, observed rather than enforced: no unprivileged user namespaces on this
+    # The boundary, observed rather than enforced: no unprivileged user namespaces on this
     # host, so `harness.outside_watch` watches the package the shell can reach and records every event outside
-    # the working copy. One watch for the whole run, so no round can write outside it unseen.
-    boundary = OutsideWatch(seed_path.parent, working.parent)
+    # the working copy and the toolchain's own local state under `.lake` (`build/` and `config/`, both written
+    # by `lake build` inside the package). `.lake/packages` is denied explicitly: it is a symlink to the cache
+    # every attempt shares, and containment is lexical, so a rebuild there is visible to every other attempt
+    # (contract Scenario 5). One watch for the whole run, so no round can write outside it unseen.
+    boundary = OutsideWatch(
+        seed_path.parent,
+        (working.parent, seed_path.parent / ".lake"),
+        denied=(seed_path.parent / ".lake" / "packages",),
+    )
     boundary.start()
     heartbeat(f"phase: boundary watch on {seed_path.parent.name}/ (allowed: {working.parent.name}/)")
     error: dict | None = None

@@ -231,18 +231,23 @@ dependency inside its own tree, reported as a violation. It is the guard withhol
 class this plan already counts — in a new sub-class: the documented instances are model-authored
 verification scratch at the package root, and this one is the build system itself.
 
-**The carve-out, and why it is at the child and not the parent.** `.lake` is one path with two meanings:
-`.lake/packages` is the absolute symlink to the shared 7.2 GB cache and a dependency rebuild there is
-visible to every other attempt, so it **must** stay watched; `.lake/build` is the attempt's own local
-output and cannot reach the repo or a sibling. So the watch's `allowed` set grows by `.lake/build`
-specifically — never by `.lake`, which would silently exempt the shared cache. Widening it to the
-attempt's own package is otherwise right, and it does not leave the pristine `baseline/` unguarded: the
-seed's integrity rides on the row's own `pristine_sha256` and `baseline.matches`, so that property is
-guarded by a recorded field rather than by an event, which is the stronger of the two. The fix belongs in
-`harness/outside_watch.py` and **must wait for the cell to finish**: that file is inside the cell's
-revision record, so editing it now converts two withheld rows into two unauditable ones, and the defect is
-deterministic and reproduces identically in the next cell, so it loses nothing by waiting — but it must not
-wait past the freeze, because **every tier-1 cell whose attempt builds carries this withholding**.
+**The carve-out, and why it is a denial rather than a narrower allow.** `.lake` is one path with two
+meanings: `.lake/packages` is the absolute symlink to the shared 7.2 GB cache and a dependency rebuild there
+is visible to every other attempt, so it **must** stay watched; everything else under `.lake` is the
+attempt's own local state. My first reading — allow `.lake/build` specifically — was **measurably too
+narrow**, and the measurement is the smoke: a real `lake build` in a freshly prepared package, watched,
+produced **18** events, every one under **`.lake/config/`** and none under `.lake/build`, because the
+preparer's own warm-up build has already created the config cache before an attempt starts. So the fix is
+`.lake` **allowed** with `.lake/packages` **denied**, which is the only shape that covers the toolchain's
+whole local state without admitting the cache — containment is lexical, so a write reached through the
+symlink still *names* a path under the package, and an allow-prefix cannot express "except". With that
+carve the same smoke reports **0** events while 20 files are written under `.lake/`, and `.lake/packages`
+stays watched. Widening to `baseline/` is likewise unnecessary rather than unguarded: the seed's integrity
+rides on the row's `pristine_sha256` and `baseline.matches`, a recorded field, which is the stronger of the
+two. The fix is in `harness/outside_watch.py` + `harness/file_mode.py` and landed **after** the cell's
+revision record was closed, so the pilot's rows remain attributable to the revision they ran under — and
+**every tier-1 cell whose attempt builds carried this withholding**, which is why it could not wait past the
+freeze.
 
 **What it does not change is the H2 datum, and the provenance must say so explicitly.** The selection rule
 takes the median of **all** precommitted attempts' recorded walls, whether or not their verdicts are true —

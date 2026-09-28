@@ -125,12 +125,40 @@ def _decoded(pipe: IO[bytes] | IO[str]) -> IO[str]:
     return io.TextIOWrapper(pipe, encoding="utf-8", errors="surrogateescape", newline="")
 
 
-class OutsideWatch:
-    """A recursive, event-based watch of a tree, with the working copy as the only allowed path."""
+def _under(path: pathlib.Path, prefix: pathlib.Path) -> bool:
+    """Whether `path` is lexically inside `prefix` — no symlink resolution, deliberately (Scenario 5)."""
+    try:
+        path.relative_to(prefix)
+        return True
+    except ValueError:
+        return False
 
-    def __init__(self, root: pathlib.Path, allowed: pathlib.Path, *, binary: str = WATCH_BINARY) -> None:
+
+class OutsideWatch:
+    """A recursive, event-based watch of a tree, with the working copy's prefixes as the allowed paths."""
+
+    def __init__(
+        self,
+        root: pathlib.Path,
+        allowed: pathlib.Path | Sequence[pathlib.Path],
+        *,
+        denied: Sequence[pathlib.Path] = (),
+        binary: str = WATCH_BINARY,
+    ) -> None:
         self.root = pathlib.Path(root)
-        self.allowed = pathlib.Path(allowed)
+        # One prefix or several. The working copy needs its own directory and the toolchain's local state
+        # under `.lake` — `build/` and `config/`, both of which `lake build` writes inside the package.
+        # `.lake/packages` is **not** allowed but denied explicitly: it is a symlink to the cache every
+        # attempt shares, and containment here is lexical, so a write reached through it still names a path
+        # under the package. Only the denial keeps that cache watched (contract Scenario 5).
+        if isinstance(allowed, (str, pathlib.Path)):
+            allowed = (allowed,)
+        self.allowed = tuple(pathlib.Path(prefix) for prefix in allowed)
+        self.denied = tuple(pathlib.Path(prefix) for prefix in denied)
+        # The handshake sentinels are written inside the *working copy* — the first prefix — because the
+        # probe's job is to show that a write the model could make is observed, and the build output is not
+        # somewhere the model writes by hand.
+        self.probe_root = self.allowed[0] if self.allowed else pathlib.Path(root)
         self.binary = binary
         self.events: list[str] = []
         self.blind: str | None = None
@@ -159,7 +187,7 @@ class OutsideWatch:
         if binary is None:
             self.blind = f"{self.binary} is not on PATH: the working-copy-only boundary cannot be observed"
             return
-        probe_dir = self.allowed / PROBE_DIRNAME
+        probe_dir = self.probe_root / PROBE_DIRNAME
         try:
             # Created *before* the watcher starts, so the recursive setup includes it and a sentinel's own
             # event has a watch to arrive on.
@@ -294,11 +322,15 @@ class OutsideWatch:
             self.events.append(f"{names} {path}")
 
     def _allowed(self, path: pathlib.Path) -> bool:
-        try:
-            path.relative_to(self.allowed)
-            return True
-        except ValueError:
+        """Inside an allowed prefix, and not inside a denied one.
+
+        The denial is what keeps the shared dependency cache watched while `.lake` is allowed: containment
+        is lexical, so a write reached through the `.lake/packages` symlink still *names* a path under the
+        package, and only an explicit denial keeps that cache out of the allowed set (Scenario 5).
+        """
+        if not any(_under(path, prefix) for prefix in self.allowed):
             return False
+        return not any(_under(path, prefix) for prefix in self.denied)
 
     def stop(self) -> tuple[list[str], str | None]:
         """Stop watching and report what was seen outside the working copy, and any blindness."""

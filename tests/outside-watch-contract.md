@@ -200,6 +200,36 @@ says so rather than implying the loop is airtight.
   guards the *new* grammar: once records are taken with `csv.reader`, a fragment that happens to contain
   two commas would be read as an event unless the event name is checked against a known set.
 
+## Scenario 5 — the toolchain's own local state is inside, and the shared cache is not
+
+- **Actor**: the boundary watch, as the file-mode runner constructs it for one attempt.
+- **Boundary**: `OutsideWatch(root=<package>, allowed=<prefixes>, denied=<prefixes>)`.
+- **Given**: a package holding `.runs/`, `.lake/build/`, `.lake/config/` and `.lake/packages/` (an absolute
+  symlink to the pinned dependency cache), and an event stream carrying one create in each, plus one at the
+  package root.
+- **When**: the stream is consumed.
+- **Then**: the `.runs/`, `.lake/build/` and `.lake/config/` writes produce **no** event — the working copy
+  and the toolchain's own local state — while `.lake/packages/` and the root-level write **do**: the shared
+  cache is the one path in there that genuinely crosses attempts, and a root-level write is the
+  working-directory accident this contract already documents as a withheld-but-complete class.
+- **Expected pre-correction failure**: `.lake/build` is reported today, because `allowed` is a single path,
+  `<package>/.runs`. `lake build` compiling the declared dependency inside the attempt's own package
+  therefore yields 22 events and forfeits the verdict — measured on **all five** attempts of the tier-1
+  pilot, every one a complete proof withheld for compiling.
+- **And the first carve attempt was measurably too narrow, which is why this scenario names `.lake`
+  rather than `.lake/build`.** A real `lake build` in a freshly prepared package, watched, produced **18**
+  events — every one under **`.lake/config/`** (`1/lakefile.olean.trace`, `1/lakefile.olean.tmp.<pid>`) and
+  none under `.lake/build`, because the preparer's own warm-up build has already created the config cache by
+  the time an attempt starts. Allowing `.lake/build` alone would have left that class unhandled. The
+  measured fix is `.lake` allowed with **`.lake/packages` denied**, and the smoke then reports **0** events
+  with 20 files written under `.lake/`.
+- **Why a denial rather than a narrower allow**: `.lake` is one path with two meanings, and the distinction
+  cannot be expressed as an allow-prefix without also admitting `packages`. Containment here is lexical, so
+  a write reached *through* the `.lake/packages` symlink still names a path under the package — only an
+  explicit denial keeps the cache every attempt shares out of the allowed set. The pristine `baseline/`
+  needs no event-based guard either: the seed's integrity rides on the row's `pristine_sha256` and
+  `baseline.matches`, a recorded field, which is the stronger of the two.
+
 ## What this contract is not
 
 The scenarios drive the read layer with a stream rather than spawning `inotifywait`: the defects are in
