@@ -156,6 +156,31 @@ observed prior same-tier/reference-proof read **invalidates that attempt**
 even when its Lean file proves the theorem. A tier-1 import of the proved
 tier-2 theorem remains an allowed, costed dependency.
 
+**The harness must be quiet for the whole of a cell, and that is a gate, not a preference.** A file-mode
+row records no `harness_revision`, so a `harness/*.py` edit in flight between a cell's first prepared
+package and its last row makes that cell span two code revisions with nothing in the rows to show it —
+the same defect that would have to be admitted rather than detected. The freeze is checked, not assumed:
+`scripts/audit_attempts.py --expect-revision <record>` re-hashes the record's path→sha256 map against the
+tree and names any file that changed or vanished, so the record is taken **before** the first package is
+prepared and the audit is run with it. Order therefore fixed: **counter fix lands and its three verifications
+pass → `harness/` frozen → theorem cell → promote → a corollary cell per candidate `N` → `n0` selected from
+those medians.** The promote sits after the theorem cell because the theorem cell declares no dependency
+(`proofs/lean/paxos/seeds.json` registers `Paxos.lean` and `PaxosMutant.lean`, both with baselines), while
+the corollary's package prepares with `--dependency PaxosProved.lean` and so cannot exist until promote has
+written it. And `PaxosN0.lean` is authored **after** `n0` is selected, never before: `tasks/paxos.json`'s
+`n0` is null, the manifest calibration's `status` is `unmeasured`, and the crossing compares **each
+candidate's own corollary cost**, so the cells produce `n0` rather than the reverse — authoring the
+corollary now would pin the instance by assumption and, following `proofs/lean/lcr/LCRN0.lean:28`, would
+put a null field into a provenance claim.
+
+**One asymmetry to keep rather than unify:** `harness.lean_repl.count_unclosed` (artifact closure) now
+reads `harness.lean_lex.count_tokens` and leaves a synthetic placeholder to elaboration and the axiom
+report, while `harness.lean_lex.count_holes` keeps counting `?name` for `harness.closure.incomplete_body`,
+which asks a **declaration-level** question — whether a body rests on a metavariable at all — under plan
+D15. They differ by design and were measured to: on `theorem t : True := by ?h`, `count_holes` returns 1
+and `count_tokens` returns 0. A later tidy-up that folds them back together would re-break the promotion of
+a proven-closed artifact, which uses the ordinary `refine … ?init ?step` idiom.
+
 **Planner-owned prep contract, pre-implementation red (`then`), now implemented:** `tests/paxos-attempt-isolation-contract.md`
 and `tests/test_paxos_attempt_isolation.py` define a
 `python -m harness.attempt_workspace prepare` CLI and temp-only structural
