@@ -350,7 +350,7 @@ The four earlier task pairs also used the shared default-flag runner, so their e
 
 Required shape, since authored as Scenario 4: `prepare` takes the seed to attempt **and the seeds that attempt may see**, copying the attempted seed with its baseline plus exactly the declared dependencies, whose *text* is needed but whose *baseline* is not (a dependency is imported, never attempted), and refusing anything else; the receipt records which registered seeds were included and which were withheld, and why; and the allowlist check follows the same declaration rather than the full registered set. A tier-1 arm then declares `<Task>Proved.lean`, giving the audit's `promoted-proof` class a declared reason to find it, while a tier-2 arm declares nothing and the prior proof cannot be present at all. **This did not affect the running theorem cell** — `proofs/lean/paxos/seeds.json` registers no `Proved` seed, so its five packages were exactly what they should be — but it **blocked the remediation reruns as specified**, and had to be ruled and red-observed before them, which it was: the shape above landed with both nodes red first, and it is the reason a tier-1 receipt lists its proved module under `included`. The **declared-dependency form** was the ruling, and it is what the contract and its reds state; the observation above is what it had to satisfy, and it does — a tier-2 package declares nothing and carries no proved module, while a tier-1 package carries exactly the module it declares.
 
-**Three reporting principles earned in this round, recorded here because each one cost something to learn.**
+**Five reporting principles earned in this round, recorded here because each one cost something to learn.**
 (1) **Every long job is a registered service with a terminal marker** — success and failure both surface as
 an exit — because twice a run died unwitnessed, and once the death was invisible for the sole reason that
 the launcher was a plain background process rather than a registered one. (2) **An agent still working is
@@ -367,7 +367,13 @@ claim about another document is a claim to verify, not to relay. And a fourth, f
 itself: **a correction must reach the artefacts derived from the file, not only the file.** Four of the
 eighteen occurrences of that claim were stale `__pycache__` bytecode of the *already corrected* docstrings —
 a generated copy that keeps repeating a retracted claim and is invisible to a grep that stops at source.
-Delete the derived artefacts, or the retraction is only as complete as the search.
+Delete the derived artefacts, or the retraction is only as complete as the search. And a fifth, from this
+invocation's own bug: **a specific path is a fact that ages; a resolution rule is correct for every case
+including ones added later.** The container invocation named one `proofs/lean/.lake/packages`, which existed
+for no task — there is one cache per task — and the fix was not a better path but the rule "the cache the
+package's own `.lake/packages` symlink resolves to", which is right for all six arms and for any arm added
+after them. Where a plan can state *how to find* something rather than *where it is*, it should, because the
+path is the version of the fact that will be wrong soonest.
 
 **The escape test now exists, and it grades the decision's two outcomes rather than asserting either.**
 `tests/isolation-escape-contract.md` + `tests/test_isolation_escape.py` (authored here: the test was
