@@ -427,22 +427,54 @@ build. Container overhead measured at ≈0.5 s per invocation, negligible agains
 is the arms' own variance, not the boundary. **Not started**: the owner sees this cost against the
 clean-subset alternative first, and the finding changes the alternatives rather than settling them.
 
-**What the remediation actually waits on, so the record does not overstate it.** One dependency, and it is
-not technical: the **owner's choice** between rebuilding the corpus per cell — cell roots outside the
-repository, self-contained packages, so that **no relative walk from the attempt's cwd reaches the
-repository**, which is the half a rebuild can actually buy, since an absolute path remains reachable on a
-host with no boundary *in the runner as it stands* — a container boundary is available and is the third half
-of the escape test — and accepting the **clean-subset basis**
-and publishing the limitation. The preparer shape this section asked for has **landed** (Scenario 4):
-`prepare` takes the seed to attempt plus the seeds that attempt may see, copies the attempted seed with its
-baseline and each declared dependency's text without one, withholds every other registered seed
-`<Stem>Proved.lean` included, and records both lists in its receipt — observed on the tier-1 pilot, whose
-receipts read `included ["PaxosN6Pilot.lean", "PaxosProved.lean"]`, `withheld ["Paxos.lean",
-"PaxosMutant.lean"]`, where the tier-2 case withholds the same proved module instead. The gate the
-remediation's audits need has landed too: the classifier now decides `own-copy` by path, so no arm's
-independence rests on a hand-run scan. And the paper is **not** a blocker but a consumer: its Paxos half is
-finished, and what the remediation feeds is §5.1/§5.2/§5.5 and Limitations item 6, on figures the reruns
-produce. The row count the remediation reports follows the ruling rather than preceding it.
+**The containerised runner is decided (owner chose A) and planned here before any code changes.** The shape
+is one boundary around the **runner**, not the model spawn, and the structural consequence is what orders
+everything else: if the runner runs inside the container then **the repository must not be mounted**, so the
+harness the runner imports has to live **in the image** — built from this repository's own flake at a pinned
+commit — while the host only *prepares* packages, which is not the leak channel. That is what makes the
+repository genuinely absent inside the run rather than merely unmounted by convention.
+
+- **Split.** Host: `harness.attempt_workspace prepare` per attempt (needs the templates, writes the package
+  and the result root). Container: `python -m harness.route_b --mode file …` for that package.
+- **Invocation**, the proven one extended to the runner:
+  `docker run --rm --read-only --network=bridge --user $(id -u):$(id -g) --tmpfs /tmp
+  -v <package>:/work -w /work -v <cell>/results/attempt-NNN:/results
+  -v <cut>/.omp:/root/.omp -e HOME=/root -e DEEPSEEK_API_KEY
+  -v <cache>:<cache>:ro -v /nix/store:/nix/store:ro <image>
+  python -m harness.route_b --task tasks/<task>.json --proof /work/<stem>.lean --mode file --tier <t>
+  --reps 1 --results /results`
+  with the pinned cache mounted **at its host path read-only** so the package's absolute `.lake/packages`
+  symlink resolves and stays un-writable, no docker socket inside, and `--user` so nothing the container
+  writes into the mounts is root-owned and unattributable.
+- **Image.** From the repository's flake: the dev shell's python and `harness/`, `tasks/`,
+  `proofs/lean/…/prompt_examples.lean`, the Lean toolchain, and the `omp` binary. One toolchain definition,
+  no drift from the host's.
+- **Verify before any cell**, because each is an assumption of the kind this session spent a day
+  disproving: `omp --mode rpc` **in the container** (the one-shot `-p` success does *not* transfer — verify
+  the rpc path itself), `inotify` working under the containerised watch, `lake build` succeeding inside the
+  container with the cache read-only, and the mounts' ownership matching `--user`.
+- **Revision.** The record is captured **after** the image is built and the runner change lands, and
+  **before** the first attempt of the re-earn; with 30 attempts over 8–16 h, a mid-run edit would invalidate
+  all of them. The pilot's capture came after launch and had to be defended; this one will not.
+- **Gate.** The escape test's container half must be green on the real layout **before** the re-earn starts:
+  a passing re-earn on a leaking layout is the outcome this whole sequence exists to prevent. **Not started**
+  until then.
+
+**What the remediation waits on is now decided.** One dependency remained — the owner's choice between
+rebuilding the corpus per cell and accepting the clean-subset basis — and **the owner chose the rebuild as a
+containerised re-earn**, which retires the clean-subset branch rather than leaving it open. The preparer
+shape the earlier section asked for has **landed** (Scenario 4): `prepare` takes the seed to attempt plus the
+seeds that attempt may see, copies the attempted seed with its baseline and each declared dependency's text
+without one, withholds every other registered seed `<Stem>Proved.lean` included, and records both lists in
+its receipt — observed on the tier-1 pilot, whose receipts read `included ["PaxosN6Pilot.lean",
+"PaxosProved.lean"]`, `withheld ["Paxos.lean", "PaxosMutant.lean"]`, where the tier-2 case withholds the
+same proved module instead. The gate the audits need has **landed** too: the classifier decides `own-copy`
+by path, so no arm's independence rests on a hand-run scan. And the paper is a **consumer**: its Paxos half
+is finished, and what the re-earn feeds is §5.1/§5.2/§5.5 and Limitations item 6, on figures the reruns
+produce. Row counts follow the ruling rather than preceding it — six arms at `R = 5`, every arm reported with
+its verdicts, its withholdings named in the three classes, its all-attempt wall distribution, and its
+revision recomputed and then the ratios recomputed from these rows alone with the published comparison left
+marked indicative.
 
 **That asymmetry, ruled from the tool that creates it — a registered seed with no baseline is a signal, not an oversight.** `seeds.json` is the *resolution* record: promotion writes the proof to a new `<Stem>Proved.lean` module, registers that module's digest in `seeds.json`, and registers the module as a `lakefile.toml` library target (`scripts/promote.py:190-214,117-137`). `baseline/<file>` is the *attempted* text, and promotion deliberately does not re-pin it, because re-pinning it "would make the next tier-2 run copy a closed file and 'close' in zero turns — a rig artefact wearing the shape of a result" (`scripts/promote.py:217-221`). So a missing `baseline/<seed>` means "this module is a dependency or an artifact, never something attempted from pristine text", and the next person adding a seed should read it as that signal rather than as an omission. The preparer's rule that **every** registered seed must have a baseline conflates the two roles — which is why it refuses all four published templates, and why lifting that alone is worse, since it then copies the completed proof of the attempted theorem into a tier-2 attempt's own tree. `tests/paxos-attempt-isolation-contract.md` Scenario 4 and its two nodes — `::test_tier2_package_withholds_an_undeclared_registered_proof_seed` and `::test_tier1_package_copies_the_declared_dependency_without_a_baseline` — are authored with that red **observed on both nodes, each for its own reason**: the tier-2 node fails `assert 2 == 0` on `error: template is missing baseline/PaxosProved.lean`, the tier-1 node on `argparse: unrecognized arguments: --dependency PaxosProved.lean`. The required shape is therefore: `--seed` copied with its baseline; `--dependency <module>` repeatable, copied without any baseline and hashed against its own recorded digest; every other registered seed withheld; the copied lakefile naming exactly the modules present; and the receipt's `modules.included` / `modules.withheld` recording both sets.
 
