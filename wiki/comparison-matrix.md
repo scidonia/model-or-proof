@@ -47,14 +47,21 @@ the positive arm's proof file while developing their refutation, so only their f
 evidence — their wall-clock and dollar figures are not measurements of anything. The `bakery` mutant row
 is unaffected. §7 caveat 13, evidence at `results/route-b-cell-reuse.md` §10.6.
 
+**Route B's cost figures in this matrix are withdrawn as cost measurements (2026-09-28).** The four
+tier-2 medians and the `bakery` and `lcr` tier-1 medians rest on rows whose transcripts show prior-proof
+reuse, and the re-earned arms failed their own audit gate as well (§2, §7 caveat 14). The **closures**
+those rows record stand — a closure is a verdict, not a cost sample — and `token-ring`'s tier-1 cell
+(38.5 s) is clean.
+
 ---
 
-## 2. The same-claim pairs — theorem plus instantiation
+### 2. The same-claim pairs — theorem plus instantiation
 
 Both arms settle the same claim at the same instance. **The proof's true cost is the general theorem
 *plus* its corollary**, since the corollary is the trivial instantiation of it. A corollary-only figure
 answers "what does instantiation cost *given* the theorem", not "what does settling this claim cost" —
-so the totals below are the honest comparison and the marginal ratios are the footnote.
+so the totals below were the honest comparison and the marginal ratios the footnote. **All of it is now
+withdrawn as cost measurement, and kept here as what was computed:**
 
 | Task | Route A at `n₀` | theorem | corollary | **proof total** | **`K` (total)** | favours |
 |---|---|---|---|---|---|---|
@@ -63,18 +70,23 @@ so the totals below are the honest comparison and the marginal ratios are the fo
 | ewd998 (N=3) | 36.4 s / $0.00202 | 162.0 s / $0.00047 | 112.3 s / $0.00051 | **274.3 s / $0.00098** | **7.53** / 0.485 | **TLC, 7.5×** |
 | lcr (N=10) | 2.670 s / $0.00015 | 216.0 s / $0.00044 | 101.0 s / $0.00042 | **317.0 s / $0.00086** | **118.7** / 5.82 | **TLC, 118.7×** |
 
-**Marginal ratios, for reference — and they mislead in both directions.** Corollary ÷ Route A gives
-0.046 / 0.016 / 2.78 / 37.8, which **overstates** the proof's wall-clock advantage (21.7× → 5.8× at
-token-ring, 63.3× → 9.3× at bakery) and **understates** TLC's (2.78× → 7.53× at EWD998, 37.8× → 118.7×
-at lcr). The theorem is reusable across every instance of its claim, so its cost must be paid once
-before any corollary exists.
+**These totals are withdrawn (2026-09-28).** Every tier-2 median, and the `bakery` and `lcr` tier-1 arms,
+rest on rows with prior-proof reuse; the re-earned reruns failed their audit gate as well (§7 caveat 14;
+`results/remediation/`, and `wiki/closed-by-theorem.md` §8–§9), so **no recomputed `K` is published and
+no split is a result**. Route A's own rows are measured and unaffected, and the one same-claim ratio that
+rests only on clean cells is `token-ring`'s marginal one — 837.938 s against the tier-1 corollary's 38.5 s.
 
-**On wall-clock the totals split 2–2. On cost, three of four favour the proof** (only lcr's does not,
-and it favours TLC on both resources).
+**The reasoning the withdrawn figures once supported is kept as reasoning.** A corollary-only ratio
+answers a different question from the one asked, because the theorem's cost is paid once before any
+corollary exists — so corollary ÷ Route A's 0.046 / 0.016 / 2.78 / 37.8 overstated the proof's wall-clock
+advantage and understated TLC's; and on cost the totals were kinder to the proof than on wall-clock (three
+of four favouring it, only lcr's not, on both resources). That is an argument about *what to count*, and
+it survives; the numbers made with it do not.
 
-**The disagreement is the finding, not a defect.** `n₀` is chosen to fit the loop's budget, not to sit at
-the task's crossover, and **no pair in this matrix was measured at a crossover** — so the ratios report
-where each instance happened to fall.
+**And the direction was never a property of the method.** `n₀` is chosen to fit the loop's budget, not to
+sit at the task's crossover, and **no pair in this matrix was measured at a crossover** — so the pairs
+reported where each instance happened to fall. **The shape survives — TLC exponential, proof flat, a
+crossover per task; the 2–2 split does not.**
 
 ---
 
@@ -130,6 +142,11 @@ where each instance happened to fall.
 | lcr | 1 | 5 | 101.0 s | 79.2 s | 178.7 s | $0.00042 | 1 |
 | ewd998 | 2 | 5 | 162.0 s | 69.0 s | 1009.5 s | $0.00047 | 1 |
 | ewd998 | 1 | 1 | 101.2 s | — | — | $0.00062 | 1 |
+
+**Withdrawn as cost measurements (2026-09-28):** the four tier-2 rows and the `bakery` and `lcr` tier-1
+rows — the same six arms as §1. Their `n`, medians, minima, maxima and cost medians are historical
+observations, not independent samples. The `token-ring` and `ewd998` tier-1 rows are unaffected, and
+every row's *outcome* — closed or not — stands.
 
 **Non-closures, all retained.** Three harness `error` rows (token-ring tier 1 at 416.2 s; bakery tier 2
 at 361.5 s ×2, zero turns — the rig, not the prover) and three mutant `no_progress` rows.
@@ -193,7 +210,7 @@ Protocol §3 names three readings and §11 decision 1 makes **reading 2 the head
 | Reading | Statement | Result |
 |---|---|---|
 | **2 (headline)** | Route B proves the tier-2 theorem within budget `B`, where Route A cannot answer at any cost | **Supported, 4 of 4.** Worst case 1009.5 s = 14.0% of the 2 h cap and $0.00081 = 0.0016% of the $50 cap. Route A's coverage of tier 2 is 0 of 4 at any budget. |
-| **1** | Route B settles the tier-1 question within a factor `K` of Route A | **Totals: `K` = 0.171 / 0.107 / 30.5 / 118.7** — two favour the proof (5.8×, 9.3×) and two favour TLC (30.5×, 118.7×). Corollary-only ratios (0.046 / 0.016 / 2.78 / 37.8) overstate the proof's advantage and understate TLC's, because the general theorem's cost must be paid before any corollary exists — see §2. |
+| **1** | Route B settles the tier-1 question within a factor `K` of Route A | **Withdrawn**: the cell medians behind `K` rest on rows with prior-proof reuse, and the re-earned reruns failed their audit gate (§2, §7 caveat 14), so **no split is reported**. The `0.171 / 0.107 / 7.53 / 118.7` totals this row used to print — with a `30.5` variant for EWD998 — are the §2 table's, and are withdrawn with it. |
 | **3** | Coverage under a fixed budget | **Counts equal at 4 of 4, claims not equal.** Route B settles four general theorems; Route A settles four bounded instances and 0 of 4 at the general tier. |
 
 ---
@@ -214,8 +231,9 @@ Protocol §3 names three readings and §11 decision 1 makes **reading 2 the head
 8. **Cost basis.** Tokens at provider list price as recorded in the session's `usage.cost`; compute at a
    stated host rate; researcher time not costed. Components reported separately.
 9. **EWD998's cells are `n=1`**, unlike every other task. Its figures are existence proofs, not rates.
-10. **No pair was measured at a crossover**, which is why the four `K` values disagree. Paxos is the task
-    ruled to fix that, with `n₀` set at the crossing.
+10. **No pair was measured at a crossover**, which is why the four pairs fell where they did — a split now
+    withdrawn with the cells behind it (caveat 14). The cost *shape* (TLC exponential, proof flat) is
+    measured; the crossover itself is extrapolated.
 11. **One calibration number rests on a scratch log, not a row** — EWD998's N=4 completion. A record
     sweep through the runner is in flight so the evidence becomes a row.
 12. **Fingerprint-collision caveat** on the 248 M-state N=4 count: TLC reported `7.0E-8` actual against an
@@ -241,6 +259,21 @@ Protocol §3 names three readings and §11 decision 1 makes **reading 2 the head
     The commands, transcript paths and line numbers, and each session's own words, are in
     `results/route-b-cell-reuse.md` §10.6, a correction to that file's own §5; the rows themselves are
     `results/proof.jsonl` rows 70 and 88. The bakery mutation arm (row 65) is unaffected.
+
+14. **The cross-task cost figures are withdrawn.** The published tier-2 medians for all four tasks, and
+    the `bakery` and `lcr` tier-1 arms, rest on rows whose transcripts show prior-proof reuse; the six
+    affected arms were re-earned under per-package isolation and failed their audit gate as well —
+    **only `tok2` is whole-clean**, the clean subsets across the six arms come to **nineteen attempts, of
+    which fifteen closed**, and the raw **twenty-six of thirty closed** must never be quoted as
+    comparable to that, because contamination *flatters* closure. So no recomputed `K` exists and §2
+    reports none; its table retains the superseded values only as historical observations, and reading 1
+    of §6 reports no split. The mutation-arm rows (caveat 13) are a separate matter — usable as
+    **outcomes**, never as **cost statistics**. Evidence: `results/remediation/` (per-arm
+    `audit.json`/`audit.txt`, `PROVENANCE.md`, `prepare-receipts.jsonl`, `revision.json`); the original
+    reuse finding is `results/route-b-cell-reuse.md` §10.4–§10.8; the narrative is
+    `wiki/closed-by-theorem.md` §8–§9. Comparisons against the superseded published values are
+    **indicative**, because those rows predate the field that records a withheld verdict and were produced
+    under a different verdict rule.
 
 ---
 
@@ -302,4 +335,6 @@ quoted with ranges and why no figure here is a single run's.
 | `n₀` definitions and budgets | `docs/protocol.md` §11 decisions 1–5, §3 |
 | The closure criterion | `harness/closure_oracle.py`, `tools/checker/PROVENANCE.md` |
 | Equivalence audits | `docs/equivalence-{token-ring,bakery,lcr,ewd998}.md` |
+| The original reuse finding | `results/route-b-cell-reuse.md` §10.4–§10.8 — the six contaminated arms and their fifteen rows |
+| The withdrawal and the rig result (§2, §6, §7.14) | `results/remediation/PROVENANCE.md`; per-arm `results/remediation/<arm>/audit.json` and `audit.txt`; `results/remediation/prepare-receipts.jsonl`; `results/remediation/revision.json`; narrative in `wiki/closed-by-theorem.md` §8–§9 |
 | Narrative | `wiki/closed-by-theorem.md`, `wiki/token-ring-route-a-vs-route-b.md` |
