@@ -363,7 +363,12 @@ so a window that looks only inside them cannot see it. State the window with the
 of the habit this plan already lists — *check the field, not the mechanism* — went wrong here: "the wiki
 still carries the withdrawn `K`" was repeated from an earlier message without being re-checked, and by then
 `wiki/closed-by-theorem.md:266-269` marked the table as withdrawn with the re-earning outcome beneath it. A
-claim about another document is a claim to verify, not to relay.
+claim about another document is a claim to verify, not to relay. And a fourth, from the sandbox retraction
+itself: **a correction must reach the artefacts derived from the file, not only the file.** Four of the
+eighteen occurrences of that claim were stale `__pycache__` bytecode of the *already corrected* docstrings —
+a generated copy that keeps repeating a retracted claim and is invisible to a grep that stops at source.
+Delete the derived artefacts, or the retraction is only as complete as the search.
+
 **The escape test now exists, and it grades the decision's two outcomes rather than asserting either.**
 `tests/isolation-escape-contract.md` + `tests/test_isolation_escape.py` (authored here: the test was
 commissioned outside the contract path and **no draft had reached the tree at the moment of authoring** —
@@ -406,7 +411,15 @@ the "shared mutable state" channel the row notes describe; `/nix/store` **ro**; 
 the model's key, by `-e`, never the environment; whether the CLI also needs a read-only mount of its config
 under `$HOME` is a scoping item to determine rather than assume. *Network*: **on**, because the model call
 needs it — so this is a **filesystem** boundary and must be described as one — and the docker socket is not
-mounted into it. *Cost*: six arms × `R = 5` = **30 attempts**; published per-attempt walls are roughly
+mounted into it. *Credentials — confirmed by measurement, before the decision rather than at hour one of
+eight*: the path works inside the boundary. `docker run --rm -w /work -v <package>:/work -v
+~/.local/bin/omp:/usr/local/bin/omp:ro -v ~/.omp:/root/.omp -e DEEPSEEK_API_KEY -e HOME=/root
+debian:stable-slim /usr/local/bin/omp -p --model deepseek/deepseek-v4-pro --cwd /work "<prompt>"` → **exit 0
+with the model's reply**, in a container where `ls /home/gavin/dev/model-or-proof` reports *No such file or
+directory*. Two details each cost a measurement: the CLI is a **glibc** binary, so alpine cannot run it (use
+a glibc base or a flake-built image), and one-shot use needs `-p`/`--print` — without it the CLI goes
+interactive and dies from the missing TTY with exit 129 and no output, which is how that was found. So the
+key travels by `-e`, the CLI's store mounts at `$HOME`, and no repository path is needed to make a call. *Cost*: six arms × `R = 5` = **30 attempts**; published per-attempt walls are roughly
 60–640 s for the tier-1 arms and 1,000–1,935 s for the tier-2 ones, so ≈ **8–16 h of wall-clock serially**,
 with one tier-2 attempt potentially near the 2 h cap. Dollars are **not** the binding cost: measured
 `cost_usd` is \$0.0006–0.003 per attempt, so ≈ **\$0.02–0.10 for the whole re-earn** plus a one-off image
