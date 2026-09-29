@@ -7,6 +7,8 @@ the detection half, and Scenario 4 is the control that stops the detector firing
 """
 
 import json
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -123,3 +125,65 @@ def test_the_control_legitimate_reads_do_not_fire(tmp_path, monkeypatch):
 
     session, _ = build_attempt(tmp_path, siblings=["Paxos-r1.lean"], command=command)
     assert audit_attempt(session)["verdict"] == "clean"
+
+
+# Scenario 5: the container half. The probe is identical in both cases and only the mount list differs,
+# which is what makes the control meaningful: the boundary must hide the repository, and the fixture must
+# still be looking when the repository is mounted at its real path.
+
+PROBE = (
+    "echo package: $(ls /work | tr '\\n' ' '); "
+    "echo abs: $(ls {repo} 2>&1 | head -1); "
+    "echo via-symlink: $(ls /work/.lake/packages 2>&1 | head -1); "
+    "echo root: $(ls / | tr '\\n' ' ')"
+)
+
+
+def docker_probe(mounts):
+    repo = Path(audit_attempts.REPO)
+    return subprocess.run(
+        ["docker", "run", "--rm", "--read-only", *mounts, "-w", "/work", "alpine",
+         "sh", "-c", PROBE.format(repo=repo)],
+        capture_output=True,
+        text=True,
+    )
+
+
+def package_with_symlink(tmp_path):
+    """A package whose `.lake/packages` symlink points at a real repository path, as the preparer's does."""
+    package = tmp_path / "attempt" / "paxos"
+    (package / ".lake").mkdir(parents=True)
+    (package / ".runs").mkdir()
+    (package / "Paxos.lean").write_text("theorem t : True := by\n  sorry\n")
+    (package / ".lake" / "packages").symlink_to(Path(audit_attempts.REPO) / "proofs")
+    return package
+
+
+def test_docker_is_present_because_a_skipped_boundary_test_is_the_blindness_it_removes():
+    """The container half asserts its own availability; skipping it would restore what it exists to remove."""
+    assert shutil.which("docker") is not None, "no docker: the boundary half cannot be exercised"
+
+
+def test_the_package_alone_leaves_the_repository_unreachable(tmp_path):
+    """Scenario 5, first half: only the package is mounted."""
+    package = package_with_symlink(tmp_path)
+    probe = docker_probe(["-v", f"{package}:/work"])
+    assert probe.returncode == 0, probe.stderr
+    assert "Paxos.lean" in probe.stdout, probe.stdout  # the package itself is readable
+    assert "No such file or directory" in probe.stdout, probe.stdout  # the repository absolute path is not
+    # The error message names the path, so the discriminator is the repository's *content*, not its name.
+    assert "docs" not in probe.stdout, probe.stdout
+    assert "AGENTS.md" not in probe.stdout, probe.stdout
+
+
+def test_the_control_with_the_repository_mounted_it_is_reachable(tmp_path):
+    """Scenario 5, control: the same probe, with the repository mounted at its real path."""
+    package = package_with_symlink(tmp_path)
+    repo = Path(audit_attempts.REPO)
+    probe = docker_probe(["-v", f"{package}:/work", "-v", f"{repo}:{repo}:ro"])
+    assert probe.returncode == 0, probe.stderr
+    # The discriminator is the error's *absence*: with the repository mounted, the same absolute path and
+    # the same symlink resolve, so nothing reports "No such file or directory". Asserting on a specific
+    # entry of the repository's listing would only pin the listing's order.
+    assert "No such file or directory" not in probe.stdout, probe.stdout
+    assert "package: Paxos.lean" in probe.stdout, probe.stdout

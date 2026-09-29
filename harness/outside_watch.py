@@ -1,14 +1,21 @@
 """Observe writes outside the working copy while a file-mode session runs (plan D26, item 5).
 
-D26 asks that the prover's shell be its working copy only. **Enforcing** that needs a sandbox, and the
-sandbox is not available on this host: `unshare -r --mount` fails with
+D26 asks that the prover's shell be its working copy only. **Enforcing** that needs a boundary, and the one
+this file's first version gave up on is not the only one this host has. Unprivileged user namespaces are
+indeed unavailable — `unshare -r --mount` fails with
 
     unshare: write failed /proc/self/uid_map: Operation not permitted
 
-i.e. unprivileged user namespaces are disabled, so bind-mounting the package read-only with the working copy
-writable is out, and bubblewrap (which needs the same) would fail identically. That is recorded here so a
-future reader does not re-litigate it: with no kernel boundary available, D26's "reported, never silently
-prevented" is the operative half, and the boundary is **observed**.
+so bubblewrap (which is not installed here, and would need the same) fails identically, and bare `chroot` is
+out as well. But **a container boundary is available**, and it is a real one: `Docker 28.5.1` is installed
+and usable by this user (in the `docker` group; the socket is `root:docker`). Measured —
+`docker run --rm --read-only -v <package>:/work -w /work alpine` — the repository does not resolve inside
+that container: no relative walk, no guessed absolute path, and no route through the `.lake` symlink, because
+none of them are there; mounting the repository read-only as well makes all of them resolve again, which is
+the control. So D26's "reported, never silently prevented" is the operative half **for the runner as it
+stands** (uncontainerised), and a containerised runner would put this watch where it belongs — the second
+layer rather than the only one. `tests/isolation-escape-contract.md` Scenario 5 carries the measurement and
+its control.
 
 Observation has to be event-based. A before/after digest sweep of the tree is defeated by a write followed
 by a restore, which is precisely the trick this exists to catch — and a candidate with a shell can perform

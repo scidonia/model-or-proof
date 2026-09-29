@@ -358,8 +358,8 @@ divided or compared against another task's total.
 
 **And one result about the rig, which stands on its own.** Auditing thirty re-earned attempts across the
 six contaminated published arms found that per-package isolation — a fresh Lean package per attempt, with
-no prior proof in its own tree, which the receipts confirm — is **necessary and insufficient on a host with
-no read sandbox**. Five of the six arms contained at least one attempt whose transcript shows a prior proof
+no prior proof in its own tree, which the receipts confirm — is **necessary and insufficient without a boundary**: a container boundary is available on this host, and none
+of these arms ran inside one. Five of the six arms contained at least one attempt whose transcript shows a prior proof
 read, by two routes: a **tier-2** attempt read the *shared template's* `<Task>Proved.lean` **by absolute
 path** (the package had correctly withheld it, so the read reaches the repository instead) — `lcr2`'s
 attempt 2 reading `TokenRingProved.lean`, **another task's** completed proof — and a **tier-1** attempt

@@ -144,7 +144,9 @@ proof's **actual** `Paxos.agreement` checks CLOSED with Lean's permitted
 The checker is repaired, but the contaminated pilot's costs stay invalid.
 
 **Repetition independence remains a separate gate; user chose operational option A.**
-No enforced read sandbox exists on this host (`harness/outside_watch.py:1-11`).
+The runner as it stands has no **enforced** read boundary: a container one is available on this host —
+measured, and exercised by `tests/isolation-escape-contract.md` Scenario 5 — but no cell has yet run inside
+one (`harness/outside_watch.py:3-16`).
 `--reps 1` with a fresh result root alone still leaves old `.runs` scratch and
 committed closure copies reachable (`harness/route_b.py:308-323,378-390`);
 do not claim the model is *unable* to read arbitrary same-UID paths. The
@@ -310,7 +312,7 @@ remain labelled contaminated diagnostics, never pooled with a fresh cell.
 
 **Offline real-package smoke, recorded in the tree (this closes the gate the contract names).** The original run was by the preparer's author (`AttemptWorkspace`, `197f794`) and lived only in a message; this is a re-run on the corrected preparer (`61c07de`) with its commands and outputs written down. Prepare: `nix develop -c python -m harness.attempt_workspace prepare --template proofs/lean/paxos --seed Paxos.lean --attempt 1 --workspace-root /tmp/awsmoke/ws --results-root /tmp/awsmoke/res` → exit 0, receipt `{"attempt":1,"package":"/tmp/awsmoke/ws/attempt-001/paxos","seed":"/tmp/awsmoke/ws/attempt-001/paxos/Paxos.lean","results":"/tmp/awsmoke/res/attempt-001","seed_sha256":"0d29361497a893f3ce2ca30d108161486a40cb4aec0ce6efae810986066f184e"}` — the registered seed digest. The prepared package held `Paxos.lean`, `PaxosMutant.lean`, `baseline/` (two files), `lakefile.toml`, `lean-toolchain`, `lake-manifest.json`, `seeds.json` and `.lake/packages` as an absolute symlink to the 7.2 GB pinned cache: no `.runs/`, promoted target, closure copy, results or OMP session. Elaboration with every proxy aimed at a dead port (`http_proxy`/`https_proxy`/`HTTP_PROXY`/`HTTPS_PROXY`=`http://127.0.0.1:9`, `all_proxy=socks5://127.0.0.1:9`): `lake env lean Smoke.lean` — a file importing Mathlib and using `norm_num [Finset.sum_range_id]` and `Finset.union_comm` — **exit 0 in 8.36 s**; and the copied seed `lake env lean Paxos.lean` **exit 0** with exactly one `Paxos.lean:266:8: warning: declaration uses 'sorry'`, the known single-`sorry` seed. Instrumented, not asserted: `strace -f -e trace=connect,socket` over the whole `lake env lean` process tree recorded **107 lines and zero `connect(` and zero `socket(` calls**, while a live control under the same tracer recorded a real `connect(3, {sa_family=AF_INET, sin_port=htons(9), sin_addr=inet_addr("127.0.0.1")}, 16) = -1 EINPROGRESS` — so the zero is a measured absence, not a dead trace. What this licenses is exactly `lake env lean` on a prepared package resolving the linked cache offline; it says nothing about `lake build` in a prepared package, which the review reached independently.
 
-**The per-attempt transcript audit is a required acceptance gate for every fresh R≥5 cell, not a courtesy.** The review's own "not entitled to claim" list is the reason: with no sandbox, the earlier proof of the same theorem stays readable at `proofs/lean/paxos/.runs/Paxos-r1.lean` and under `results/paxos-calibration/closures/paxos/`, so independence rests **entirely** on the post-hoc audit. No attempt's wall time enters a cell's median, and no `P(N)`, parity, ratio or `n0` arithmetic may consume that median, until **every** attempt's complete OMP tool-call transcript has been inspected and recorded — one line per attempt naming the row, the session path, the calls scanned and a verdict (`clean`, or `contaminated` with the offending command). The scan must match bare sibling filenames and dynamically generated shell reads, not only `.runs/`-shaped paths (the published-cell audit's decisive commands were bare relative names inside a `for` loop); the audit's evidence must be committed beside the rows as a bounded extract **before** the claim is published, because `results/omp/` is gitignored (`.gitignore:10`) — the `results/route-b-cell-reuse.md` precedent; and an attempt whose audit is missing is *unaudited*, which is not clean, and cannot be counted. The scan also has to cover the second channel the review named: the linked `.lake/packages` is **shared mutable state**, so a dependency rebuild or `lake update` by one attempt is visible to the template and to every other attempt; each attempt's audit line therefore also records whether it wrote through that cache, and a fresh cell claims no isolation from it. An observed prior same-tier read or copy invalidates that attempt's independent-cost evidence even when its Lean file proves the theorem. `results/paxos-calibration/omp/` (the contaminated pilot's session roots) was untracked and unmatched by `.gitignore:10`'s `results/omp/`, so a blanket `git add -A` would have swept it in; the convention is now decided once for both instances — see the ignore rule noted below — and the audit's bounded extract remains what gets committed beside the rows.
+**The per-attempt transcript audit is a required acceptance gate for every fresh R≥5 cell, not a courtesy.** The review's own "not entitled to claim" list is the reason: with no enforced boundary in the run as configured, the earlier proof of the same theorem stays readable at `proofs/lean/paxos/.runs/Paxos-r1.lean` and under `results/paxos-calibration/closures/paxos/`, so independence rests **entirely** on the post-hoc audit. No attempt's wall time enters a cell's median, and no `P(N)`, parity, ratio or `n0` arithmetic may consume that median, until **every** attempt's complete OMP tool-call transcript has been inspected and recorded — one line per attempt naming the row, the session path, the calls scanned and a verdict (`clean`, or `contaminated` with the offending command). The scan must match bare sibling filenames and dynamically generated shell reads, not only `.runs/`-shaped paths (the published-cell audit's decisive commands were bare relative names inside a `for` loop); the audit's evidence must be committed beside the rows as a bounded extract **before** the claim is published, because `results/omp/` is gitignored (`.gitignore:10`) — the `results/route-b-cell-reuse.md` precedent; and an attempt whose audit is missing is *unaudited*, which is not clean, and cannot be counted. The scan also has to cover the second channel the review named: the linked `.lake/packages` is **shared mutable state**, so a dependency rebuild or `lake update` by one attempt is visible to the template and to every other attempt; each attempt's audit line therefore also records whether it wrote through that cache, and a fresh cell claims no isolation from it. An observed prior same-tier read or copy invalidates that attempt's independent-cost evidence even when its Lean file proves the theorem. `results/paxos-calibration/omp/` (the contaminated pilot's session roots) was untracked and unmatched by `.gitignore:10`'s `results/omp/`, so a blanket `git add -A` would have swept it in; the convention is now decided once for both instances — see the ignore rule noted below — and the audit's bounded extract remains what gets committed beside the rows.
 
 **Published-cell remediation: per-arm scope and ordering, fixed before the reruns.** The scope is the six contaminated arms and fifteen rows exactly as `results/route-b-cell-reuse.md` §10.4–§10.8 records them — token-ring tier-2 (rows 48, 59, 60, 62), bakery tier-2 (68), lcr tier-2 (77, 78, 79), ewd998 tier-2 (94, 95, 96, 97), bakery tier-1 (83), lcr tier-1 (74, 76) — while the twenty-one tier-1 rows that only import the task's own general `*Proved` theorem remain **intended dependency** and are not rerun. Each affected arm is re-earned as its own cell: R≥5 file-mode attempts on one seed digest, a prepared per-attempt Lean package for each attempt with its own workspace, results **and OMP session** root, and the **same transcript audit applied per rerun**. A rerun that itself shows a prior-proof read invalidates that attempt and is retained as diagnostic; it is never quietly repeated until it comes out clean, which would be the `-cleanup` error in a new place. Every old row, closure copy and transcript is preserved as historical — censored or relabelled rows would destroy the evidence that produced the finding. The two **mutant** arms that read a true-model proof (LCRMutant row 70, EWD998Mutant row 88, J78) are **not** added as cost arms: a mutant's required control is a falsifiability outcome, so its wall/dollar figures never enter `K`, and adding two unregistered arms would change the comparison's population after the fact. The paper update states this in exactly these terms: those negative-control attempts were **neither isolated nor independent** — their *outcome* evidence stands, their wall-clock and dollar figures must not be presented as independent sample statistics, and they must not be used to validate the checker. A future mutant reported `closure.verdict: true` after copying a true proof is a **rig failure needing separate action**, never a cell to average. `K`'s definition is unchanged (`docs/protocol.md:120-127`; operationalised at `wiki/closed-by-theorem.md:217-243`) and currently stands at 0.171 / 0.107 / 7.53 / 118.7 on a 2–2 split.
 
@@ -368,9 +370,12 @@ commissioned outside the contract path and **no draft had reached the tree at th
 no file, no artifact, no
 registered transcript — so there was nothing to adopt at that moment; the commissioned agent was in fact
 still **running**, and was stopped before it could overwrite this contract, which is principle (2) above).
-Its pass condition is stated in **two halves**,
-because the obvious version is not achievable on this host: no read sandbox exists, so a cell root outside
-the repository makes a **relative** traversal impossible and does nothing about an **absolute** path. Half
+Its pass condition is stated in **three halves**,
+because for the runner as it stands there is no boundary: a cell root outside the repository buys the layout
+half, while **a container boundary is available on this host** and buys the third — the only one that closes
+an **absolute** path, which both measured leaks used (`tests/isolation-escape-contract.md` Scenario 5), so
+the second half listed above is detection for the runner as configured rather than a statement about what is
+possible here. Half
 one is therefore *impossible-by-layout* and testable by resolving the candidate relative paths — with a
 control that **fails on the current layout**, since the escape is measured rather than argued; half two is
 *detected-by-audit*, and that is the half a clean-subset-only report is a statement about. This also matters
@@ -380,11 +385,41 @@ exercises the `own-copy`-by-path rule against the case it was written for — a 
 another cell — and Scenario 4 is the control that must **not** fire, which caught a fixture defect on its
 first run rather than letting it pass for the wrong reason.
 
+**Scoping the containerised runner (recommendation: containerise the runner, not the model spawn).** Two
+shapes are available. **(A)** wrap the model spawn — `harness` starts `omp --mode rpc …` as a subprocess, so
+that subprocess could be `docker run …` instead. **(B)** run the whole runner inside one container with the
+package and the cell's results root mounted. **Recommend B**: the model's shell is a *child* of the runner, so
+B bounds the leak channel **and** the runner's own view in one place, keeps the watch's and the audit's
+semantics intact because they read the mounted results root, and leaves the `--mode rpc` protocol, the
+environment and the cwd untouched — where A couples the boundary to one spawn's internals and must be
+revisited whenever that spawn changes. A stays the fallback if running `nix develop` inside the image proves
+awkward.
+
+*Image*: built from this repository's own flake (`nix` can emit an image), so there is **one** toolchain
+source — the dev shell's python plus `harness/`, `elan`/`lake`, and the model CLI — rather than a second
+definition of the environment that can drift from the first. *Mounts and modes*: `<package>:/work` **rw**;
+the cell's `results` root **rw** so rows land on the host where the audit reads them; the pinned dependency
+cache mounted at its **host path** read-only, because the package's `.lake/packages` is an absolute symlink
+and mounting the cache at the same path keeps it resolving while making it un-writable — which also closes
+the "shared mutable state" channel the row notes describe; `/nix/store` **ro**; `--read-only` root with
+`--tmpfs /tmp`; `--user $(id -u):$(id -g)` so packages and rows stay the user's. *Credentials*: pass **only**
+the model's key, by `-e`, never the environment; whether the CLI also needs a read-only mount of its config
+under `$HOME` is a scoping item to determine rather than assume. *Network*: **on**, because the model call
+needs it — so this is a **filesystem** boundary and must be described as one — and the docker socket is not
+mounted into it. *Cost*: six arms × `R = 5` = **30 attempts**; published per-attempt walls are roughly
+60–640 s for the tier-1 arms and 1,000–1,935 s for the tier-2 ones, so ≈ **8–16 h of wall-clock serially**,
+with one tier-2 attempt potentially near the 2 h cap. Dollars are **not** the binding cost: measured
+`cost_usd` is \$0.0006–0.003 per attempt, so ≈ **\$0.02–0.10 for the whole re-earn** plus a one-off image
+build. Container overhead measured at ≈0.5 s per invocation, negligible against those walls. The uncertainty
+is the arms' own variance, not the boundary. **Not started**: the owner sees this cost against the
+clean-subset alternative first, and the finding changes the alternatives rather than settling them.
+
 **What the remediation actually waits on, so the record does not overstate it.** One dependency, and it is
 not technical: the **owner's choice** between rebuilding the corpus per cell — cell roots outside the
 repository, self-contained packages, so that **no relative walk from the attempt's cwd reaches the
 repository**, which is the half a rebuild can actually buy, since an absolute path remains reachable on a
-host with no read sandbox — and accepting the **clean-subset basis**
+host with no boundary *in the runner as it stands* — a container boundary is available and is the third half
+of the escape test — and accepting the **clean-subset basis**
 and publishing the limitation. The preparer shape this section asked for has **landed** (Scenario 4):
 `prepare` takes the seed to attempt plus the seeds that attempt may see, copies the attempted seed with its
 baseline and each declared dependency's text without one, withholds every other registered seed

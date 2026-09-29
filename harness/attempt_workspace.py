@@ -43,9 +43,11 @@ to name exactly the modules copied: a promoted module is both an ``[[lean_lib]]`
 auditable rather than inferred from a directory listing. The seed digest is the one asserted property
 the receipt also names; a reader who wants the rest of the statement above inspects the prepared tree,
 which is what the contract's scenarios do.
-It does **not** assert that earlier proofs are unreadable. This host has no enforced read sandbox
-(``harness/outside_watch.py:1-11``: ``unshare``/bubblewrap are denied, file-mode bash runs as the same
-UID, and ``outside_watch`` tracks writes only), so a same-UID session can still read any path it names.
+It does **not** assert that earlier proofs are unreadable. The harness as it stands has no enforced read
+boundary (``harness/outside_watch.py:3-16``: user namespaces are denied, file-mode bash runs as the same
+UID, and ``outside_watch`` tracks writes only), so in an **uncontainerised** run a same-UID session can still
+read any path it names — a container boundary is available on this host and closes exactly that, measured in
+``tests/isolation-escape-contract.md`` Scenario 5.
 The accepted guarantee is **operational nonreuse**: the attempt's own tree offers no prior proof, and
 complete tool-call transcripts are audited afterwards, with any observed prior same-tier read
 invalidating that attempt. No comment, receipt or doc here claims otherwise.

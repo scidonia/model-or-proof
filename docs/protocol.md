@@ -174,7 +174,8 @@ Three candidate readings, all reported rather than one being chosen for the read
    the same immutable seed digest in a **fresh Lean package and clean working directory**,
    with its own OMP session and results root; prior proof copies, helper scratch, closure
    artifacts and transcripts are **not placed in that package**. The shell on this host is
-   not read-sandboxed (user namespaces/bubblewrap are unavailable); the claim is **no
+   not read-sandboxed (user namespaces are unavailable, and a container boundary is available
+   on this host but unused by the arms reported here); the claim is **no
    prior-proof reads observed in the complete per-attempt tool transcript**, not that the
    same-UID model could not open an old artifact by absolute path. Inspect and cite every
    attempt's transcript; an observed read/copy of a previous same-tier completed proof or
