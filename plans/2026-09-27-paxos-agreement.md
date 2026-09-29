@@ -440,12 +440,17 @@ repository genuinely absent inside the run rather than merely unmounted by conve
   `docker run --rm --read-only --network=bridge --user $(id -u):$(id -g) --tmpfs /tmp
   -v <package>:/work -w /work -v <cell>/results/attempt-NNN:/results
   -v <cut>/.omp:/root/.omp -e HOME=/root -e DEEPSEEK_API_KEY
-  -v <cache>:<cache>:ro -v /nix/store:/nix/store:ro <image>
+  -v <the cache the package's own `.lake/packages` symlink resolves to>:<that same host path>:ro
+  -v /nix/store:/nix/store:ro <image>
   python -m harness.route_b --task tasks/<task>.json --proof /work/<stem>.lean --mode file --tier <t>
   --reps 1 --results /results`
-  with the pinned cache mounted **at its host path read-only** so the package's absolute `.lake/packages`
-  symlink resolves and stays un-writable, no docker socket inside, and `--user` so nothing the container
-  writes into the mounts is root-owned and unattributable.
+  with the cache the package's own `.lake/packages` symlink resolves to mounted **at that host path
+  read-only**, so the absolute symlink resolves and stays un-writable. The path is **resolved rather than
+  named** because there is one cache **per task** (`proofs/lean/<task>/.lake/packages`, each ~7.2 GB); an
+  earlier draft of this invocation named a single `proofs/lean/.lake/packages`, which does not exist — caught
+  by the launcher's author, verified here, and corrected rather than left for the executor to trip over. No
+  docker socket inside, and `--user` so nothing the container writes into the mounts is root-owned and
+  unattributable.
 - **Image.** From the repository's flake: the dev shell's python and `harness/`, `tasks/`,
   `proofs/lean/…/prompt_examples.lean`, the Lean toolchain, and the `omp` binary. One toolchain definition,
   no drift from the host's.
