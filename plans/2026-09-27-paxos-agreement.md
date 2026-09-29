@@ -348,9 +348,26 @@ The four earlier task pairs also used the shared default-flag runner, so their e
 
 Required shape, since authored as Scenario 4: `prepare` takes the seed to attempt **and the seeds that attempt may see**, copying the attempted seed with its baseline plus exactly the declared dependencies, whose *text* is needed but whose *baseline* is not (a dependency is imported, never attempted), and refusing anything else; the receipt records which registered seeds were included and which were withheld, and why; and the allowlist check follows the same declaration rather than the full registered set. A tier-1 arm then declares `<Task>Proved.lean`, giving the audit's `promoted-proof` class a declared reason to find it, while a tier-2 arm declares nothing and the prior proof cannot be present at all. **This did not affect the running theorem cell** — `proofs/lean/paxos/seeds.json` registers no `Proved` seed, so its five packages were exactly what they should be — but it **blocked the remediation reruns as specified**, and had to be ruled and red-observed before them, which it was: the shape above landed with both nodes red first, and it is the reason a tier-1 receipt lists its proved module under `included`. The **declared-dependency form** was the ruling, and it is what the contract and its reds state; the observation above is what it had to satisfy, and it does — a tier-2 package declares nothing and carries no proved module, while a tier-1 package carries exactly the module it declares.
 
+**The escape test now exists, and it grades the decision's two outcomes rather than asserting either.**
+`tests/isolation-escape-contract.md` + `tests/test_isolation_escape.py` (authored here: the test was
+commissioned outside the contract path and **no draft reached the tree** — no file, no artifact, no
+registered transcript — so there was nothing to adopt). Its pass condition is stated in **two halves**,
+because the obvious version is not achievable on this host: no read sandbox exists, so a cell root outside
+the repository makes a **relative** traversal impossible and does nothing about an **absolute** path. Half
+one is therefore *impossible-by-layout* and testable by resolving the candidate relative paths — with a
+control that **fails on the current layout**, since the escape is measured rather than argued; half two is
+*detected-by-audit*, and that is the half a clean-subset-only report is a statement about. This also matters
+for the decision itself: **the measured leaks were absolute-path reads**, so a rebuilt corpus would not have
+prevented them and the rebuild's benefit is the reachable-by-default set, not unreachability. Scenario 3
+exercises the `own-copy`-by-path rule against the case it was written for — a same-named working copy in
+another cell — and Scenario 4 is the control that must **not** fire, which caught a fixture defect on its
+first run rather than letting it pass for the wrong reason.
+
 **What the remediation actually waits on, so the record does not overstate it.** One dependency, and it is
 not technical: the **owner's choice** between rebuilding the corpus per cell — cell roots outside the
-repository, self-contained packages, no repository path reachable — and accepting the **clean-subset basis**
+repository, self-contained packages, so that **no relative walk from the attempt's cwd reaches the
+repository**, which is the half a rebuild can actually buy, since an absolute path remains reachable on a
+host with no read sandbox — and accepting the **clean-subset basis**
 and publishing the limitation. The preparer shape this section asked for has **landed** (Scenario 4):
 `prepare` takes the seed to attempt plus the seeds that attempt may see, copies the attempted seed with its
 baseline and each declared dependency's text without one, withholds every other registered seed
